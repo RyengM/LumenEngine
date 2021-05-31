@@ -1,5 +1,7 @@
-#include "RenderGraph.h"
+#include "RenderGraph/RenderGraph.h"
 #include <iostream>
+
+using namespace Lumen::RenderGraph;
 
 void main()
 {

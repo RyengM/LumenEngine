@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 3.15)
 set(PROJECT_NAME RenderGraph)
 project(${PROJECT_NAME})
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+include_directories("${CMAKE_SOURCE_DIR}/Include")
 
-file(GLOB HEADER_FILES "*.h")
+file(GLOB HEADER_FILES "${CMAKE_SOURCE_DIR}/Include/RenderGraph/*.h")
 file(GLOB SOURCE_FILES "*.cpp")
 
-add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
+add_library(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/Bin)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Bin/$(Configuration)")
+set_target_properties(${PROJECT_NAME} PROPERTIES 
+    ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/Lib")

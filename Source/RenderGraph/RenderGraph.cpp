@@ -1,7 +1,9 @@
-#include "RenderGraph.h"
+#include "RenderGraph/RenderGraph.h"
 #include <queue>
 #include <iostream>
 #include <cassert>
+
+using namespace Lumen::RenderGraph;
 
 bool RenderGraph::IsRegisteredPassNode(const std::string& name) const
 {
