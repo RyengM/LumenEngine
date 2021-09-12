@@ -1,0 +1,2 @@
+add_subdirectory(RenderGraphTest)
+add_subdirectory(LoggerTest)

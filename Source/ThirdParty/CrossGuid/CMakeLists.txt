@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.5.1)
 set(PROJECT_NAME CrossGuid)
 project(${PROJECT_NAME} VERSION 0.2.3)
 
-include_directories("${CMAKE_SOURCE_DIR}/Include")
+include_directories("${CMAKE_SOURCE_DIR}/Source")
 
-file(GLOB HEADER_FILES "${CMAKE_SOURCE_DIR}/Include/ThirdParty/CrossGuid/*.hpp")
-file(GLOB SOURCE_FILES "*.cpp")
+file(GLOB HEADER_FILES "Public/*.hpp")
+file(GLOB SOURCE_FILES "Private/*.cpp")
 
 add_library(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -43,3 +43,4 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"
     ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/Lib")
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "ThirdParty")
