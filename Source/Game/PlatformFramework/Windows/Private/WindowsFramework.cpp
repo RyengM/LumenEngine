@@ -1,4 +1,4 @@
-#include "Game/PlatformFramework/Public/WindowsFramework.h"
+#include "Game/PlatformFramework/Windows/Public/WindowsFramework.h"
 #include "Core/Logger/Public/Logger.h"
 #include <cassert>
 
@@ -48,7 +48,6 @@ int RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFram
     // Get command line and config file parameters for app run
     UINT32 Width = 1920;
     UINT32 Height = 1080;
-    pFramework->OnParseCommand(lpCmdLine);
 
     // Window setup based on config params
     sWindowStyle = WS_OVERLAPPEDWINDOW;
@@ -72,8 +71,9 @@ int RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFram
         hInstance,                                              // Application handle
         NULL);                                                  // Used with multiple windows, NULL
 
-    // Create framework
-    pFramework->OnCreate();
+    // Init Engine
+    pFramework->PreInit();
+    pFramework->Init();
 
     // show the window
     ShowWindow(hWnd, nCmdShow);
@@ -91,11 +91,11 @@ int RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFram
             DispatchMessage(&msg);                              // Send the message to the WindowProc function
         }
         else if (!bIsMinimized)
-            pFramework->Run();
+            pFramework->Tick();
     }
 
-    // Destroy app-side framework 
-    pFramework->OnDestroy();
+    // Exit
+    pFramework->Exit();
 
     // Delete the framework
     pFrameworkInstance = nullptr;

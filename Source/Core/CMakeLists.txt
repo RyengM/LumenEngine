@@ -6,12 +6,12 @@ project(${PROJECT_NAME})
 include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 
-#file(GLOB ASYNC_FILES "Async/Public/*.h" "Async/Private/*.cpp")
+file(GLOB ASYNC_FILES "Async/Public/*.h" "Async/Private/*.cpp")
 file(GLOB LOGGER_FILES "Logger/Public/*.h" "Logger/Private/*.cpp")
-#source_group("Async" FILES ${ASYNC_FILES})
+source_group("Async" FILES ${ASYNC_FILES})
 source_group("Logger" FILES ${LOGGER_FILES})
 
-add_library(${PROJECT_NAME} ${LOGGER_FILES})
+add_library(${PROJECT_NAME} ${ASYNC_FILES} ${LOGGER_FILES})
 
 target_link_libraries(${PROJECT_NAME} 
 	debug ${CMAKE_SOURCE_DIR}/Lib/spdlog_d.lib

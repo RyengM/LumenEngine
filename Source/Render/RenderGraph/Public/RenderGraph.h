@@ -16,36 +16,36 @@ namespace Lumen::Render
 	{
 	public:
 		PassNode(std::string name, std::vector<size_t> inputs, std::vector<size_t> outputs) :
-			name{ std::move(name) }, inputs{ std::move(inputs) }, outputs{ std::move(outputs) } {}
+			mName{ std::move(name) }, mInputs{ std::move(inputs) }, mOutputs{ std::move(outputs) } {}
 
-		const std::string& GetName() const noexcept { return name; }
-		const std::vector<size_t>& GetInputs() const noexcept { return inputs; }
-		const std::vector<size_t>& GetOutputs() const noexcept { return outputs; }
+		const std::string& GetName() const noexcept { return mName; }
+		const std::vector<size_t>& GetInputs() const noexcept { return mInputs; }
+		const std::vector<size_t>& GetOutputs() const noexcept { return mOutputs; }
 
 	private:
-		std::string name;
-		std::vector<size_t> inputs;
-		std::vector<size_t> outputs;
+		std::string mName;
+		std::vector<size_t> mInputs;
+		std::vector<size_t> mOutputs;
 	};
 
 	class ResourceNode
 	{
 	public:
-		ResourceNode(std::string name) : name(std::move(name)) {}
-		const std::string& GetName() const noexcept { return name; }
+		ResourceNode(std::string name) : mName(std::move(name)) {}
+		const std::string& GetName() const noexcept { return mName; }
 
 	private:
-		std::string name;
+		std::string mName;
 	};
 
 	class RenderGraph
 	{
 	public:
 		// RenderGraph
-		RenderGraph(std::string name) : name(std::move(name)) {}
+		RenderGraph(std::string name) : mName(std::move(name)) {}
 
-		const std::vector<ResourceNode>& GetResourceNodes() const noexcept { return resourceNodes; }
-		const std::vector<PassNode>& GetPassNodes() const noexcept { return passNodes; }
+		const std::vector<ResourceNode>& GetResourceNodes() const noexcept { return mResourceNodes; }
+		const std::vector<PassNode>& GetPassNodes() const noexcept { return mPassNodes; }
 
 		size_t GetResourceNodeIndex(const std::string& name) const;
 		size_t GetPassNodeIndex(const std::string& name) const;
@@ -85,22 +85,22 @@ namespace Lumen::Render
 
 	private:
 		// Render Graph
-		std::string name;
-		std::vector<ResourceNode> resourceNodes;
-		std::vector<PassNode> passNodes;
-		// @std::string: node name, @size_t: resource ID, index of node in origin vector
-		std::unordered_map<std::string, size_t> name2resourceMap;
-		std::unordered_map<std::string, size_t> name2passMap;
+		std::string mName;
+		std::vector<ResourceNode> mResourceNodes;
+		std::vector<PassNode> mPassNodes;
+		// @std::string: node mName, @size_t: resource ID, index of node in origin vector
+		std::unordered_map<std::string, size_t> mName2resourceMap;
+		std::unordered_map<std::string, size_t> mName2passMap;
 
 		// Compile
 		// @size_t: current resourceNode, ResourceNodeManager: related compile data
-		std::unordered_map<size_t, ResourceNodeManager> resource2managerMap;
+		std::unordered_map<size_t, ResourceNodeManager> mResource2managerMap;
 		// @size_t: current passNode, set<size_t>: dependent passNodes
-		std::unordered_map<size_t, std::set<size_t>> passDependency;
-		std::vector<size_t> compiledExecutePassSequence;
+		std::unordered_map<size_t, std::set<size_t>> mPassDependency;
+		std::vector<size_t> mCompiledExecutePassSequence;
 		bool bCompiled = false;
 
 		// Execute
-		std::unordered_map<size_t, PassFunction> pass2functionMap;
+		std::unordered_map<size_t, PassFunction> mPass2functionMap;
 	};
 }

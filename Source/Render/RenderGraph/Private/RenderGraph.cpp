@@ -7,32 +7,32 @@ using namespace Lumen::Render;
 
 bool RenderGraph::IsRegisteredPassNode(const std::string& name) const
 {
-	return name2passMap.find(name) != name2passMap.end();
+	return mName2passMap.find(name) != mName2passMap.end();
 }
 
 bool RenderGraph::IsRegisteredResourceNode(const std::string& name) const
 {
-	return name2resourceMap.find(name) != name2resourceMap.end();
+	return mName2resourceMap.find(name) != mName2resourceMap.end();
 }
 
 size_t RenderGraph::GetPassNodeIndex(const std::string& name) const
 {
 	assert(IsRegisteredPassNode(name));
-	return name2passMap.find(name)->second;
+	return mName2passMap.find(name)->second;
 }
 
 size_t RenderGraph::GetResourceNodeIndex(const std::string& name) const
 {
 	assert(IsRegisteredResourceNode(name));
-	return name2resourceMap.find(name)->second;
+	return mName2resourceMap.find(name)->second;
 }
 
 size_t RenderGraph::RegisterPassNode(PassNode node)
 {
 	assert(!IsRegisteredPassNode(node.GetName()));
-	size_t id = passNodes.size();
-	name2passMap.emplace(node.GetName(), id);
-	passNodes.push_back(std::move(node));
+	size_t id = mPassNodes.size();
+	mName2passMap.emplace(node.GetName(), id);
+	mPassNodes.push_back(std::move(node));
 	return id;
 }
 
@@ -44,9 +44,9 @@ size_t RenderGraph::RegisterPassNode(std::string name, std::vector<size_t> input
 size_t RenderGraph::RegisterResourceNode(ResourceNode node)
 {
 	assert(!IsRegisteredResourceNode(node.GetName()));
-	size_t id = resourceNodes.size();
-	name2resourceMap.emplace(node.GetName(), id);
-	resourceNodes.push_back(std::move(node));
+	size_t id = mResourceNodes.size();
+	mName2resourceMap.emplace(node.GetName(), id);
+	mResourceNodes.push_back(std::move(node));
 	return id;
 }
 
@@ -62,7 +62,7 @@ bool RenderGraph::IsRenderGraphCompiled() const
 
 void RenderGraph::RegisterPassFunction(size_t passNode, PassFunction function)
 {
-	pass2functionMap.emplace(std::move(passNode), std::move(function));
+	mPass2functionMap.emplace(std::move(passNode), std::move(function));
 }
 
 bool RenderGraph::CompileGraphWithDependency()
@@ -74,7 +74,7 @@ bool RenderGraph::CompileGraphWithDependency()
 	// @size_t: current passNode, @size_t: dependent passNode
 	std::unordered_map<size_t, size_t> indegreeMap;
 	
-	for (const auto& [node, dependency] : passDependency)
+	for (const auto& [node, dependency] : mPassDependency)
 	{
 		// Push nodes whose in-degree equals to zero
 		if (!dependency.size())
@@ -88,11 +88,11 @@ bool RenderGraph::CompileGraphWithDependency()
 	{
 		auto selectedNode = zeroIndegreeNodes.front();
 		zeroIndegreeNodes.pop();
-		compiledExecutePassSequence.push_back(selectedNode);
+		mCompiledExecutePassSequence.push_back(selectedNode);
 		indegreeMap.erase(selectedNode);
 		for (auto& [node, dependencyNum] : indegreeMap)
 		{
-			auto dependency = passDependency.find(node)->second;
+			auto dependency = mPassDependency.find(node)->second;
 			if (dependency.find(selectedNode) != dependency.end())
 				dependencyNum--;
 			if (dependencyNum == 0)
@@ -107,41 +107,41 @@ bool RenderGraph::CompileGraphWithDependency()
 void RenderGraph::Compile()
 {
 	// Construct readers and writer for resource nodes, useless resource node will be ignored automatically
-	for (int id = 0; id < passNodes.size(); ++id)
+	for (int id = 0; id < mPassNodes.size(); ++id)
 	{
-		const auto pass = passNodes[id];
+		const auto pass = mPassNodes[id];
 		for (const auto& input : pass.GetInputs())
-			resource2managerMap[input].readers.push_back(id);
+			mResource2managerMap[input].readers.push_back(id);
 		for (const auto& output : pass.GetOutputs())
-			resource2managerMap[output].writer = id;
+			mResource2managerMap[output].writer = id;
 	}
 	// Construct pass node dependencies
 	// Ensure that each pass node has its dependency, even though the value is zero
-	for (int idx = 0; idx < passNodes.size(); ++idx)
-		passDependency.try_emplace(idx);
-	for (const auto& [resourceNode, resourceData] : resource2managerMap)
+	for (int idx = 0; idx < mPassNodes.size(); ++idx)
+		mPassDependency.try_emplace(idx);
+	for (const auto& [resourceNode, resourceData] : mResource2managerMap)
 	{
 		for (const auto reader : resourceData.readers)
-			passDependency[reader].insert(resourceData.writer);
+			mPassDependency[reader].insert(resourceData.writer);
 	}
 	// Sort graph into vector with dependency
 	bool result = CompileGraphWithDependency();
 	assert(result);
 
 	// Check resource lifetime, from writer to last reader
-	for (auto& [node, resourceData] : resource2managerMap)
+	for (auto& [node, resourceData] : mResource2managerMap)
 	{
 		resourceData.lifeStartPass = resourceData.writer;
 		resourceData.lifeEndPass = resourceData.writer;
 		int curIndex = 0;
 		// This value must can be found, so init value of curIndex is not important
-		for (int i = compiledExecutePassSequence.size() - 1; i >= 0; --i)
-			if (compiledExecutePassSequence[i] == resourceData.lifeStartPass)
+		for (int i = mCompiledExecutePassSequence.size() - 1; i >= 0; --i)
+			if (mCompiledExecutePassSequence[i] == resourceData.lifeStartPass)
 				curIndex = i;
 		for (auto& reader : resourceData.readers)
-			for (int i = compiledExecutePassSequence.size() - 1; i >= 0; --i)
-				if (compiledExecutePassSequence[i] == reader && i > curIndex)
-					resourceData.lifeEndPass = compiledExecutePassSequence[i];
+			for (int i = mCompiledExecutePassSequence.size() - 1; i >= 0; --i)
+				if (mCompiledExecutePassSequence[i] == reader && i > curIndex)
+					resourceData.lifeEndPass = mCompiledExecutePassSequence[i];
 	}
 
 	bCompiled = true;
@@ -149,10 +149,10 @@ void RenderGraph::Compile()
 
 void RenderGraph::Exec()
 {
-	for (const auto& node : compiledExecutePassSequence)
+	for (const auto& node : mCompiledExecutePassSequence)
 	{
-		assert(pass2functionMap.find(node) != pass2functionMap.end());
-		pass2functionMap.find(node)->second();
+		assert(mPass2functionMap.find(node) != mPass2functionMap.end());
+		mPass2functionMap.find(node)->second();
 	}
 }
 
@@ -164,28 +164,28 @@ void RenderGraph::LogCompiledInfo() const
 		return;
 	}
 	std::cout << "--------------------- pass info ---------------------" << std::endl;
-	for (int i = 0; i < passNodes.size(); ++i)
-		std::cout << i << ": " + passNodes[i].GetName() << std::endl;
+	for (int i = 0; i < mPassNodes.size(); ++i)
+		std::cout << i << ": " + mPassNodes[i].GetName() << std::endl;
 	std::cout << std::endl;
 	std::cout << "------------------- resource info -------------------" << std::endl;
-	for (int i = 0; i < resourceNodes.size(); ++i)
+	for (int i = 0; i < mResourceNodes.size(); ++i)
 	{
-		std::cout << i << ": " + resourceNodes[i].GetName() << std::endl;
-		auto resource = resource2managerMap.find(i)->second;
-		std::cout << "  - writer :" << passNodes[resource.writer].GetName() << std::endl;
+		std::cout << i << ": " + mResourceNodes[i].GetName() << std::endl;
+		auto resource = mResource2managerMap.find(i)->second;
+		std::cout << "  - writer :" << mPassNodes[resource.writer].GetName() << std::endl;
 		std::cout << "  - reader :" << std::endl;
 		for (const auto& reader : resource.readers)
-			std::cout << "    * " << passNodes[reader].GetName() << std::endl;
-		std::cout << "  - lifetime :" << passNodes[resource.lifeStartPass].GetName() << " -> " << passNodes[resource.lifeEndPass].GetName() << std::endl;
+			std::cout << "    * " << mPassNodes[reader].GetName() << std::endl;
+		std::cout << "  - lifetime :" << mPassNodes[resource.lifeStartPass].GetName() << " -> " << mPassNodes[resource.lifeEndPass].GetName() << std::endl;
 	}
 	std::cout << std::endl;
 	std::cout << "---------- ------- pass dependency ------------------" << std::endl;
-	for (const auto& [node, dependency] : passDependency)
+	for (const auto& [node, dependency] : mPassDependency)
 		for (const auto& dependencyNode : dependency)
-			std::cout << passNodes[dependencyNode].GetName() << " -> " << passNodes[node].GetName() << std::endl;
+			std::cout << mPassNodes[dependencyNode].GetName() << " -> " << mPassNodes[node].GetName() << std::endl;
 	std::cout << std::endl;
 	std::cout << "---------------- compiled pass order ----------------" << std::endl;
-	for (int i = 0; i < compiledExecutePassSequence.size(); ++i)
-		std::cout << i << ": " + passNodes[compiledExecutePassSequence[i]].GetName() << std::endl;
+	for (int i = 0; i < mCompiledExecutePassSequence.size(); ++i)
+		std::cout << i << ": " + mPassNodes[mCompiledExecutePassSequence[i]].GetName() << std::endl;
 	std::cout << std::endl;
 }

@@ -1,18 +1,14 @@
 #pragma once
-#include "BaseFramework.h"
-#include "Game/PlatformFramework/Public/stdafx.h"
+#include "Game/Launch/Public/BaseFramework.h"
+#include "Game/PlatformFramework/Windows/Public/stdafx.h"
 
 namespace Lumen::Game
 {
+	// Provide Win32 backend
 	class WindowsFramework : public BaseFramework
 	{
 	public:
 		WindowsFramework(const char* name) : BaseFramework(name) {};
-
-		virtual void OnParseCommand(const char* cmdLine) = 0;
-		virtual void OnCreate() = 0;
-		virtual void OnDestroy() = 0;
-		virtual void Run() = 0;
 	};
 }
 

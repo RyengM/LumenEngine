@@ -6,12 +6,14 @@ project(${PROJECT_NAME})
 include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 
-file(GLOB GAME_FRAMEWORK_FILES "GameFramework/Public/*.h" "GameFramework/Private/*.cpp")
-file(GLOB PLATFORM_FRAMEWORK_FILES "PlatFormFramework/Public/*.h" "PlatFormFramework/Private/*.cpp")
-source_group("GameFramework" FILES ${GAME_FRAMEWORK_FILES})
-source_group("PlatFormFramework" FILES ${PLATFORM_FRAMEWORK_FILES})
+file(GLOB GAMEPLAY_FILES "GamePlay/Public/*.h" "GamePlay/Private/*.cpp")
+file(GLOB WINDOWS_FILES "PlatFormFramework/Windows/Public/*.h" "PlatFormFramework/Windows/Private/*.cpp")
+file(GLOB LAUNCH_FILES "Launch/Public/*.h" "Launch/Private/*.cpp")
+source_group("GamePlay" FILES ${GAMEPLAY_FILES})
+source_group("PlatFormFramework/Windows" FILES ${WINDOWS_FILES})
+source_group("Launch" FILES ${LAUNCH_FILES})
 
-add_library(${PROJECT_NAME} ${GAME_FRAMEWORK_FILES} ${PLATFORM_FRAMEWORK_FILES})
+add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${LAUNCH_FILES})
 
 target_link_libraries(${PROJECT_NAME} 
 	debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
