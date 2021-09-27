@@ -1,4 +1,4 @@
-#include "Core/Async/Public/RingQueue.h"
+#include "Core/Common/Public/RingQueue.h"
 #include <vector>
 
 using namespace Lumen::Core;
@@ -38,5 +38,13 @@ void main()
 		q.Push(p);
 		int v0 = q.Front()(2);
 		int v1 = q.GetBuffer()->item(3);
+	}
+
+	{
+		RingQueue<TestStruct> queue;
+		queue.Push(TestStruct(1));
+		auto t = std::move(queue.Front());
+		queue.Pop();
+		int a = 2;
 	}
 }

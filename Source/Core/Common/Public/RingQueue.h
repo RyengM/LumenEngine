@@ -4,6 +4,7 @@
 
 namespace Lumen::Core
 {
+	// Lock free ring queue, for one producer and one consumer
 	template<typename T>
 	class RingQueue
 	{
