@@ -39,3 +39,9 @@ Logger::~Logger()
 {
 	spdlog::drop_all();
 }
+
+Logger& Logger::GetInstance()
+{
+	static Logger instance;
+	return instance;
+}

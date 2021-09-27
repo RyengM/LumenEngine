@@ -7,21 +7,16 @@ namespace Lumen::Core
 	class Logger
 	{
 	public:
+		static Logger& GetInstance();
+
+		inline std::shared_ptr<spdlog::logger> GetLogger() noexcept { return mLogger; }
+
+	private:
 		Logger();
 		~Logger();
 		Logger(const Logger&) = delete;
 		Logger& operator=(const Logger&) = delete;
 
-		static Logger& GetInstance()
-		{
-			static Logger instance;
-			return instance;
-		}
-
-		inline std::shared_ptr<spdlog::logger> GetLogger() noexcept
-		{
-			return mLogger;
-		}
 	private:
 		std::shared_ptr<spdlog::logger> mLogger;
 	};

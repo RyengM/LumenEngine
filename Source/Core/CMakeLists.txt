@@ -6,12 +6,18 @@ project(${PROJECT_NAME})
 include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 
-file(GLOB ASYNC_FILES "Async/Public/*.h" "Async/Private/*.cpp")
+file(GLOB COMMON_FILES "Common/Public/*.h" "Common/Public/Details/*.inl" "Common/Private/*.cpp")
 file(GLOB LOGGER_FILES "Logger/Public/*.h" "Logger/Private/*.cpp")
-source_group("Async" FILES ${ASYNC_FILES})
+file(GLOB TASK_GRAPH_FILES "TaskGraph/Public/*.h" "TaskGraph/Public/Details/*.inl" "TaskGraph/Private/*.cpp")
+file(GLOB THREAD_FILES "Thread/Public/*.h" "Thread/Public/Details/*.inl" "Thread/Private/*.cpp")
+file(GLOB MEMORY_FILES "Memory/Public/*.h" "Memory/Public/Details/*.inl" "Memory/Private/*.cpp")
+source_group("Common" FILES ${COMMON_FILES})
 source_group("Logger" FILES ${LOGGER_FILES})
+source_group("TaskGraph" FILES ${TASK_GRAPH_FILES})
+source_group("Thread" FILES ${THREAD_FILES})
+source_group("Memory" FILES ${MEMORY_FILES})
 
-add_library(${PROJECT_NAME} ${ASYNC_FILES} ${LOGGER_FILES})
+add_library(${PROJECT_NAME} ${COMMON_FILES} ${LOGGER_FILES} ${TASK_GRAPH_FILES} ${THREAD_FILES} ${MEMORY_FILES})
 
 target_link_libraries(${PROJECT_NAME} 
 	debug ${CMAKE_SOURCE_DIR}/Lib/spdlog_d.lib
