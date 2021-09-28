@@ -9,6 +9,8 @@ file(GLOB SOURCE_FILES "*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
+add_dependencies (${PROJECT_NAME} Render)
+
 target_link_libraries(${PROJECT_NAME} 
 	debug ${CMAKE_SOURCE_DIR}/Lib/Render_d.lib
 	optimized ${CMAKE_SOURCE_DIR}/Lib/Render.lib)

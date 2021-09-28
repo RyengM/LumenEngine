@@ -10,6 +10,8 @@ file(GLOB SOURCE_FILES "*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
+add_dependencies (${PROJECT_NAME} Core)
+
 target_link_libraries(${PROJECT_NAME} 
 	debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
 	optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)

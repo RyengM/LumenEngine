@@ -19,9 +19,11 @@ source_group("Memory" FILES ${MEMORY_FILES})
 
 add_library(${PROJECT_NAME} ${COMMON_FILES} ${LOGGER_FILES} ${TASK_GRAPH_FILES} ${THREAD_FILES} ${MEMORY_FILES})
 
-target_link_libraries(${PROJECT_NAME} 
-	debug ${CMAKE_SOURCE_DIR}/Lib/spdlog_d.lib
-	optimized ${CMAKE_SOURCE_DIR}/Lib/spdlog.lib)
+add_dependencies (${PROJECT_NAME} spdlog)
+
+target_link_libraries(${PROJECT_NAME}
+    debug ${CMAKE_SOURCE_DIR}/Lib/spdlog_d.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/spdlog.lib)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"

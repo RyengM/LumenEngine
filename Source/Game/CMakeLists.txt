@@ -15,9 +15,11 @@ source_group("Launch" FILES ${LAUNCH_FILES})
 
 add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${LAUNCH_FILES})
 
-target_link_libraries(${PROJECT_NAME} 
-	debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
-	optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)
+add_dependencies (${PROJECT_NAME} Core)
+
+target_link_libraries(${PROJECT_NAME}
+    debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"
