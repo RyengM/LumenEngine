@@ -10,7 +10,7 @@ ThreadPool::ThreadPool(unsigned int num)
 		mThreads.emplace_back([this] {
 			while (true)
 			{
-				std::packaged_task<void()> task;
+				std::function<void()> task;
 				{
 					std::unique_lock<std::mutex> lock(mMutex);
 					mCondition.wait(lock, [this] {
