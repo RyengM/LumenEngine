@@ -11,8 +11,8 @@ namespace Lumen::Core
 	public:
 		static ThreadManager& GetInstance();
 
-		bool Register(RunnableThread* thread);
-		bool UnRegister(std::thread::id);
+		void Register(RunnableThread* thread);
+		void UnRegister(std::thread::id);
 
 	private:
 		ThreadManager() {}

@@ -1,4 +1,5 @@
 #include "Core/Thread/Public/RunnableThread.h"
+#include "Core/Thread/Public/ThreadManager.h"
 
 using namespace Lumen::Core;
 

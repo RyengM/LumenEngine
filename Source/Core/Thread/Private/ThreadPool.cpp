@@ -1,5 +1,10 @@
 #include "Core/Thread/Public/ThreadPool.h"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#include <processthreadsapi.h>
+#endif
+
 using namespace Lumen::Core;
 
 ThreadPool::ThreadPool(unsigned int num)
@@ -8,6 +13,10 @@ ThreadPool::ThreadPool(unsigned int num)
 	for (int i = 0; i < num; ++i)
 	{
 		mThreads.emplace_back([this] {
+#ifdef _MSC_VER
+			HRESULT r;
+			r = SetThreadDescription(GetCurrentThread(), L"Thread Pool Worker Thread");
+#endif
 			while (true)
 			{
 				std::function<void()> task;

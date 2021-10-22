@@ -8,12 +8,12 @@ ThreadManager& ThreadManager::GetInstance()
 	return instance;
 }
 
-bool ThreadManager::Register(RunnableThread* thread)
+void ThreadManager::Register(RunnableThread* thread)
 {
-	mThreads.insert({ thread->GetThreadID(), thread });
+	mThreads.emplace(thread->GetThreadID(), thread);
 }
 
-bool ThreadManager::UnRegister(std::thread::id id)
+void ThreadManager::UnRegister(std::thread::id id)
 {
 	mThreads.erase(id);
 }

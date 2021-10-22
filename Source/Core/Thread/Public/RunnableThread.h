@@ -1,6 +1,5 @@
 #pragma once
 #include "Runnable.h"
-#include "ThreadManager.h"
 #include <thread>
 
 namespace Lumen::Core
@@ -19,7 +18,7 @@ namespace Lumen::Core
 
 		inline std::thread::id GetThreadID() noexcept { return mThreadID; }
 
-	protected:
+	private:
 		RunnableThread(const char* name, Runnable* runnable);
 		
 		void Run();
