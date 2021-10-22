@@ -6,8 +6,7 @@
 #include <string>
 #include <unordered_set>
 
-#define TASK_ALLOC_SIZE 256
-#define TASK_MEMORY_SIZE 2048
+#define TASK_ALLOC_SIZE 256				// Aligned size of task allocated in custom memory
 
 namespace Lumen::Core
 {
@@ -70,8 +69,6 @@ namespace Lumen::Core
 	{
 	public:
 		static TaskAllocator& GetInstance();
-		// Ensure setup before using this singleton
-		static void Setup(unsigned int blockNum);
 		
 		// Get a free address of memory pool
 		AlignedTaskWrapper* Allocate();

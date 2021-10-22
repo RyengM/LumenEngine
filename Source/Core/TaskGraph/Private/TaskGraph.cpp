@@ -8,15 +8,6 @@ TaskAllocator& TaskAllocator::GetInstance()
 	return instance;
 }
 
-void TaskAllocator::Setup(unsigned int blockNum)
-{
-	if (!TaskAllocator::GetInstance().bSetup)
-	{
-		//TaskAllocator::GetInstance().mMemoryPool.Reserve(blockNum);
-		TaskAllocator::GetInstance().bSetup = true;
-	}
-}
-
 AlignedTaskWrapper* TaskAllocator::Allocate()
 {
 	return mMemoryPool.RequestElement();
@@ -34,7 +25,6 @@ void TaskGraph::Setup(unsigned int threadNum)
 	{
 		TaskGraph::GetInstance().mThreadPool = new TaskThreadPool(threadNum);
 		TaskGraph::GetInstance().bSetup = true;
-		TaskAllocator::Setup(TASK_MEMORY_SIZE);
 	}
 }
 
