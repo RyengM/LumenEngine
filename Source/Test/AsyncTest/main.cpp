@@ -136,7 +136,7 @@ void main()
 
 	// Task graph test
 	{
-		TaskGraph::Setup(1);
+		TaskGraph::Setup(4);
 		auto taskRefA = TaskNode<TestTaskA>::CreateTask("TaskA")->Schedual();
 		auto taskRefB = TaskNode<TestTaskB>::CreateTask("TaskB", {taskRefA->GetIndex()})->Schedual("233 B");
 		auto taskRefC = TaskNode<TestTaskC>::CreateTask("TaskC", {taskRefB->GetIndex()})->Schedual("233 C");

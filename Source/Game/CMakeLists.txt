@@ -8,12 +8,12 @@ include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 
 file(GLOB GAMEPLAY_FILES "GamePlay/Public/*.h" "GamePlay/Private/*.cpp")
 file(GLOB WINDOWS_FILES "PlatFormFramework/Windows/Public/*.h" "PlatFormFramework/Windows/Private/*.cpp")
-file(GLOB LAUNCH_FILES "Launch/Public/*.h" "Launch/Private/*.cpp")
+file(GLOB ENGINE_FILES "Engine/Public/*.h" "Engine/Private/*.cpp")
 source_group("GamePlay" FILES ${GAMEPLAY_FILES})
 source_group("PlatFormFramework/Windows" FILES ${WINDOWS_FILES})
-source_group("Launch" FILES ${LAUNCH_FILES})
+source_group("Engine" FILES ${ENGINE_FILES})
 
-add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${LAUNCH_FILES})
+add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${ENGINE_FILES})
 
 add_dependencies (${PROJECT_NAME} Core)
 

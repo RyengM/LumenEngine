@@ -17,4 +17,5 @@ target_link_libraries(${PROJECT_NAME}
 	optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Test")
+
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/Bin/Test)
