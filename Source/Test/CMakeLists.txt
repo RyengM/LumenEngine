@@ -1,4 +1,4 @@
 add_subdirectory(RenderGraphTest)
 add_subdirectory(AsyncTest)
 add_subdirectory(LoggerTest)
-add_subdirectory(ParserTest)
+add_subdirectory(ReflectTest)
