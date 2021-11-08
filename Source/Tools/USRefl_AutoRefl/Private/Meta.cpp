@@ -384,7 +384,7 @@ bool TypeMeta::IsOverloaded(std::string_view name) const {
 
 bool TypeMeta::HaveAnyOutputField() const {
 	for (const auto& field : fields) {
-		if (field.accessSpecifier == AccessSpecifier::PUBLIC && !field.IsFriendFunction() && !field.IsDeletedFunction())
+		if (!field.IsFriendFunction() && !field.IsDeletedFunction())
 			return true;
 	}
 	return false;

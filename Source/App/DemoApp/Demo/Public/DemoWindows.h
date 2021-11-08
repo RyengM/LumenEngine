@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Game/PlatformFramework/Windows/Public/WindowsFramework.h"
 
 namespace Demo

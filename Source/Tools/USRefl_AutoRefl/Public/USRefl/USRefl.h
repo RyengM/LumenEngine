@@ -13,3 +13,7 @@
 #include "TypeInfo.h"
 #include "TypeInfoBase.h"
 #include "Util.h"
+
+// To access private member and mark the reflective object
+// There is no ';' for antlr parse
+#define REFLECTION_REGISTRATION(Typename) friend Ubpa::USRefl::TypeInfo<Typename>

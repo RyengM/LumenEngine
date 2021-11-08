@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Task.h"
 #include "Core/Common/Public/RingQueue.h"
 #include <thread>

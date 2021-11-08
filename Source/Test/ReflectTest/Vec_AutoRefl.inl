@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <USRefl/USRefl.h>
+#include <Tools/USRefl_AutoRefl/Public/USRefl/USRefl.h>
 
 template<typename T>
 struct Ubpa::USRefl::TypeInfo<Lumen::Refl::Vec<T>> :
@@ -12,24 +12,27 @@ struct Ubpa::USRefl::TypeInfo<Lumen::Refl::Vec<T>> :
         Attr {TSTR("size"), sizeof(T)},
     };
     static constexpr FieldList fields = {
-        Field {TSTR(UMeta::constructor), WrapConstructor<Lumen::Refl::Vec<T>()>()},
-        Field {TSTR(UMeta::constructor), WrapConstructor<Lumen::Refl::Vec<T>(T, T)>()},
-        Field {TSTR(UMeta::destructor), WrapDestructor<Lumen::Refl::Vec<T>>()},
-        Field {TSTR("x"), &Lumen::Refl::Vec<T>::x, AttrList {
+        Field {TSTR(UMeta::constructor), WrapConstructor<Lumen::Refl::Vec<T>()>(), AccessSpecifier::PUBLIC},
+        Field {TSTR(UMeta::constructor), WrapConstructor<Lumen::Refl::Vec<T>(T, T)>(), AccessSpecifier::PUBLIC},
+        Field {TSTR(UMeta::destructor), WrapDestructor<Lumen::Refl::Vec<T>>(), AccessSpecifier::PUBLIC},
+        Field {TSTR("x"), &Lumen::Refl::Vec<T>::x, AccessSpecifier::PUBLIC, AttrList {
             Attr {TSTR("not_serialize")},
         }},
-        Field {TSTR("y"), &Lumen::Refl::Vec<T>::y, AttrList {
+        Field {TSTR("y"), &Lumen::Refl::Vec<T>::y, AccessSpecifier::PUBLIC, AttrList {
             Attr {TSTR("info"), "hello"},
             Attr {TSTR("maximum"), 10.f},
         }},
-        Field {TSTR("num"), &Lumen::Refl::Vec<T>::num},
-        Field {TSTR("Sum"), static_cast<float(Lumen::Refl::Vec<T>::*)()const>(&Lumen::Refl::Vec<T>::Sum)},
-        Field {TSTR("Sum"), static_cast<float(Lumen::Refl::Vec<T>::*)(float, float)const>(&Lumen::Refl::Vec<T>::Sum), AttrList {
+        Field {TSTR("num"), &Lumen::Refl::Vec<T>::num, AccessSpecifier::PUBLIC},
+        Field {TSTR("Sum"), static_cast<float(Lumen::Refl::Vec<T>::*)()const>(&Lumen::Refl::Vec<T>::Sum), AccessSpecifier::PUBLIC},
+        Field {TSTR("Sum"), static_cast<float(Lumen::Refl::Vec<T>::*)(float, float)const>(&Lumen::Refl::Vec<T>::Sum), AccessSpecifier::PUBLIC, AttrList {
             Attr {TSTR(UMeta::default_functions), std::tuple {
                 [](Lumen::Refl::Vec<T> const* this_, float z){ return this_->Sum(std::forward<float>(z)); }
             }},
         }},
-        Field {TSTR("Dot"), &Lumen::Refl::Vec<T>::Dot},
+        Field {TSTR("Dot"), &Lumen::Refl::Vec<T>::Dot, AccessSpecifier::PUBLIC},
+        Field {TSTR("z"), &Lumen::Refl::Vec<T>::z, AccessSpecifier::PRIVATE, AttrList {
+            Attr {TSTR("info"), "i'm private"},
+        }},
     };
 };
 

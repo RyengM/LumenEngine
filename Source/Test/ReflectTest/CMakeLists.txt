@@ -6,7 +6,6 @@ project(${PROJECT_NAME})
 include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/UANTLR")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/UANTLR/Runtime/Public")
-include_directories("${CMAKE_SOURCE_DIR}/Source/Tools/USRefl_AutoRefl/Public")
 
 file(GLOB SOURCE_FILES "*.h" "*.inl" "*.cpp")
 

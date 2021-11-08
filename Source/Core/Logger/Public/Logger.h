@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ThirdParty/Spdlog/include/spdlog/spdlog.h"
 
 namespace Lumen::Core

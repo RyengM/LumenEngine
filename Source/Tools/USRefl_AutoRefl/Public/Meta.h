@@ -1,5 +1,6 @@
 #pragma once
 
+#include "USRefl/Util.h"
 #include <vector>
 #include <string_view>
 #include <string>
@@ -15,13 +16,6 @@ namespace Ubpa::USRefl {
 		std::string GenerateName(bool withoutQuatation) const;
 		std::string GenerateValue(bool toFunction) const;
 		std::string GenerateValue(const std::string& type) const;
-	};
-
-	enum class AccessSpecifier {
-		PUBLIC,
-		PROTECTED,
-		PRIVATE,
-		DEFAULT
 	};
 	
 	using DeclSpecifier = std::string;

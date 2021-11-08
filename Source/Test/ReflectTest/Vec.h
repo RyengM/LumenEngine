@@ -1,8 +1,13 @@
+#pragma once
+
 #include <tuple>
 
 namespace Lumen::Refl {
+
 	template<typename T>
 	struct [[size(sizeof(T))]] Vec {
+
+		REFLECTION_REGISTRATION(Lumen::Refl::Vec<T>);
 
 		Vec() : x{ 0.f }, y{ 0.f } {}
 		Vec(T x, T y) : x{ x }, y{ y } {}
@@ -28,9 +33,12 @@ namespace Lumen::Refl {
 		static T Dot(const Vec& lhs, const Vec& rhs) {
 			return lhs.x * rhs.x + lhs.y * rhs.y;
 		}
+
+	private:
+		[[info("i'm private")]]
+		T z = 0;
 	};
 }
 
-// CMake will generate this file before building
-// it contains the reflection declaration of Vec
+//Code generate tool will generate this file by code gen tool
 #include "Vec_AutoRefl.inl"

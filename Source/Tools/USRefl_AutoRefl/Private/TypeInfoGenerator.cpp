@@ -15,7 +15,7 @@ string TypeInfoGenerator::Generate(const vector<TypeMeta>& typeMetas) {
 		<< endl
 		<< "#pragma once" << endl
 		<< endl
-		<< "#include <USRefl/USRefl.h>" << endl
+		<< "#include <Tools/USRefl_AutoRefl/Public/USRefl/USRefl.h>" << endl
 		<< endl;
 
 	for (const auto& typeMeta : typeMetas) {
@@ -93,9 +93,9 @@ string TypeInfoGenerator::Generate(const vector<TypeMeta>& typeMetas) {
 			ss << endl;
 			for (const auto& field : typeMeta.fields) {
 				if (field.isTemplate
-					|| field.accessSpecifier != AccessSpecifier::PUBLIC
 					|| field.IsFriendFunction()
 					|| field.IsDeletedFunction()
+					|| field.name == ""
 				)
 					continue;
 				
@@ -147,6 +147,23 @@ string TypeInfoGenerator::Generate(const vector<TypeMeta>& typeMetas) {
 					ss << tname << "::" << field.name;
 					break;
 				}
+				}
+				// access level
+				ss << ", ";
+				switch (field.accessSpecifier)
+				{
+				case AccessSpecifier::DEFAULT:
+				case AccessSpecifier::PUBLIC:
+					ss << "AccessSpecifier::PUBLIC";
+					break;
+				case AccessSpecifier::PROTECTED:
+					ss << "AccessSpecifier::PROTECTED";
+					break;
+				case AccessSpecifier::PRIVATE:
+					ss << "AccessSpecifier::PRIVATE";
+					break;
+				default:
+					break;
 				}
 				// attributes
 				const bool hasInitializerAttr = config.isInitializerAsAttr

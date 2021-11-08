@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Core/Common/Public/RingQueue.h"
 #include <thread>
 #include <mutex>
