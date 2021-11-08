@@ -83,7 +83,15 @@ int main(int argc, char** argv) {
 	}
 
 	//string inputPath = argv[1];
-	string rootDir = argv[1];
+	string inputDir = argv[1];
+	char rootDir[1024];
+
+#ifdef _WIN32
+	auto rst = _fullpath(rootDir, inputDir.c_str(), 1024);
+#else
+	realpath(inputDir.c_str(), rootDir);
+#endif
+	
 	if (!exists(rootDir)) {
 		cerr << "root directory doesn't exist" << endl;
 		return 1;

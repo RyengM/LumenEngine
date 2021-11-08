@@ -11,7 +11,7 @@ bool SourceModifier::TryModify(std::string& code, const std::string& inlPath)
 
 	// Add include for this file
 	if (code.substr(code.size() - 5, 4) != ".inl")
-		code += "\n\n// Code generate tool will generate this file by code gen tool\n#include \"" + inlPath + "\"";
+		code += "\n\n// Code generation tool will generate this file by code gen tool\n#include \"" + inlPath + "\"";
 
 	return true;
 }
