@@ -41,4 +41,4 @@ namespace Lumen::Refl {
 }
 
 // Code generation tool will generate this file by code gen tool
-#include "D:\Workplace\LumenEngine\Source\Test\ReflectTest\Vec_AutoRefl.inl"
+#include "Vec_AutoRefl.inl"

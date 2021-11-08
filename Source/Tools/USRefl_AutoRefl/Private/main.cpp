@@ -72,7 +72,7 @@ void EnterDictRecur(const std::string& dir)
 		if (it.status().type() == file_type::directory)
 			EnterDictRecur(path);
 		else if (it.status().type() == file_type::regular)
-			OperateFile(path);
+			OperateFile(it.path().filename().string());
 	}
 }
 
