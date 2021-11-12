@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(PROJECT_NAME USRefl_AutoRefl)
+set(PROJECT_NAME USRefl)
 project(${PROJECT_NAME})
 
 include_directories("${CMAKE_SOURCE_DIR}/Source")

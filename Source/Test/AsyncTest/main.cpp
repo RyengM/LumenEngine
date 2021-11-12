@@ -60,7 +60,7 @@ private:
 	std::string mStr;
 };
 
-void main()
+int main()
 {
 	struct TestStruct
 	{
@@ -142,4 +142,6 @@ void main()
 		auto taskRefC = TaskNode<TestTaskC>::CreateTask("TaskC", {taskRefB->GetIndex()})->Schedual("233 C");
 		taskRefC->Wait();
 	}
+
+	return 0;
 }

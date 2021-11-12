@@ -3,7 +3,7 @@
 
 using namespace Lumen::Render;
 
-void main()
+int main()
 {
 	RenderGraph rg("TestRG");
 	auto gBuffer0 = rg.RegisterResourceNode("G-Buffer0");
@@ -42,4 +42,6 @@ void main()
 
 	std::cout << "----------------------- exec ------------------------" << std::endl;
 	rg.Exec();
+
+	return 0;
 }

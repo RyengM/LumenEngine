@@ -3,7 +3,7 @@
 
 using namespace Lumen::Core;
 
-void main()
+int main()
 {
 	Logger::GetInstance().GetLogger()->set_level(spdlog::level::info);
 	Logger::GetInstance().GetLogger()->set_level(spdlog::level::trace);
@@ -14,4 +14,6 @@ void main()
 	LOG_CRITICAL("233");
 	LOG_FLUSH;
 	LOG_TRACE("233");
+
+	return 0;
 }

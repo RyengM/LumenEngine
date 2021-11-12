@@ -1,15 +1,21 @@
+// Forked from USRefl, the following changes have been made
+// 1. Specialize for the project structure
+// 2. The output form is connected to RTTR
+
 #include "MetaGenerator.h"
 #include "TypeInfoGenerator.h"
-#include "SourceModifier.h"
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
+#include <regex>
 
 using namespace Ubpa::USRefl;
 using namespace std;
 using namespace std::filesystem;
+
+static vector<string> gRecognizedMmacroList = { "RTTR_REGISTRATION_FRIEND", "RTTR_ENABLE" };
 
 string ReadFileIntoString(const char* filename) {
 	ifstream ifile(filename);
@@ -23,30 +29,24 @@ string ReadFileIntoString(const char* filename) {
 	return buf.str();
 }
 
-void OperateFile(const std::string& inputPath)
-{
+void Preprocess(std::string& code) {
+	for (const auto& macro : gRecognizedMmacroList)
+		while (regex_search(code, regex(macro))) {
+			code = regex_replace(code, regex(macro + "\\(\\w*\\)"), "");
+			code = regex_replace(code, regex(macro), "");
+		}
+}
+
+void OperateFile(const std::string& inputPath, const std::string& filename, const std::string& curDirectory) {
 	string postfix = inputPath.substr(inputPath.size() - 2, 2);
 	if (postfix != ".h") return;
 
-	string outputPath = inputPath.substr(0, inputPath.size() - 2) + "_AutoRefl.inl";
+	string cppName = filename.substr(0, filename.size() - 2) + ".cpp";
 
 	auto code = ReadFileIntoString(inputPath.c_str());
 
-	// Modify source .h file
-	SourceModifier sourceModifier;
-	bool shouldGenerate = sourceModifier.TryModify(code, outputPath);
-
-	if (!shouldGenerate) return;
-
-	string tempPath = inputPath + ".temp";
-	ofstream out(tempPath);
-	if (!out.is_open())
-		cerr << "open fail : " << tempPath << endl;
-
-	out << code;
-	out.close();
-	remove(inputPath.c_str());
-	auto success = rename(tempPath.c_str(), inputPath.c_str());
+	// Preprocess file to delete macro, our parser do not need macro
+	Preprocess(code);
 
 	// Parse and generate inl
 	MetaGenerator metaGenerator;
@@ -56,23 +56,51 @@ void OperateFile(const std::string& inputPath)
 	auto curout = ReadFileIntoString(inputPath.c_str());
 	if (curout == rst) return;
 
-	out.open(outputPath);
-	if (!out.is_open())
-		cerr << "open fail : " << outputPath << endl;
+	// Check if cpp file is existed, if not exist, create one
+	auto cppFilename = curDirectory + "/../Private/" + cppName;
+	const path cppPath = cppFilename;
+	if (!exists(cppPath)) {
+		ofstream out(cppPath);
+		if (!out.is_open())
+			cerr << "open fail : " << cppPath << endl;
+		out << "#include \"../Public/" + filename + "\"\n\n" << rst;
+		out.close();
+	}
+	else {
+		path tempPath = cppFilename + ".temp";
+		ofstream out(tempPath);
+		if (!out.is_open())
+			cerr << "open fail : " << tempPath << endl;
+		auto cppCode = ReadFileIntoString(cppFilename.c_str());
 
-	out << rst;
-	out.close();
+		// Check header include
+		if (!regex_search(cppCode, regex("#include (\"|<).*/?(\\w.?/?)*(\"|>)\\n")))
+			cppCode += "#include \"../Public/" + filename + "\"";
+		// Check if reflection is generated, if not, append
+		if (cppCode.find("RTTR_REGISTRATION") == cppCode.npos) 
+			cppCode += "\n\n" + rst;
+		// Else, replace content
+		else {
+			smatch replaceStr;
+			regex_search(rst, replaceStr, regex("RTTR_REGISTRATION[^\\}]*\\}"));
+			cppCode = regex_replace(cppCode, regex("RTTR_REGISTRATION[^\\}]*\\}"), replaceStr.str());
+		}
+
+		out << cppCode;
+		out.close();
+		remove(cppPath.c_str());
+		rename(tempPath.c_str(), cppPath.c_str());
+	}
 }
 
-void EnterDictRecur(const std::string& dir)
-{
+void EnterDictRecur(const std::string& dir) {
 	directory_iterator list(dir);
 	for (auto& it : list) {
 		auto path = it.path().string();
 		if (it.status().type() == file_type::directory)
 			EnterDictRecur(path);
 		else if (it.status().type() == file_type::regular)
-			OperateFile(it.path().filename().string());
+			OperateFile(it.path().string(), it.path().filename().string(), dir.c_str());
 	}
 }
 
@@ -94,6 +122,11 @@ int main(int argc, char** argv) {
 	
 	if (!exists(rootDir)) {
 		cerr << "root directory doesn't exist" << endl;
+		return 1;
+	}
+	directory_entry entry(rootDir);
+	if (entry.status().type() != file_type::directory) {
+		cerr << "arguments error, input should be a directory" << endl;
 		return 1;
 	}
 
