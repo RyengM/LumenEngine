@@ -12,9 +12,6 @@ int main() {
     std::vector<BaseObject*> vec;
     vec.emplace_back(d);
 
-    for (auto v : vec)
-        v->Test();
-
     constructor cons = derivedType.get_constructor();
     constructor cons2 = derivedType.get_constructor({ type::get<int>() });
     cons.invoke();

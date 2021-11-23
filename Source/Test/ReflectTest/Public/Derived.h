@@ -13,9 +13,8 @@ namespace Lumen::Test
         Derived();
         Derived(int a);
 
+        [[info("test")]]
         int mDerivedPub = 4;
-
-        virtual void Test() override;
 
         void F0();
         void F0(int a);
@@ -24,7 +23,7 @@ namespace Lumen::Test
     private:
         int mDerivedPri = 2;
 
-		RTTR_REGISTRATION_FRIEND
+		DECLARE_SERIALIZE
 		RTTR_ENABLE(BaseObject)
 	};
 }

@@ -1,16 +1,22 @@
 #pragma once
 
-#include "ThirdParty/Rapidjson/rapidjson.h"
+#include "Core/Common/Public/BaseObject.h"
+#include "ThirdParty/Rapidjson/prettywriter.h"
+
+using namespace rapidjson;
+using namespace Lumen::Core;
 
 namespace Lumen::Game
 {
+	// Only objects inherited from BaseObject can be serialized by this way
 	class Serializer
 	{
 	public:
 		static Serializer& GetInstance();
 
-		template<typename T>
-		void Serialize(T* obj);
+		void Serialize(BaseObject* obj, std::string_view path);
+		void SerializeInternal(Archive& ar, BaseObject* obj);
+		void PutLineByDataType(Archive& ar, const rttr::property& p, BaseObject* obj);
 
 	private:
 		Serializer() {};
@@ -19,5 +25,3 @@ namespace Lumen::Game
 		Serializer& operator=(const Serializer&) = delete;
 	};
 }
-
-#include "Details/Serializer.inl"

@@ -13,11 +13,6 @@ Derived::Derived(int a)
 	std::cout << "constructor with param" << std::endl; 
 }
 
-void Derived::Test()
-{
-	std::cout << "derived func test" << std::endl; 
-}
-
 void Derived::F0()
 {
 	std::cout << "default func" << std::endl;
@@ -43,7 +38,9 @@ RTTR_REGISTRATION
 		.constructor<>()
 		.constructor<int>()
 		.property("mDerivedPub", &Derived::mDerivedPub)
-		.method("Test", &Derived::Test)
+		(
+			metadata("info", "test")
+		)
 		.method("F0", select_overload<void()>(&Derived::F0))
 		.method("F0", select_overload<void(int)>(&Derived::F0))
 		.method("F0", select_overload<void(float)>(&Derived::F0))

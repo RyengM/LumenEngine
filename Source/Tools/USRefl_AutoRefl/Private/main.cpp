@@ -2,6 +2,11 @@
 // 1. Specialize for the project structure
 // 2. The output form is connected to RTTR
 
+// Way to use this tool
+// 1. Add LumenEngine/Bin/Release to user environment path
+// 2. USRefl [directory to be reflected]
+// 3. This tool will search recursive to reflect the files had been marked by macro
+
 #include "MetaGenerator.h"
 #include "TypeInfoGenerator.h"
 
@@ -15,7 +20,7 @@ using namespace Ubpa::USRefl;
 using namespace std;
 using namespace std::filesystem;
 
-static vector<string> gRecognizedMmacroList = { "RTTR_REGISTRATION_FRIEND", "RTTR_ENABLE" };
+static vector<string> gRecognizedMacroList = { "RTTR_REGISTRATION_FRIEND", "RTTR_ENABLE" };
 
 string ReadFileIntoString(const char* filename) {
 	ifstream ifile(filename);
@@ -29,12 +34,15 @@ string ReadFileIntoString(const char* filename) {
 	return buf.str();
 }
 
-void Preprocess(std::string& code) {
-	for (const auto& macro : gRecognizedMmacroList)
+bool Preprocess(std::string& code) {
+	bool bMacroExist = false;
+	for (const auto& macro : gRecognizedMacroList)
 		while (regex_search(code, regex(macro))) {
 			code = regex_replace(code, regex(macro + "\\(\\w*\\)"), "");
 			code = regex_replace(code, regex(macro), "");
+			bMacroExist = true;
 		}
+	return bMacroExist;
 }
 
 void OperateFile(const std::string& inputPath, const std::string& filename, const std::string& curDirectory) {
@@ -46,7 +54,7 @@ void OperateFile(const std::string& inputPath, const std::string& filename, cons
 	auto code = ReadFileIntoString(inputPath.c_str());
 
 	// Preprocess file to delete macro, our parser do not need macro
-	Preprocess(code);
+	if (!Preprocess(code)) return;
 
 	// Parse and generate inl
 	MetaGenerator metaGenerator;
