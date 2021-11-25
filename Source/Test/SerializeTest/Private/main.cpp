@@ -8,9 +8,13 @@ using namespace Lumen::Test;
 int main() {
 	type derivedType = type::get_by_name("Derived");
 	variant derived = derivedType.create({ std::string_view("TestObject") });
-	Derived* d = derived.get_value<Derived*>();
 
-	Serializer::GetInstance().Serialize(d, "./");
+	Derived* s = derived.get_value<Derived*>();
+	s->mAge = 50;
+	Serializer::GetInstance().Serialize(s, "./test.json");
 	
+	Derived d;
+	Serializer::GetInstance().Deserialize(&d, "./test.json");
+
 	return 0;
 }

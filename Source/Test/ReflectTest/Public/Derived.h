@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Game/GamePlay/Public/BaseObject.h"
+#include "Core/Common/Public/BaseObject.h"
 
-using namespace Lumen::Game;
-using namespace rttr;
+using namespace Lumen::Core;
 
 namespace Lumen::Test
 {
@@ -23,7 +22,7 @@ namespace Lumen::Test
     private:
         int mDerivedPri = 2;
 
-		DECLARE_SERIALIZE
+		RTTR_REGISTRATION_FRIEND
 		RTTR_ENABLE(BaseObject)
 	};
 }

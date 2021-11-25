@@ -1,7 +1,7 @@
 ﻿#include "Test/ReflectTest/Public/Derived.h"
 #include <iostream>
 
-using namespace Lumen::Game;
+using namespace Lumen::Core;
 using namespace Lumen::Test;
 
 int main() {

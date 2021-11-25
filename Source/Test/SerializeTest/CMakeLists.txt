@@ -11,17 +11,15 @@ file(GLOB_RECURSE SOURCE_FILES "*.h" "*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-add_dependencies (${PROJECT_NAME} Core Game RTTR CrossGuid)
+add_dependencies (${PROJECT_NAME} Core Game RTTR)
 
 target_link_libraries(${PROJECT_NAME}
     debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/Game_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/RTTR_d.lib
-    debug ${CMAKE_SOURCE_DIR}/Lib/CrossGuid_d.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Game.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/CrossGuid.lib)
+    optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Test")
 

@@ -17,7 +17,7 @@ namespace Lumen::Game
 		[[serialize(true)]]
 		std::string mName;
 		[[serialize(true)]]
-		Entity* mOwner;
+		std::shared_ptr<Entity> mOwner;
 		[[serialize(true)]]
 		std::vector<Component*> mComponents;
 		[[serialize(true)]]

@@ -18,15 +18,13 @@ source_group("Asset" FILES ${ASSET_FILES})
 
 add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${ENGINE_FILES} ${ASSET_FILES})
 
-add_dependencies (${PROJECT_NAME} Core RTTR CrossGuid)
+add_dependencies (${PROJECT_NAME} Core RTTR)
 
 target_link_libraries(${PROJECT_NAME}
     debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/RTTR_d.lib
-    debug ${CMAKE_SOURCE_DIR}/Lib/CrossGuid_d.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/CrossGuid.lib)
+    optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"

@@ -13,6 +13,5 @@ RTTR_REGISTRATION
 {
 	registration::class_<Lumen::Core::BaseObject>("BaseObject")
 		.constructor<>()
-		.method("Serialize", &BaseObject::Serialize)
 	;
 }

@@ -23,7 +23,17 @@ THE SOFTWARE.
 */
 
 #include <cstring>
-#include "ThirdParty/CrossGuid/Public/guid.hpp"
+#include "Core/Common/Public/guid.hpp"
+
+#ifdef _WIN32
+#define GUID_WINDOWS
+#elif __linux__
+#define GUID_LIBUUID
+#elif macintosh
+#define GUID_CFUUID
+#elif __ANDROID__
+#define GUID_ANDROID
+#endif
 
 #ifdef GUID_LIBUUID
 #include <uuid/uuid.h>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Common/Public/BaseObject.h"
-#include "ThirdParty/CrossGuid/Public/guid.hpp"
+#include "Core/Common/Public/Guid.hpp"
 
 using namespace Lumen::Core;
 
@@ -10,10 +10,9 @@ namespace Lumen::Game
 	// Reference of asset
 	struct AssetRef : public BaseObject
 	{
-		xg::Guid guid;
+		[[serialize(true)]]
+		std::string guid;
 		std::shared_ptr<BaseObject> ref;
-
-		void Serialize(Archive& ar) override;
 	};
 
 	// Base class of all components

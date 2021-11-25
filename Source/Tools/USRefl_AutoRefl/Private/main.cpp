@@ -118,7 +118,6 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	//string inputPath = argv[1];
 	string inputDir = argv[1];
 	char rootDir[1024];
 
@@ -129,12 +128,26 @@ int main(int argc, char** argv) {
 #endif
 	
 	if (!exists(rootDir)) {
-		cerr << "root directory doesn't exist" << endl;
+		cerr << "file or directory doesn't exist" << endl;
 		return 1;
 	}
 	directory_entry entry(rootDir);
+
+	// File
+	std::string fileFullPath = std::string(rootDir);
+	if (fileFullPath.substr(fileFullPath.length() - 2, fileFullPath.length()) == ".h" ||
+		fileFullPath.substr(fileFullPath.length() - 4, fileFullPath.length()) == ".hpp")
+	{
+		auto idx = inputDir.find_last_of('/');
+		if (idx == std::string::npos) idx = inputDir.find_last_of('\\');
+		inputDir = inputDir.substr(idx + 1, inputDir.length());
+		OperateFile(fileFullPath, inputDir, std::filesystem::current_path().string());
+		return 0;
+	}
+
+	// Directory
 	if (entry.status().type() != file_type::directory) {
-		cerr << "arguments error, input should be a directory" << endl;
+		cerr << "arguments error, input should be a directory or header file" << endl;
 		return 1;
 	}
 

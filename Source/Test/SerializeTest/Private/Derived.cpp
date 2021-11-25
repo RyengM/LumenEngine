@@ -3,6 +3,11 @@
 
 using namespace Lumen::Test;
 
+DerivedSubComponent::DerivedSubComponent()
+{
+	mAssetRef.guid = xg::newGuid();
+}
+
 Derived::Derived(std::string_view name)
 {
 	SetName(name);

@@ -7,7 +7,7 @@ include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty")
 
-file(GLOB COMMON_FILES "Common/Public/*.h" "Common/Public/Details/*.inl" "Common/Private/*.cpp")
+file(GLOB COMMON_FILES "Common/Public/*.h" "Common/Public/*.hpp" "Common/Public/Details/*.inl" "Common/Private/*.cpp")
 file(GLOB LOGGER_FILES "Logger/Public/*.h" "Logger/Private/*.cpp")
 file(GLOB TASK_GRAPH_FILES "TaskGraph/Public/*.h" "TaskGraph/Public/Details/*.inl" "TaskGraph/Private/*.cpp")
 file(GLOB THREAD_FILES "Thread/Public/*.h" "Thread/Public/Details/*.inl" "Thread/Private/*.cpp")

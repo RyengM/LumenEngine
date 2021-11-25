@@ -2,7 +2,7 @@
 
 #include "Game/GamePlay/Public/Entity.h"
 #include "Game/GamePlay/Public/Component.h"
-#include "Core/Math/Public/Vertor.h"
+#include "Core/Math/Public/Vector.h"
 
 using namespace Lumen::Game;
 using namespace Lumen::Core;
@@ -22,7 +22,7 @@ namespace Lumen::Test
     class DerivedSubComponent : public DerivedComponent
     {
     public:
-        DerivedSubComponent() = default;
+        DerivedSubComponent();
         DerivedSubComponent(int num) : mDerivedSub(num) {}
 
         [[serialize(true)]]

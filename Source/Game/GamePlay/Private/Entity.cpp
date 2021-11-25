@@ -20,10 +20,16 @@ RTTR_REGISTRATION
 			metadata("serialize", true)
 		)
 		.property("mOwner", &Entity::mOwner, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
 		.property("mComponents", &Entity::mComponents, registration::private_access)
 		(
 			metadata("serialize", true)
 		)
 		.property("mChildEntities", &Entity::mChildEntities, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
 	;
 }
