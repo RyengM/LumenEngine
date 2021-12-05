@@ -29,13 +29,15 @@ RunnableThread::~RunnableThread()
 
 void RunnableThread::Run()
 {
-	mRunnable->Init();
-	while (bInitialized && ! bStop) mRunnable->Run();
+	bool bRunnableInit = mRunnable->Init();
+	while (bInitialized && !bStop && bRunnableInit) 
+		mRunnable->Run();
 }
 
 void RunnableThread::Exit()
 {
 	bStop = true;
+	mRunnable->Exit();
 	ThreadManager::GetInstance().UnRegister(mThread.get_id());
 	mThread.join();
 	delete mRunnable;

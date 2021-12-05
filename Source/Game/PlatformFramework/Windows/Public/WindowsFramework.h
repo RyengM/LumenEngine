@@ -10,8 +10,16 @@ namespace Lumen::Game
 	{
 	public:
 		WindowsFramework(const char* name) : BaseFramework(name) {};
+		static int RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework);
+
+	protected:
+		bool InitMainWindow();
+		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	private:
+		HINSTANCE mhAppInst = nullptr;			// Application instance handle
+		HWND      mhMainWnd = nullptr;			// Main window handle
+		int		  mClientWidth = 800;
+		int		  mClientHeight = 600;
 	};
 }
-
-using namespace Lumen::Game;
-int RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework);

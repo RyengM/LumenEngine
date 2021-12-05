@@ -6,7 +6,7 @@ project(${PROJECT_NAME})
 include_directories("${CMAKE_SOURCE_DIR}/Source" "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 
-file(GLOB DEMO_FILES "Demo/Public/*.h" "Demo/Private/*.cpp")
+file(GLOB DEMO_FILES "Public/*.h" "Private/*.cpp")
 source_group("Demo" FILES ${DEMO_FILES})
 
 add_executable(${PROJECT_NAME} WIN32 ${DEMO_FILES})

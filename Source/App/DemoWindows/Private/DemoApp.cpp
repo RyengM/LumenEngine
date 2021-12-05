@@ -1,4 +1,4 @@
-#include "App/DemoApp/Demo/Public/DemoWindows.h"
+#include "App/DemoWindows/Public/DemoApp.h"
 
 using namespace Demo;
 using namespace Lumen::Game;
@@ -7,5 +7,5 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 {
     LPCSTR Name = "Demo";
 
-    return RunFramework(hInstance, lpCmdLine, nShowCmd, new DemoWindows(Name));
+    return DemoWindows::RunFramework(hInstance, lpCmdLine, nShowCmd, new DemoWindows(Name));
 }
