@@ -58,8 +58,9 @@ namespace Lumen::Core
 	{
 		if (mEnd - mStart >= mCapacity)
 			ReAllocate();
-		size_t cur = mEnd++;
+		size_t cur = mEnd;
 		new (mBuffer + cur % mCapacity)Element(value);
+		mEnd++;
 	}
 
 	template<typename T>
@@ -68,8 +69,9 @@ namespace Lumen::Core
 	{
 		if (mEnd - mStart >= mCapacity)
 			ReAllocate();
-		size_t cur = mEnd++;
+		size_t cur = mEnd;
 		mBuffer[cur % mCapacity].Emplace(std::forward<Args>(args)...);
+		mEnd++;
 	}
 
 	template<typename T>
