@@ -8,18 +8,16 @@ namespace Lumen::Game
 	class BaseFramework
 	{
 	public:
-		BaseFramework(const char* name) : mName(name) {}
+		BaseFramework(const wchar_t* name) : mName(name) {}
 		virtual ~BaseFramework() {}
 
-		inline void PreInit() { mEngine.PreInit(); }
-		inline void Init() { mEngine.Init(); }
+		inline void PreInit() { mEngine.PreInit(); }		// Launch modules
+		inline void Init() { mEngine.Init(); }				// Load assets
 		inline void Tick() { mEngine.Tick(); }
 		inline void Exit() { mEngine.Exit(); }
 
-		inline const char* GetName() noexcept { return mName; }
-
-	private:
-		const char* mName;
+	public:
+		const wchar_t* mName;
 		EditorEngine mEngine;
 	};
 }

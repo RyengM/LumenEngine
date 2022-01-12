@@ -37,13 +37,13 @@ namespace Lumen::Core
 	template<typename T>
 	MemoryPool<T>::MemoryPool(MemoryPool&& pool)
 	{
-
+		// TODO
 	}
 
 	template<typename T>
 	MemoryPool<T>& MemoryPool<T>::operator=(MemoryPool&& pool)
 	{
-
+		// TODO
 	}
 
 	template<typename T>

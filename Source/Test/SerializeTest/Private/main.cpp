@@ -10,7 +10,6 @@ int main() {
 	variant derived = derivedType.create({ std::string_view("TestObject") });
 
 	Derived* s = derived.get_value<Derived*>();
-	s->mAge = 50;
 	Serializer::GetInstance().Serialize(s, "./test.json");
 	
 	Derived d;

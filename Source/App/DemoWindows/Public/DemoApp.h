@@ -9,6 +9,6 @@ namespace Demo
 	class DemoWindows : public WindowsFramework
 	{
 	public:
-		DemoWindows(const char* name) : WindowsFramework(name) {};
+		DemoWindows(const wchar_t* name) : WindowsFramework(name) {};
 	};
 }
