@@ -2,6 +2,87 @@
 
 using namespace Lumen::Core;
 
+Vec2 Vec2::operator+(const Vec2& v) const
+{
+	Vec2 vec2;
+	vec2.x = x + v.x;
+	vec2.y = y + v.y;
+	return vec2;
+}
+
+Vec2 Vec2::operator-(const Vec2& v) const
+{
+	Vec2 vec2;
+	vec2.x = x - v.x;
+	vec2.y = y - v.y;
+	return vec2;
+}
+
+Vec2 Vec2::operator*(const float num) const
+{
+	Vec2 vec2;
+	vec2.x = x * num;
+	vec2.y = y * num;
+	return vec2;
+}
+
+Vec2 Vec2::operator/(const float num) const
+{
+	Vec2 vec2;
+	float invn = 1 / num;
+	vec2.x = x * invn;
+	vec2.y = y * invn;
+	return vec2;
+}
+
+Vec2& Vec2::operator+=(const Vec2& v)
+{
+	x += v.x;
+	y += v.y;
+	return *this;
+}
+
+Vec2& Vec2::operator-=(const Vec2& v)
+{
+	x -= v.x;
+	y -= v.y;
+	return *this;
+}
+
+Vec2& Vec2::operator*=(const float num)
+{
+	x *= num;
+	y *= num;
+	return *this;
+}
+
+Vec2& Vec2::operator/=(const float num)
+{
+	float invn = 1 / num;
+	x *= invn;
+	y *= invn;
+	return *this;
+}
+
+float Vec2::Dot(const Vec2& v) const
+{
+	return x * v.x + y * v.y;
+}
+
+float Vec2::Length()
+{
+	return sqrt(x * x + y * y);
+}
+
+Vec2 Vec2::Normalize()
+{
+	Vec2 vec2;
+	float invn = 1 / Length();
+	vec2.x = x * invn;
+	vec2.y = y * invn;
+	return vec2;
+}
+
 Vec3 Vec3::operator-(void)
 {
 	Vec3 vec3;
@@ -236,6 +317,29 @@ Vec3 Vec4::xyz() const
 
 RTTR_REGISTRATION
 {
+	registration::class_<Lumen::Core::Vec2>("Vec2")
+		.property("x", &Vec2::x)
+		(
+			metadata("serialize", true)
+		)
+		.property("y", &Vec2::y)
+		(
+			metadata("serialize", true)
+		)
+		.constructor<>()
+		.constructor<float, float>()
+		.method("operator+", &Vec2::operator+)
+		.method("operator-", &Vec2::operator-)
+		.method("operator*", &Vec2::operator*)
+		.method("operator/", &Vec2::operator/)
+		.method("operator+=", &Vec2::operator+=)
+		.method("operator-=", &Vec2::operator-=)
+		.method("operator*=", &Vec2::operator*=)
+		.method("operator/=", &Vec2::operator/=)
+		.method("Dot", &Vec2::Dot)
+		.method("Length", &Vec2::Length)
+		.method("Normalize", &Vec2::Normalize)
+	;
 	registration::class_<Lumen::Core::Vec3>("Vec3")
 		.property("x", &Vec3::x)
 		(
@@ -260,6 +364,7 @@ RTTR_REGISTRATION
 		.method("operator+=", &Vec3::operator+=)
 		.method("operator-=", &Vec3::operator-=)
 		.method("operator*=", &Vec3::operator*=)
+		.method("operator/=", &Vec3::operator/=)
 		.method("operator==", &Vec3::operator==)
 		.method("SqrLength", &Vec3::SqrLength)
 		.method("Length", &Vec3::Length)
@@ -296,6 +401,7 @@ RTTR_REGISTRATION
 		.method("operator+=", &Vec4::operator+=)
 		.method("operator-=", &Vec4::operator-=)
 		.method("operator*=", &Vec4::operator*=)
+		.method("operator/=", &Vec4::operator/=)
 		.method("xyz", &Vec4::xyz)
 	;
 }

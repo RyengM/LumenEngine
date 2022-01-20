@@ -6,6 +6,34 @@
 
 namespace Lumen::Core
 {
+	struct Vec2 : public BaseObject
+	{
+		[[serialize(true)]]
+		float x, y;
+
+		Vec2() : x(0), y(0) {};
+		Vec2(float x, float y) : x(x), y(y) {};
+
+		Vec2 operator+(const Vec2& v) const;
+		Vec2 operator-(const Vec2& v) const;
+
+		Vec2 operator*(const float num) const;
+		Vec2 operator/(const float num) const;
+
+		Vec2& operator+=(const Vec2& v);
+		Vec2& operator-=(const Vec2& v);
+
+		Vec2& operator*=(const float num);
+		Vec2& operator/=(const float num);
+
+		float Dot(const Vec2& v) const;
+
+		float Length();
+		Vec2 Normalize();
+
+		RTTR_ENABLE(BaseObject)
+	};
+
 	struct Vec3 : public BaseObject
 	{
 		[[serialize(true)]]
