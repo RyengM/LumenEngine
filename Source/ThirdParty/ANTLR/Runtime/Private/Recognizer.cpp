@@ -54,7 +54,7 @@ std::map<std::string, size_t> Recognizer::getTokenTypeMap() {
       if (!symbolicName.empty()) {
         result[symbolicName] = i;
       }
-				}
+                }
     result["EOF"] = EOF;
     _tokenTypeMapCache[&vocabulary] = result;
   }

@@ -4,7 +4,7 @@ using namespace antlrcpp;
 using namespace Lumen::Game;
 
 int main() {
-	ShaderLab shaderLab = ShaderLabCompiler::GetInstance().Compile("Test.hlsl");
+    ShaderLab shaderLab = ShaderLabCompiler::GetInstance().Compile("Test.hlsl");
 
-	return 0;
+    return 0;
 }

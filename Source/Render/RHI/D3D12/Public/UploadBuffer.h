@@ -27,7 +27,7 @@ public:
             &heapProperty,
             D3D12_HEAP_FLAG_NONE,
             &resourceDescBuffer,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&mUploadBuffer)));
 

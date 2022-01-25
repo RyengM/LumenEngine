@@ -4,23 +4,23 @@
 
 namespace Lumen::Core
 {
-	// Logger singleton of spdlog
-	class Logger
-	{
-	public:
-		static Logger& GetInstance();
+    // Logger singleton of spdlog
+    class Logger
+    {
+    public:
+        static Logger& GetInstance();
 
-		inline std::shared_ptr<spdlog::logger> GetLogger() noexcept { return mLogger; }
+        inline std::shared_ptr<spdlog::logger> GetLogger() noexcept { return mLogger; }
 
-	private:
-		Logger();
-		~Logger();
-		Logger(const Logger&) = delete;
-		Logger& operator=(const Logger&) = delete;
+    private:
+        Logger();
+        ~Logger();
+        Logger(const Logger&) = delete;
+        Logger& operator=(const Logger&) = delete;
 
-	private:
-		std::shared_ptr<spdlog::logger> mLogger;
-	};
+    private:
+        std::shared_ptr<spdlog::logger> mLogger;
+    };
 
 #ifdef _Win32
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '\\') + 1) : __FILE__)
@@ -30,7 +30,7 @@ namespace Lumen::Core
 
 #ifndef SUFFIX
 #define SUFFIX(msg) std::string(msg).append("  Location: ").append(__FILENAME__).\
-	append(" Line: ").append(std::to_string(__LINE__)).c_str()
+    append(" Line: ").append(std::to_string(__LINE__)).c_str()
 #endif
 
 #define LOG_INFO(...) Logger::GetInstance().GetLogger()->info(__VA_ARGS__)

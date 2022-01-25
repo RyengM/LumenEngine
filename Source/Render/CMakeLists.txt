@@ -22,8 +22,8 @@ add_library(${PROJECT_NAME} ${RENDER_GRAPH_FILES} ${RENDER_CORE_FILES} ${RENDER_
 add_dependencies (${PROJECT_NAME} Core)
 
 target_link_libraries(${PROJECT_NAME} 
-	debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
-	optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)
+    debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"

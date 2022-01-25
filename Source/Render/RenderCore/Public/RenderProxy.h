@@ -2,9 +2,9 @@
 
 namespace Lumen::Render
 {
-	// Base struct for all render proxies
-	struct RenderProxy
-	{
+    // Base struct for all render proxies
+    struct RenderProxy
+    {
 
-	};
+    };
 }

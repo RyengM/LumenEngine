@@ -77,8 +77,8 @@ namespace atn {
    * in the input and A B C E could predict alternative 2 in another position in
    * input. The conflicting SLL configurations could still be non-unique in the
    * full context prediction, which would lead us to requiring more input than the
-   * original A B C.	To make a	prediction cache work, we have to track	the exact
-   * input	used during the previous prediction. That amounts to a cache that maps
+   * original A B C.    To make a    prediction cache work, we have to track    the exact
+   * input    used during the previous prediction. That amounts to a cache that maps
    * X to a specific DFA for that context.</p>
    *
    * <p>

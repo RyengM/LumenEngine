@@ -9,38 +9,38 @@
 
 namespace Lumen::Game
 {
-	struct DrawDataProxy
-	{
-		ImDrawData* mDrawData;
-		ImVector<ImDrawList*> mDrawLists;
+    struct DrawDataProxy
+    {
+        ImDrawData* mDrawData;
+        ImVector<ImDrawList*> mDrawLists;
 
-		DrawDataProxy();
-		// Deep copy, we assume do not use OwnerViewport in render thread
-		DrawDataProxy(const ImDrawData* drawData);
-		~DrawDataProxy();
-	};
+        DrawDataProxy();
+        // Deep copy, we assume do not use OwnerViewport in render thread
+        DrawDataProxy(const ImDrawData* drawData);
+        ~DrawDataProxy();
+    };
 
-	class ImguiManagerDx12
-	{
-	public:
-		void Init(void* hWnd, int frameNum);
-		void Clear();
+    class ImguiManagerDx12
+    {
+    public:
+        void Init(void* hWnd, int frameNum);
+        void Clear();
 
-		DrawDataProxy* CreateContextDrawDataProxy(ImGuiContext* context, int currFrame);
+        DrawDataProxy* CreateContextDrawDataProxy(ImGuiContext* context, int currFrame);
 
-		inline std::vector<ImGuiContext*>& GetContexts() noexcept { return mContexts; }
+        inline std::vector<ImGuiContext*>& GetContexts() noexcept { return mContexts; }
 
-	private:
-		int mFrameNum = 0;
+    private:
+        int mFrameNum = 0;
 
-		// Collection of all contexts
-		std::vector<ImGuiContext*> mContexts;
-		ImGuiContext* mEditorContext;
-		std::unordered_map<ImGuiContext*, int> mContext2IndexMap;
+        // Collection of all contexts
+        std::vector<ImGuiContext*> mContexts;
+        ImGuiContext* mEditorContext;
+        std::unordered_map<ImGuiContext*, int> mContext2IndexMap;
 
-		// Real place to store proxy memory
-		DrawDataProxy* mProxyStorage;
-		
-		static int const mContextNum = 1;
-	};
+        // Real place to store proxy memory
+        DrawDataProxy* mProxyStorage;
+        
+        static int const mContextNum = 1;
+    };
 }

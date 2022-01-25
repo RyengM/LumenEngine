@@ -33,7 +33,7 @@ namespace antlr4 {
     bool errorRecoveryMode;
 
     /** The index into the input stream where the last error occurred.
-     * 	This is used to prevent infinite loops where an error is found
+     *     This is used to prevent infinite loops where an error is found
      *  but no token is consumed during recovery...another error is found,
      *  ad nauseum.  This is a failsafe mechanism to guarantee that at least
      *  one token/tree node is consumed for two errors.

@@ -12,8 +12,8 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 add_dependencies (${PROJECT_NAME} Render)
 
 target_link_libraries(${PROJECT_NAME} 
-	debug ${CMAKE_SOURCE_DIR}/Lib/Render_d.lib
-	optimized ${CMAKE_SOURCE_DIR}/Lib/Render.lib)
+    debug ${CMAKE_SOURCE_DIR}/Lib/Render_d.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/Render.lib)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "Test")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/Bin/Test)

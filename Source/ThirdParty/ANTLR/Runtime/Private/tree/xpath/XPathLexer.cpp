@@ -57,11 +57,11 @@ void XPathLexer::action(RuleContext *context, size_t ruleIndex, size_t actionInd
 void XPathLexer::IDAction(antlr4::RuleContext * /*context*/, size_t actionIndex) {
   switch (actionIndex) {
     case 0: 
-    				if (isupper(getText()[0]))
-    				  setType(TOKEN_REF);
-    				else
-    				  setType(RULE_REF);
-    				 break;
+                    if (isupper(getText()[0]))
+                      setType(TOKEN_REF);
+                    else
+                      setType(RULE_REF);
+                     break;
 
   default:
     break;
@@ -106,18 +106,18 @@ std::vector<std::string> XPathLexer::_tokenNames;
 
 XPathLexer::Initializer::Initializer() {
   // This code could be in a static initializer lambda, but VS doesn't allow access to private class members from there.
-	for (size_t i = 0; i < _symbolicNames.size(); ++i) {
-		std::string name = _vocabulary.getLiteralName(i);
-		if (name.empty()) {
-			name = _vocabulary.getSymbolicName(i);
-		}
+    for (size_t i = 0; i < _symbolicNames.size(); ++i) {
+        std::string name = _vocabulary.getLiteralName(i);
+        if (name.empty()) {
+            name = _vocabulary.getSymbolicName(i);
+        }
 
-		if (name.empty()) {
-			_tokenNames.push_back("<INVALID>");
-		} else {
+        if (name.empty()) {
+            _tokenNames.push_back("<INVALID>");
+        } else {
       _tokenNames.push_back(name);
     }
-	}
+    }
 
   _serializedATN = {
     0x3, 0x430, 0xd6d1, 0x8206, 0xad2d, 0x4417, 0xaef1, 0x8d80, 0xaadd, 

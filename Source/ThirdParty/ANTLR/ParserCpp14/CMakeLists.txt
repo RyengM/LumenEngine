@@ -15,8 +15,8 @@ add_library(${PROJECT_NAME} ${PARSER_CPP_FILES})
 add_dependencies (${PROJECT_NAME} ANTLR_Runtime)
 
 target_link_libraries(${PROJECT_NAME} 
-	debug ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime_d.lib
-	optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime.lib)
+    debug ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime_d.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime.lib)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "ThirdParty")
 

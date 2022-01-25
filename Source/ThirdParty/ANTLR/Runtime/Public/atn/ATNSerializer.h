@@ -20,19 +20,19 @@ namespace atn {
     /// Serialize state descriptors, edge descriptors, and decision->state map
     ///  into list of ints:
     ///
-    /// 		grammar-type, (ANTLRParser.LEXER, ...)
-    ///  	max token type,
-    ///  	num states,
-    ///  	state-0-type ruleIndex, state-1-type ruleIndex, ... state-i-type
+    ///         grammar-type, (ANTLRParser.LEXER, ...)
+    ///      max token type,
+    ///      num states,
+    ///      state-0-type ruleIndex, state-1-type ruleIndex, ... state-i-type
     ///  ruleIndex optional-arg ...
-    ///  	num rules,
-    ///  	rule-1-start-state rule-1-args, rule-2-start-state  rule-2-args, ...
-    ///  	(args are token type,actionIndex in lexer else 0,0)
+    ///      num rules,
+    ///      rule-1-start-state rule-1-args, rule-2-start-state  rule-2-args, ...
+    ///      (args are token type,actionIndex in lexer else 0,0)
     ///      num modes,
     ///      mode-0-start-state, mode-1-start-state, ... (parser has 0 modes)
     ///      num sets
     ///      set-0-interval-count intervals, set-1-interval-count intervals, ...
-    ///  	num total edges,
+    ///      num total edges,
     ///      src, trg, edge-type, edge arg1, optional edge arg2 (present always),
     ///      ...
     ///      num decisions,

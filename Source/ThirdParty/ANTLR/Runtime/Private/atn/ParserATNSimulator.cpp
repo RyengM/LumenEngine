@@ -407,7 +407,7 @@ size_t ParserATNSimulator::execATNWithFullContext(dfa::DFA &dfa, dfa::DFAState *
   // on-the-fly when doing full context prediction.
 
   /*
-   In non-exact ambiguity detection mode, we might	actually be able to
+   In non-exact ambiguity detection mode, we might    actually be able to
    detect an exact ambiguity, but I'm not going to spend the cycles
    needed to check. We only emit ambiguity warnings in exact ambiguity
    mode.

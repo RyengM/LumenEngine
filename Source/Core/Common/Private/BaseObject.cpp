@@ -11,7 +11,7 @@ BaseObject::BaseObject()
 
 RTTR_REGISTRATION
 {
-	registration::class_<Lumen::Core::BaseObject>("BaseObject")
-		.constructor<>()
-	;
+    registration::class_<Lumen::Core::BaseObject>("BaseObject")
+        .constructor<>()
+    ;
 }

@@ -17890,7 +17890,7 @@ CPP14Parser::PureSpecifierContext* CPP14Parser::pureSpecifier() {
     setState(1830);
     dynamic_cast<PureSpecifierContext *>(_localctx)->val = match(CPP14Parser::OctalLiteral);
     if((dynamic_cast<PureSpecifierContext *>(_localctx)->val != nullptr ? dynamic_cast<PureSpecifierContext *>(_localctx)->val->getText() : "") != "0") throw new InputMismatchException(this);
-    		
+            
    
   }
   catch (RecognitionException &e) {
@@ -22077,18 +22077,18 @@ dfa::Vocabulary CPP14Parser::_vocabulary(_literalNames, _symbolicNames);
 std::vector<std::string> CPP14Parser::_tokenNames;
 
 CPP14Parser::Initializer::Initializer() {
-	for (size_t i = 0; i < _symbolicNames.size(); ++i) {
-		std::string name = _vocabulary.getLiteralName(i);
-		if (name.empty()) {
-			name = _vocabulary.getSymbolicName(i);
-		}
+    for (size_t i = 0; i < _symbolicNames.size(); ++i) {
+        std::string name = _vocabulary.getLiteralName(i);
+        if (name.empty()) {
+            name = _vocabulary.getSymbolicName(i);
+        }
 
-		if (name.empty()) {
-			_tokenNames.push_back("<INVALID>");
-		} else {
+        if (name.empty()) {
+            _tokenNames.push_back("<INVALID>");
+        } else {
       _tokenNames.push_back(name);
     }
-	}
+    }
 
   _serializedATN = {
     0x3, 0x608b, 0xa72a, 0x8133, 0xb9ed, 0x417c, 0x3be7, 0x7786, 0x5964, 

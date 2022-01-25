@@ -24,7 +24,7 @@ struct ID3D12GraphicsCommandList;
 struct D3D12_CPU_DESCRIPTOR_HANDLE;
 struct D3D12_GPU_DESCRIPTOR_HANDLE;
 
-IMGUI_IMPL_API void ImGui_ImplDX12_SetSharedFontAtlas(ImFontAtlas* shared_font_atlas);
+IMGUI_IMPL_API void     ImGui_ImplDX12_SetSharedFontAtlas(ImFontAtlas* shared_font_atlas);
 
 // cmd_list is the command list that the implementation will use to render imgui draw lists.
 // Before calling the render function, caller must prepare cmd_list by resetting it and setting the appropriate

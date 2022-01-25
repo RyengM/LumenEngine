@@ -65,15 +65,15 @@ namespace DirectX
                                         _Out_opt_ DDS_ALPHA_MODE* alphaMode = nullptr
                                       );
 
-	HRESULT CreateDDSTextureFromMemory12(_In_ ID3D12Device* device,
-		                                 _In_ ID3D12GraphicsCommandList* cmdList,
-		                                 _In_reads_bytes_(ddsDataSize) const uint8_t* ddsData,
-		                                 _In_ size_t ddsDataSize,
-		                                 _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& texture,
-		                                 _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& textureUploadHeap,
-		                                 _In_ size_t maxsize = 0,
-		                                 _Out_opt_ DDS_ALPHA_MODE* alphaMode = nullptr
-		                                 );
+    HRESULT CreateDDSTextureFromMemory12(_In_ ID3D12Device* device,
+                                         _In_ ID3D12GraphicsCommandList* cmdList,
+                                         _In_reads_bytes_(ddsDataSize) const uint8_t* ddsData,
+                                         _In_ size_t ddsDataSize,
+                                         _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& texture,
+                                         _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& textureUploadHeap,
+                                         _In_ size_t maxsize = 0,
+                                         _Out_opt_ DDS_ALPHA_MODE* alphaMode = nullptr
+                                         );
 
     HRESULT CreateDDSTextureFromFile( _In_ ID3D11Device* d3dDevice,
                                       _In_z_ const wchar_t* szFileName,
@@ -83,14 +83,14 @@ namespace DirectX
                                       _Out_opt_ DDS_ALPHA_MODE* alphaMode = nullptr
                                     );
 
-	HRESULT CreateDDSTextureFromFile12(_In_ ID3D12Device* device,
-		                               _In_ ID3D12GraphicsCommandList* cmdList,
-		                               _In_z_ const wchar_t* szFileName,
-		                               _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& texture,
-		                               _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& textureUploadHeap,
-		                               _In_ size_t maxsize = 0,
-		                               _Out_opt_ DDS_ALPHA_MODE* alphaMode = nullptr
-		                               );
+    HRESULT CreateDDSTextureFromFile12(_In_ ID3D12Device* device,
+                                       _In_ ID3D12GraphicsCommandList* cmdList,
+                                       _In_z_ const wchar_t* szFileName,
+                                       _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& texture,
+                                       _Out_ Microsoft::WRL::ComPtr<ID3D12Resource>& textureUploadHeap,
+                                       _In_ size_t maxsize = 0,
+                                       _Out_opt_ DDS_ALPHA_MODE* alphaMode = nullptr
+                                       );
 
     // Standard version with optional auto-gen mipmap support
     HRESULT CreateDDSTextureFromMemory( _In_ ID3D11Device* d3dDevice,

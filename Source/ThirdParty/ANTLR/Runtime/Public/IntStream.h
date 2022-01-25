@@ -48,11 +48,11 @@ namespace antlr4 {
     ///
     /// <ul>
     ///   <li><strong>Forward movement:</strong> The value of <seealso cref="#index index()"/>
-    ///		before calling this method is less than the value of {@code index()}
-    ///		after calling this method.</li>
+    ///        before calling this method is less than the value of {@code index()}
+    ///        after calling this method.</li>
     ///   <li><strong>Ordered lookahead:</strong> The value of {@code LA(1)} before
-    ///		calling this method becomes the value of {@code LA(-1)} after calling
-    ///		this method.</li>
+    ///        calling this method becomes the value of {@code LA(-1)} after calling
+    ///        this method.</li>
     /// </ul>
     ///
     /// Note that calling this method does not guarantee that {@code index()} is

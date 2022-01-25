@@ -4,10 +4,10 @@ FrameResource::FrameResource(ID3D12Device* device, UINT passCount, UINT objectCo
 {
     ThrowIfFailed(device->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
-		IID_PPV_ARGS(cmdListAlloc.GetAddressOf())));
+        IID_PPV_ARGS(cmdListAlloc.GetAddressOf())));
 
     passCB = std::make_unique<UploadBuffer<PassConstants>>(device, passCount, true);
-	materialBuffer = std::make_unique<UploadBuffer<MaterialData>>(device, materialCount, false);
+    materialBuffer = std::make_unique<UploadBuffer<MaterialData>>(device, materialCount, false);
     objectCB = std::make_unique<UploadBuffer<ObjectConstants>>(device, objectCount, true);
 }
 

@@ -6,14 +6,14 @@ using namespace Lumen::Game;
 using namespace Lumen::Test;
 
 int main() {
-	type derivedType = type::get_by_name("Derived");
-	variant derived = derivedType.create({ std::string_view("TestObject") });
+    type derivedType = type::get_by_name("Derived");
+    variant derived = derivedType.create({ std::string_view("TestObject") });
 
-	Derived* s = derived.get_value<Derived*>();
-	Serializer::GetInstance().Serialize(s, "./test.json");
-	
-	Derived d;
-	Serializer::GetInstance().Deserialize(&d, "./test.json");
+    Derived* s = derived.get_value<Derived*>();
+    Serializer::GetInstance().Serialize(s, "./test.json");
+    
+    Derived d;
+    Serializer::GetInstance().Deserialize(&d, "./test.json");
 
-	return 0;
+    return 0;
 }

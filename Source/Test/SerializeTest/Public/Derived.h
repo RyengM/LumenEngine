@@ -34,8 +34,8 @@ namespace Lumen::Test
         RTTR_ENABLE(DerivedComponent)
     };
 
-	class Derived : public Entity
-	{
+    class Derived : public Entity
+    {
     public:
         Derived() = default;
         Derived(std::string_view name);
@@ -69,7 +69,7 @@ namespace Lumen::Test
         [[serialize(true)]]
         std::string mSecrect = "guess";
 
-		RTTR_REGISTRATION_FRIEND
-		RTTR_ENABLE(Entity)
-	};
+        RTTR_REGISTRATION_FRIEND
+        RTTR_ENABLE(Entity)
+    };
 }

@@ -7,9 +7,9 @@
 namespace Ubpa::USRefl {
     class MetaGenerator {
     public:
-		MetaGenerator();
-		~MetaGenerator();
-		MetaGenerator(MetaGenerator&&) noexcept;
+        MetaGenerator();
+        ~MetaGenerator();
+        MetaGenerator(MetaGenerator&&) noexcept;
         MetaGenerator& operator=(MetaGenerator&&) noexcept;
 
         std::vector<TypeMeta> Parse(std::string_view cppCode);

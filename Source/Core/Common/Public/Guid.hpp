@@ -49,35 +49,35 @@ BEGIN_XG_NAMESPACE
 class Guid
 {
 public:
-	explicit Guid(const std::array<unsigned char, 16> &bytes);
-	explicit Guid(std::array<unsigned char, 16> &&bytes);
+    explicit Guid(const std::array<unsigned char, 16> &bytes);
+    explicit Guid(std::array<unsigned char, 16> &&bytes);
 
-	explicit Guid(std::string_view fromString);
-	Guid();
-	
-	Guid(const Guid &other) = default;
-	Guid &operator=(const Guid &other) = default;
-	Guid(Guid &&other) = default;
-	Guid &operator=(Guid &&other) = default;
+    explicit Guid(std::string_view fromString);
+    Guid();
+    
+    Guid(const Guid &other) = default;
+    Guid &operator=(const Guid &other) = default;
+    Guid(Guid &&other) = default;
+    Guid &operator=(Guid &&other) = default;
 
-	bool operator==(const Guid &other) const;
-	bool operator!=(const Guid &other) const;
+    bool operator==(const Guid &other) const;
+    bool operator!=(const Guid &other) const;
 
-	std::string str() const;
-	operator std::string() const;
-	const std::array<unsigned char, 16>& bytes() const;
-	void swap(Guid &other);
-	bool isValid() const;
+    std::string str() const;
+    operator std::string() const;
+    const std::array<unsigned char, 16>& bytes() const;
+    void swap(Guid &other);
+    bool isValid() const;
 
 private:
-	void zeroify();
+    void zeroify();
 
-	// actual data
-	std::array<unsigned char, 16> _bytes;
+    // actual data
+    std::array<unsigned char, 16> _bytes;
 
-	// make the << operator a friend so it can access _bytes
-	friend std::ostream &operator<<(std::ostream &s, const Guid &guid);
-	friend bool operator<(const Guid &lhs, const Guid &rhs);
+    // make the << operator a friend so it can access _bytes
+    friend std::ostream &operator<<(std::ostream &s, const Guid &guid);
+    friend bool operator<(const Guid &lhs, const Guid &rhs);
 };
 
 Guid newGuid();
@@ -85,14 +85,14 @@ Guid newGuid();
 #ifdef GUID_ANDROID
 struct AndroidGuidInfo
 {
-	static AndroidGuidInfo fromJniEnv(JNIEnv *env);
+    static AndroidGuidInfo fromJniEnv(JNIEnv *env);
 
-	JNIEnv *env;
-	jclass uuidClass;
-	jmethodID newGuidMethod;
-	jmethodID mostSignificantBitsMethod;
-	jmethodID leastSignificantBitsMethod;
-	std::thread::id initThreadId;
+    JNIEnv *env;
+    jclass uuidClass;
+    jmethodID newGuidMethod;
+    jmethodID mostSignificantBitsMethod;
+    jmethodID leastSignificantBitsMethod;
+    std::thread::id initThreadId;
 };
 
 extern AndroidGuidInfo androidInfo;
@@ -105,45 +105,45 @@ Guid newGuid(JNIEnv *env);
 
 namespace details
 {
-	template <typename...> struct hash;
+    template <typename...> struct hash;
 
-	template<typename T> 
-	struct hash<T> : public std::hash<T>
-	{
-		using std::hash<T>::hash;
-	};
+    template<typename T> 
+    struct hash<T> : public std::hash<T>
+    {
+        using std::hash<T>::hash;
+    };
 
 
-	template <typename T, typename... Rest>
-	struct hash<T, Rest...>
-	{
-		inline std::size_t operator()(const T& v, const Rest&... rest) {
-			std::size_t seed = hash<Rest...>{}(rest...);
-			seed ^= hash<T>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-			return seed;
-		}
-	};
+    template <typename T, typename... Rest>
+    struct hash<T, Rest...>
+    {
+        inline std::size_t operator()(const T& v, const Rest&... rest) {
+            std::size_t seed = hash<Rest...>{}(rest...);
+            seed ^= hash<T>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            return seed;
+        }
+    };
 }
 
 END_XG_NAMESPACE
 
 namespace std
 {
-	// Template specialization for std::swap<Guid>() --
-	// See guid.cpp for the function definition
-	template <>
-	void swap(xg::Guid &guid0, xg::Guid &guid1) noexcept;
+    // Template specialization for std::swap<Guid>() --
+    // See guid.cpp for the function definition
+    template <>
+    void swap(xg::Guid &guid0, xg::Guid &guid1) noexcept;
 
-	// Specialization for std::hash<Guid> -- this implementation
-	// uses std::hash<std::string> on the stringification of the guid
-	// to calculate the hash
-	template <>
-	struct hash<xg::Guid>
-	{
-		std::size_t operator()(xg::Guid const &guid) const
-		{
-			const uint64_t* p = reinterpret_cast<const uint64_t*>(guid.bytes().data());
-			return xg::details::hash<uint64_t, uint64_t>{}(p[0], p[1]);
-		}
-	};
+    // Specialization for std::hash<Guid> -- this implementation
+    // uses std::hash<std::string> on the stringification of the guid
+    // to calculate the hash
+    template <>
+    struct hash<xg::Guid>
+    {
+        std::size_t operator()(xg::Guid const &guid) const
+        {
+            const uint64_t* p = reinterpret_cast<const uint64_t*>(guid.bytes().data());
+            return xg::details::hash<uint64_t, uint64_t>{}(p[0], p[1]);
+        }
+    };
 }

@@ -4,11 +4,11 @@
 
 namespace Demo
 {
-	using namespace Lumen::Game;
+    using namespace Lumen::Game;
 
-	class DemoWindows : public WindowsFramework
-	{
-	public:
-		DemoWindows(const wchar_t* name) : WindowsFramework(name) {};
-	};
+    class DemoWindows : public WindowsFramework
+    {
+    public:
+        DemoWindows(const wchar_t* name) : WindowsFramework(name) {};
+    };
 }

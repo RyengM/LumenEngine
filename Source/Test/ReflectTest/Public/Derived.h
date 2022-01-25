@@ -6,8 +6,8 @@ using namespace Lumen::Core;
 
 namespace Lumen::Test
 {
-	class Derived : public BaseObject
-	{
+    class Derived : public BaseObject
+    {
     public:
         Derived();
         Derived(int a);
@@ -22,7 +22,7 @@ namespace Lumen::Test
     private:
         int mDerivedPri = 2;
 
-		RTTR_REGISTRATION_FRIEND
-		RTTR_ENABLE(BaseObject)
-	};
+        RTTR_REGISTRATION_FRIEND
+        RTTR_ENABLE(BaseObject)
+    };
 }

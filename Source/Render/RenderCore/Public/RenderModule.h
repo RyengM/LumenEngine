@@ -2,8 +2,8 @@
 
 namespace Lumen::Render
 {
-	class RenderModule
-	{
+    class RenderModule
+    {
 
-	};
+    };
 }

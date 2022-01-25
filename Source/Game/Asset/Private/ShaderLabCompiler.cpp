@@ -6,19 +6,19 @@ using namespace Lumen::Game;
 
 ShaderLabCompiler& ShaderLabCompiler::GetInstance()
 {
-	static ShaderLabCompiler instance;
-	return instance;
+    static ShaderLabCompiler instance;
+    return instance;
 }
 
 ShaderLab ShaderLabCompiler::Compile(std::string_view sourceFile)
 {
-	ShaderLab shaderLab;
+    ShaderLab shaderLab;
 
-	std::ifstream ifile(sourceFile.data());
-	if (!ifile.is_open())
-		return shaderLab;
-	std::ostringstream buf;
-	buf << ifile.rdbuf();
+    std::ifstream ifile(sourceFile.data());
+    if (!ifile.is_open())
+        return shaderLab;
+    std::ostringstream buf;
+    buf << ifile.rdbuf();
 
-	return mShaderLabGenerator.Compile(buf.str());
+    return mShaderLabGenerator.Compile(buf.str());
 }

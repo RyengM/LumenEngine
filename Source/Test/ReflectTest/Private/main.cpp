@@ -24,6 +24,6 @@ int main() {
     func1.invoke(d, 1);
     func2.invoke(d, 1.f);
 
-	return 0;
+    return 0;
 }
 
