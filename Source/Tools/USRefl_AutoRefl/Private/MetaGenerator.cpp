@@ -1,8 +1,8 @@
 #include "MetaGenerator.h"
 
 #include "antlr4-runtime.h"
-#include "ThirdParty/UANTLR/ParserCpp14/Public/CPP14Lexer.h"
-#include "ThirdParty/UANTLR/ParserCpp14/Public/CPP14ParserBaseVisitor.h"
+#include "ThirdParty/ANTLR/ParserCpp14/Public/CPP14Lexer.h"
+#include "ThirdParty/ANTLR/ParserCpp14/Public/CPP14ParserBaseVisitor.h"
 
 #include <sstream>
 

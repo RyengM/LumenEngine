@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(PROJECT_NAME UANTLR_Runtime)
+set(PROJECT_NAME ANTLR_Runtime)
 project(${PROJECT_NAME})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Public")
@@ -23,3 +23,7 @@ add_definitions(-DANTLR4CPP_STATIC)
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"
     ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/Lib")
+
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+endif()

@@ -5,6 +5,7 @@ project(${PROJECT_NAME})
 
 include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
+include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/ANTLR/Runtime/Public")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty")
 
 file(GLOB GAMEPLAY_FILES "GamePlay/Public/*.h" "GamePlay/Public/Details/*.inl" "GamePlay/Private/*.cpp")
@@ -18,19 +19,25 @@ source_group("Asset" FILES ${ASSET_FILES})
 
 add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${ENGINE_FILES} ${ASSET_FILES})
 
-add_dependencies (${PROJECT_NAME} Core RTTR Imgui)
+add_dependencies (${PROJECT_NAME} Core RTTR Imgui ANTLR_Runtime ANTLR_ParserShaderLab)
 
 target_link_libraries(${PROJECT_NAME}
     debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/RTTR_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/Imgui_d.lib
+    debug ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime_d.lib
+    debug ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab_d.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/Imgui.lib)
+    optimized ${CMAKE_SOURCE_DIR}/Lib/Imgui.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab.lib)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"
     ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/Lib")
+
+add_definitions(-DANTLR4CPP_STATIC)
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE "/MP")

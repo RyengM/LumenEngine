@@ -30,14 +30,14 @@ struct ANTLR4CPP_PUBLIC Any
   Any(Any& that) : _ptr(that.clone()) {
   }
 
-  Any(Any&& that) : _ptr(that._ptr) {
+  Any(Any&& that) noexcept : _ptr(that._ptr) {
     that._ptr = nullptr;
   }
 
   Any(const Any& that) : _ptr(that.clone()) {
   }
 
-  Any(const Any&& that) : _ptr(that.clone()) {
+  Any(const Any&& that) noexcept : _ptr(that.clone()) {
   }
 
   template<typename U>
@@ -88,7 +88,7 @@ struct ANTLR4CPP_PUBLIC Any
     return *this;
   }
 
-  Any& operator = (Any&& a) {
+  Any& operator = (Any&& a) noexcept {
     if (_ptr == a._ptr)
       return *this;
 

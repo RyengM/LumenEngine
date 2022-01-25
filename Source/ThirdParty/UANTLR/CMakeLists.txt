@@ -1,2 +1,0 @@
-add_subdirectory(Runtime)
-add_subdirectory(ParserCpp14)

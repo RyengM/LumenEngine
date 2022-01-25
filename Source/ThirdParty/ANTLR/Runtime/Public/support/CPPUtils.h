@@ -21,7 +21,7 @@ namespace antlrcpp {
   // Using RAII + a lambda to implement a "finally" replacement.
   struct FinalAction {
     FinalAction(std::function<void ()> f) : _cleanUp { f } {}
-    FinalAction(FinalAction &&other) :
+    FinalAction(FinalAction &&other) noexcept :
 	_cleanUp(std::move(other._cleanUp)), _enabled(other._enabled) {
       other._enabled = false; // Don't trigger the lambda after ownership has moved.
     }
