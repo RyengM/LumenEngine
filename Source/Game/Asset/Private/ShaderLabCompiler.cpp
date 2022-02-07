@@ -10,15 +10,16 @@ ShaderLabCompiler& ShaderLabCompiler::GetInstance()
     return instance;
 }
 
-ShaderLab ShaderLabCompiler::Compile(std::string_view sourceFile)
+void ShaderLabCompiler::Compile(ShaderLab* shaderLab, std::string_view sourceFile)
 {
-    ShaderLab shaderLab;
-
     std::ifstream ifile(sourceFile.data());
     if (!ifile.is_open())
-        return shaderLab;
+        return;
     std::ostringstream buf;
     buf << ifile.rdbuf();
 
-    return mShaderLabGenerator.Compile(buf.str());
+    ShaderLab shaderTmp = mShaderLabGenerator.Compile(buf.str());
+    shaderLab->name = std::move(shaderTmp.name);
+    shaderLab->properties = std::move(shaderTmp.properties);
+    shaderLab->categories = std::move(shaderTmp.categories);
 }

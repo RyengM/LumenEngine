@@ -48,11 +48,11 @@ namespace Lumen::Core
         void Finish();
 
     private:
-        size_t mIndex;                                                    // Identifier of task node
-        size_t mHash;                                                    // Hash of task typename
+        size_t mIndex;                                                     // Identifier of task node
+        size_t mHash;                                                      // Hash of task typename
         std::string mName;
         TaskPriority mPriority;
-        uint8_t mTaskStorage[sizeof(T)];                                // Place where task data is stored
+        uint8_t mTaskStorage[sizeof(T)];                                   // Place where task data is stored
         std::vector<size_t> mDependencies;
         std::vector<size_t> mSubsequentTasks;
         std::atomic<size_t> mUnExcutedDependencyCount = 0;

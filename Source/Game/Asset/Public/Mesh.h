@@ -34,6 +34,6 @@ namespace Lumen::Game
     class MeshLoader
     {
     public:
-        Mesh LoadObj(const std::string& path);
+        static void LoadObj(Mesh* mesh, std::string_view sourceFile);
     };
 }

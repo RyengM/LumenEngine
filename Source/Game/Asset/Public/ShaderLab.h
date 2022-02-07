@@ -86,15 +86,10 @@ namespace Lumen::Game
     };
 
     // ShaderLab is designed like unity shaderlab
-    class ShaderLab
+    struct ShaderLab
     {
-    public:
-
-    private:
-        std::string mName;
-        std::unordered_map<std::string, Property> mProperties;
-        Category mCategories;
-
-        friend class ShaderLabGenerator;
+        std::string name;
+        std::unordered_map<std::string, Property> properties;
+        Category categories;
     };
 }

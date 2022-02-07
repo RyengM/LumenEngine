@@ -11,25 +11,21 @@ Entity::Entity()
 
 RTTR_REGISTRATION
 {
-    registration::class_<Lumen::Game::Entity>("Entity")
-        .constructor<>()
-        .method("GetName", &Entity::GetName)
-        .method("SetName", &Entity::SetName)
-        .property("mName", &Entity::mName, registration::private_access)
-        (
-            metadata("serialize", true)
-        )
-        .property("mOwner", &Entity::mOwner, registration::private_access)
-        (
-            metadata("serialize", true)
-        )
-        .property("mComponents", &Entity::mComponents, registration::private_access)
-        (
-            metadata("serialize", true)
-        )
-        .property("mChildEntities", &Entity::mChildEntities, registration::private_access)
-        (
-            metadata("serialize", true)
-        )
-    ;
+	registration::class_<Lumen::Game::Entity>("Entity")
+		.constructor<>()
+		.method("GetName", &Entity::GetName)
+		.method("SetName", &Entity::SetName)
+		.property("mName", &Entity::mName, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
+		.property("mComponents", &Entity::mComponents, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
+		.property("mChildEntities", &Entity::mChildEntities, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
+	;
 }

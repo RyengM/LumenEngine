@@ -20,16 +20,16 @@ namespace Lumen::Game
         static Serializer& GetInstance();
 
         void Serialize(BaseObject* obj, std::string_view path);
-        void SerializeInternal(PrettyWriter<StringBuffer>& writer, const rttr::instance& obj);
-
         void Deserialize(BaseObject* obj, std::string_view path);
-        void DeserializeInternal(rttr::instance obj, Value& json);
 
     private:
         Serializer() {};
         ~Serializer() {};
         Serializer(const Serializer&) = delete;
         Serializer& operator=(const Serializer&) = delete;
+
+        void SerializeInternal(PrettyWriter<StringBuffer>& writer, const rttr::instance& obj);
+        void DeserializeInternal(rttr::instance obj, Value& json);
 
         bool WriteVariant(PrettyWriter<StringBuffer>& writer, const rttr::variant& var);
         bool WriteAtomicTypes(PrettyWriter<StringBuffer>& writer, const rttr::type& t, const rttr::variant& var);

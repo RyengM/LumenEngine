@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Component.h"
+#include "TransformComponent.h"
 
 namespace Lumen::Game
 {
@@ -16,8 +16,6 @@ namespace Lumen::Game
     private:
         [[serialize(true)]]
         std::string mName;
-        [[serialize(true)]]
-        std::shared_ptr<Entity> mOwner;
         [[serialize(true)]]
         std::vector<Component*> mComponents;
         [[serialize(true)]]

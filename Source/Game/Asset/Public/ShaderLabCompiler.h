@@ -9,7 +9,7 @@ namespace Lumen::Game
     public:
         static ShaderLabCompiler& GetInstance();
 
-        ShaderLab Compile(std::string_view sourceFile);
+        void Compile(ShaderLab* shaderLab, std::string_view sourceFile);
 
     private:
         ShaderLabCompiler() = default;

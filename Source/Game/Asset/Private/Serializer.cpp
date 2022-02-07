@@ -55,7 +55,6 @@ void Serializer::Serialize(BaseObject* obj, std::string_view path)
     SerializeInternal(writer, obj);
 
     std::string json = buffer.GetString();
-    puts(json.c_str());
 
     // Output data to local
     auto outDir = GetFullPath(path.data());

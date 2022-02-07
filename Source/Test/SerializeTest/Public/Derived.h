@@ -10,18 +10,16 @@ using namespace rttr;
 
 namespace Lumen::Test
 {
-    class DerivedComponent : public Component
+    struct DerivedComponent : Component
     {
-    public:
         [[serialize(true)]]
         int mSub = 10;
 
         RTTR_ENABLE(Component)
     };
 
-    class DerivedSubComponent : public DerivedComponent
+    struct DerivedSubComponent : public DerivedComponent
     {
-    public:
         DerivedSubComponent();
         DerivedSubComponent(int num) : mDerivedSub(num) {}
 

@@ -1,6 +1,6 @@
 #include "Game/Asset/Public/ShaderLabGenerator.h"
 
-using namespace    Lumen::Game;
+using namespace Lumen::Game;
 
 std::string_view ExtractString(std::string_view sourceStr)
 {
@@ -47,16 +47,16 @@ antlrcpp::Any ShaderLabGenerator::visitShader(ShaderLabParser::ShaderContext* ct
     ShaderLab shaderLab;
 
     std::string shaderName = visitShader_name(ctx->shader_name());
-    shaderLab.mName = std::move(shaderName);
+    shaderLab.name = std::move(shaderName);
     if (ctx->properties())
     {
         std::unordered_map<std::string, Property> properties = visitProperties(ctx->properties());
-        shaderLab.mProperties = std::move(properties);
+        shaderLab.properties = std::move(properties);
     }
     if (ctx->category())
     {
         Category category = visitCategory(ctx->category());
-        shaderLab.mCategories = std::move(category);
+        shaderLab.categories = std::move(category);
     }
 
     return shaderLab;

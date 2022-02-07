@@ -1,4 +1,4 @@
-#include "Game/Asset/Public/Mesh.h"
+#include "Game/Asset/Public/mesh.h"
 #include <unordered_map>
 #include <cassert>
 #include <fstream>
@@ -7,14 +7,13 @@
 
 using namespace Lumen::Game;
 
-Mesh MeshLoader::LoadObj(const std::string& filename)
+void MeshLoader::LoadObj(Mesh* mesh, std::string_view sourceFile)
 {
-    Mesh mesh;
     int vertexCount = 0, normalCount = 0, texCount = 0, faceCount = 0, actualVertexCount = 0;
 
     // Count and init data
     std::ifstream in;
-    in.open(filename);
+    in.open(sourceFile.data());
     assert(in.is_open());
     std::string content;
     while (std::getline(in, content))
@@ -48,11 +47,11 @@ Mesh MeshLoader::LoadObj(const std::string& filename)
     std::vector<Vec3> pos(vertexCount);
     std::vector<Vec3> normal(normalCount);
     std::vector<Vec2> texCoord(texCount);
-    mesh.vertices.resize(actualVertexCount);
-    mesh.indices.resize(faceCount * 3);
+    mesh->vertices.resize(actualVertexCount);
+    mesh->indices.resize(faceCount * 3);
     in.close();
     // Read data
-    in.open(filename);
+    in.open(sourceFile.data());
     assert(in.is_open());
     // Count number for vertex, normal and texCoord counting
     int v = 0, n = 0, t = 0;
@@ -93,8 +92,8 @@ Mesh MeshLoader::LoadObj(const std::string& filename)
                 if (i == 3)
                 {
                     if (content.empty()) break;
-                    mesh.indices[iindex] = mesh.indices[iindex - 3];
-                    mesh.indices[iindex + 1] = mesh.indices[iindex - 1];
+                    mesh->indices[iindex] = mesh->indices[iindex - 3];
+                    mesh->indices[iindex + 1] = mesh->indices[iindex - 1];
                     iindex += 2;
                 }
                 // Count number of '/'
@@ -105,8 +104,8 @@ Mesh MeshLoader::LoadObj(const std::string& filename)
                 int index = 0, j = 0;
                 for (j = 0; content[j] != '/'; ++j)
                     index = index * 10 + (content[j] - 48);
-                mesh.indices[iindex] = ivertex;
-                mesh.vertices[ivertex].pos = pos[index - 1];
+                mesh->indices[iindex] = ivertex;
+                mesh->vertices[ivertex].pos = pos[index - 1];
 
                 if (countSlash == 1)
                 {
@@ -114,7 +113,7 @@ Mesh MeshLoader::LoadObj(const std::string& filename)
                     index = 0;
                     for (j = j + 1; content[j]; ++j)
                         index = index * 10 + (content[j] - 48);
-                    mesh.vertices[ivertex].texCoord = texCoord[index - 1];
+                    mesh->vertices[ivertex].texCoord = texCoord[index - 1];
                 }
                 else if (countSlash == 2)
                 {
@@ -123,12 +122,12 @@ Mesh MeshLoader::LoadObj(const std::string& filename)
                     for (j = j + 1; content[j] != '/'; ++j)
                         index = index * 10 + (content[j] - 48);
                     if (index > 0)
-                        mesh.vertices[ivertex].texCoord = texCoord[index - 1];
+                        mesh->vertices[ivertex].texCoord = texCoord[index - 1];
                     // Normal
                     index = 0;
                     for (j = j + 1; content[j]; ++j)
                         index = index * 10 + (content[j] - 48);
-                    mesh.vertices[ivertex].normal = normal[index - 1];
+                    mesh->vertices[ivertex].normal = normal[index - 1];
                 }
                 iindex++;
                 ivertex++;
@@ -136,6 +135,4 @@ Mesh MeshLoader::LoadObj(const std::string& filename)
         }
     }
     in.close();
-
-    return mesh;
 }
