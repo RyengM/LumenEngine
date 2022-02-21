@@ -2,8 +2,7 @@
 
 #include "Core/Thread/Public/RunnableThread.h"
 #include "Core/Logger/Public/Logger.h"
-#include "Render/RHI/Common/Public/GraphicsRHI.h"
-#include "Render/RenderCore/Public/RenderContext.h"
+#include "Render/RHI/Common/Public/RHIContext.h"
 
 using namespace Lumen::Core;
 
@@ -12,6 +11,8 @@ namespace Lumen::Render
     class RenderRunnable : public Runnable
     {
     public:
+        RenderRunnable(const WindowInfo& windowInfo);
+
         virtual bool Init() override;
         // Consume command and execute them
         virtual void Run() override;
@@ -19,13 +20,7 @@ namespace Lumen::Render
         virtual void Exit() override;
         virtual ~RenderRunnable() override {}
 
-        void MakeSharedRenderContext(std::shared_ptr<RenderContext> context);
-
     private:
-        std::unique_ptr<GraphicsRHI> mGraphicsRHI;
-        // Shared from game thread, contains all the proxies for render
-        std::shared_ptr<RenderContext> mRenderContext;
-        // Current frame proxy data consumed by render thread
-        FrameRenderContext mCurFrameRenderContext;
+        std::unique_ptr<RHIContext> mGraphicsContext;
     };
 }

@@ -245,20 +245,20 @@ antlrcpp::Any ShaderLabGenerator::visitKernel(ShaderLabParser::KernelContext* ct
     }
     for (auto stateContext : ctx->common_state())
     {
-        std::pair<StateType, std::uint8_t> state = visitCommon_state(stateContext);
+        std::pair<EStateType, std::uint8_t> state = visitCommon_state(stateContext);
         switch (state.first)
         {
-        case StateType::CullMode:
-            kernel.commonState.cullMode = CullMode(state.second);
+        case EStateType::CullMode:
+            kernel.commonState.cullMode = ECullMode(state.second);
             break;
-        case StateType::ZTest:
-            kernel.commonState.zTestMode = Comparator(state.second);
+        case EStateType::ZTest:
+            kernel.commonState.zTestMode = EComparator(state.second);
             break;
-        case StateType::ZWriteMode:
-            kernel.commonState.zWriteMode = ZWriteMode(state.second);
+        case EStateType::ZWriteMode:
+            kernel.commonState.zWriteMode = EZWriteMode(state.second);
             break;
-        case StateType::ColorMask:
-            kernel.commonState.colorMaskChannel = Channel(state.second);
+        case EStateType::ColorMask:
+            kernel.commonState.colorMaskChannel = EChannel(state.second);
         default:
             break;
         }
@@ -292,8 +292,8 @@ antlrcpp::Any ShaderLabGenerator::visitTags(ShaderLabParser::TagsContext* ctx)
 
 antlrcpp::Any Lumen::Game::ShaderLabGenerator::visitCull(ShaderLabParser::CullContext* ctx)
 {
-    std::pair<StateType, std::uint8_t> state;
-    state.first = StateType::CullMode;
+    std::pair<EStateType, std::uint8_t> state;
+    state.first = EStateType::CullMode;
     std::string content = ctx->CullMode()->getText();
     if (content == "Front")            state.second = 0;
     else if (content == "Back")        state.second = 1;
@@ -304,28 +304,28 @@ antlrcpp::Any Lumen::Game::ShaderLabGenerator::visitCull(ShaderLabParser::CullCo
 
 antlrcpp::Any Lumen::Game::ShaderLabGenerator::visitZtest(ShaderLabParser::ZtestContext* ctx)
 {
-    std::pair<StateType, std::uint8_t> state;
-    state.first = StateType::ZTest;
+    std::pair<EStateType, std::uint8_t> state;
+    state.first = EStateType::ZTest;
     std::string content = ctx->Comparator()->getText();
-    if (content == "Less")            state.second = 0;
-    else if (content == "Greater")    state.second = 1;
-    else if (content == "LEqual")    state.second = 2;
-    else if (content == "GEqual")    state.second = 3;
+    if (content == "Less")             state.second = 0;
+    else if (content == "Greater")     state.second = 1;
+    else if (content == "LEqual")      state.second = 2;
+    else if (content == "GEqual")      state.second = 3;
     else if (content == "NotEqual")    state.second = 4;
-    else if (content == "Always")    state.second = 5;
-    else if (content == "Never")    state.second = 6;
+    else if (content == "Always")      state.second = 5;
+    else if (content == "Never")       state.second = 6;
 
     return state;
 }
 
 antlrcpp::Any Lumen::Game::ShaderLabGenerator::visitZwrite(ShaderLabParser::ZwriteContext* ctx)
 {
-    std::pair<StateType, std::uint8_t> state;
-    state.first = StateType::ZWriteMode;
+    std::pair<EStateType, std::uint8_t> state;
+    state.first = EStateType::ZWriteMode;
     std::string content;
     content = ExtractString(ctx->ZWriteMode()->getText());
-    if (content == "On")            state.second = 0;
-    else if (content == "Off")        state.second = 1;
+    if (content == "On")               state.second = 0;
+    else if (content == "Off")         state.second = 1;
     
 
     return state;
@@ -333,8 +333,8 @@ antlrcpp::Any Lumen::Game::ShaderLabGenerator::visitZwrite(ShaderLabParser::Zwri
 
 antlrcpp::Any Lumen::Game::ShaderLabGenerator::visitColor_mask(ShaderLabParser::Color_maskContext* ctx)
 {
-    std::pair<StateType, std::uint8_t> state;
-    state.first = StateType::ColorMask;
+    std::pair<EStateType, std::uint8_t> state;
+    state.first = EStateType::ColorMask;
     std::string content = visitChannel(ctx->channel());
     if (content.find('R') != std::string::npos)
         state.second |= 1;

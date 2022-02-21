@@ -1,5 +1,6 @@
 #include "Game/PlatformFramework/Windows/Public/WindowsFramework.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
+#include "Render/RHI/D3D12/Public/D3DContext.h"
 #include <cassert>
 #include <WindowsX.h>
 
@@ -7,28 +8,17 @@ using namespace Lumen::Game;
 using namespace Lumen::Core;
 using namespace Lumen::Render;
 
+thread_local ImGuiContext* MyImGuiTLS = NULL;
+
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
 {
     if (!pFramework->InitMainWindow())
         return 0;
-
-    // We regard preinit as the first frame, we can enqueue render command at preinit stage
-    RenderCommandQueue::GetInstance().BeginEnqueue();
-    // Make sure backend device is prepared before init
-    pFramework->InitDevice();
-    pFramework->InitUI();
-    pFramework->PreInit();
-    RenderCommandQueue::GetInstance().EndEnqueue();
-
-    // We regard init as the second frame, we can enqueue render command at init stage
-    RenderCommandQueue::GetInstance().BeginEnqueue();
-    // Make sure win imgui is prepared when imgui dx backend is initialized
+ 
+    pFramework->PreInit(pFramework->mWindowInfo);
     pFramework->Init();
-    RenderCommandQueue::GetInstance().EndEnqueue();
-    
-    // Wait until the first frame is done, it means dx12 device is established
-    while (!RenderCommandQueue::GetInstance().IsEmpty());
+    //pFramework->InitUI();
 
     // Main loop
     MSG msg = { 0 };
@@ -44,14 +34,14 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
         {
             // If command queue is full, do nothing, else start this frame
             if (!RenderCommandQueue::GetInstance().BeginEnqueue()) continue;
-            pFramework->UpdateUI();
+            //pFramework->UpdateUI();
             pFramework->Tick();
             RenderCommandQueue::GetInstance().EndEnqueue();
         }
     }
 
-    // Wait for render thread finish all work
-    while (!RenderCommandQueue::GetInstance().IsEmpty());
+    // Wait for render thread finish all work, need to consider GPU side, do later
+    /*while (!RenderCommandQueue::GetInstance().IsEmpty());*/
 
     // Exit
     pFramework->Exit();
@@ -64,54 +54,46 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
     return static_cast<char>(msg.wParam);
 }
 
-void WindowsFramework::InitDevice()
-{
-    ENQUEUE_RENDER_COMMAND("InitDevice", [this](FrameRenderContext* renderContext, GraphicsRHI* graphicsRHI) {
-        graphicsRHI->SetClientResolution(mClientWidth, mClientHeight);
-        if (!graphicsRHI->InitDirect3D(this->mhMainWnd))
-        {
-            LOG_ERROR("Device create failed, program exists");
-            exit(0);
-        }
-        LOG_INFO("Graphics device iniatialized");
-    });
-}
-
 void WindowsFramework::InitUI()
 {
-    mImguiManager.Init(mhMainWnd, mEngine.GetConfig().frameBufferNum);
+    mImguiManager.Init(mEngine.GetConfig().frameBufferNum);
     gImguiManager = &mImguiManager;
+
+    ImGui_ImplWin32_Init(mWindowInfo.mainWnd);
+    // Make sure fonts is initialized
+    unsigned char* pixels;
+    int width, height;
+    ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
     
-    ENQUEUE_RENDER_COMMAND("InitUI", [this](FrameRenderContext* renderContext, GraphicsRHI* graphicsRHI) {
-        graphicsRHI->InitUI();
-        graphicsRHI->OnResize();
-        graphicsRHI->CreateUIDeviceObject();
-        LOG_INFO("UI iniatialized");
-    });
+    //ENQUEUE_RENDER_COMMAND("InitUI", [this](GraphicsRHI* graphicsRHI) {
+    //    graphicsRHI->InitUI();
+    //    graphicsRHI->OnResize();    // This line should be modified, i dont know why there is memory leak
+    //    graphicsRHI->CreateUIDeviceObject();
+    //    LOG_INFO("UI iniatialized");
+    //});
 }
 
 void WindowsFramework::UpdateUI()
 {
-    ImGui_ImplWin32_NewFrame_Shared();
-
     for (auto context : mImguiManager.GetContexts())
     {
         ImGui::SetCurrentContext(context);
-        ImGui_ImplWin32_NewFrame_Context(context, { 0.f, 0.f }, (float)mClientWidth, (float)mClientHeight);
-        ImGui::NewFrame();
+        ImGui_ImplWin32_NewFrame();
 
+        ImGui::NewFrame();
         UpdateGuiWindow();
+        ImGui::EndFrame();
         // Prepare data to current context.DrawData
-        ImGui::Render();
+        //ImGui::Render();
         // Create proxy and submit to render context
-        DrawDataProxy* proxy = mImguiManager.CreateContextDrawDataProxy(context, mEngine.GetCurrFrame());
-        mEngine.SubmitGUIPorxy(proxy->mDrawData);
+        /*DrawDataProxy* proxy = mImguiManager.CreateContextDrawDataProxy(context, mEngine.GetCurrFrame());
+        mEngine.SubmitGUIPorxy(proxy->mDrawData);*/
+
+        // Update UI in render thread
+        //ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
+        //    //graphicsRHI->DrawUI(static_cast<ImDrawData*>(proxy->mDrawData));
+        //});
     }
-    // Update UI in render thread
-    ENQUEUE_RENDER_COMMAND("UpdateUI", [](FrameRenderContext* renderContext, GraphicsRHI* graphicsRHI) {
-        for (auto drawData : renderContext->guiProxies)
-            graphicsRHI->DrawUI(static_cast<ImDrawData*>(drawData));
-    });
 }
 
 void WindowsFramework::Clean()
@@ -183,35 +165,35 @@ bool WindowsFramework::InitMainWindow()
     }
 
     // Compute window rectangle dimensions based on requested client area dimensions.
-    RECT R = { 0, 0, mClientWidth, mClientHeight };
+    RECT R = { 0, 0, mWindowInfo.clientWidth, mWindowInfo.clientHeight };
     AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
     int width = R.right - R.left;
     int height = R.bottom - R.top;
 
-    mhMainWnd = CreateWindow(mWndClass.lpszClassName, mName,
+    mWindowInfo.mainWnd = CreateWindow(mWndClass.lpszClassName, mName,
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, width, height, 0, 0, mWndClass.hInstance, 0);
-    if (!mhMainWnd)
+    if (!mWindowInfo.mainWnd)
     {
         MessageBox(0, L"CreateWindow Failed.", 0, 0);
         return false;
     }
 
-    ShowWindow(mhMainWnd, SW_SHOW);
-    UpdateWindow(mhMainWnd);
+    ShowWindow((HWND)mWindowInfo.mainWnd, SW_SHOW);
+    UpdateWindow((HWND)mWindowInfo.mainWnd);
 
     return true;
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler_Context(ImGuiContext* ctx, bool ingore_mouse, bool ingore_keyboard, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+//extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler_Context(ImGuiContext* ctx, bool ingore_mouse, bool ingore_keyboard, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Message handler
 LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (gImguiManager)
-        for (auto context : gImguiManager->GetContexts())
-            if (ImGui_ImplWin32_WndProcHandler_Context(context, false, false, hWnd, message, wParam, lParam))
-                return true;
+    //if (gImguiManager)
+    //    for (auto context : gImguiManager->GetContexts())
+    //        if (ImGui_ImplWin32_WndProcHandler_Context(context, false, false, hWnd, message, wParam, lParam))
+    //            return true;
 
     switch (message)
     {

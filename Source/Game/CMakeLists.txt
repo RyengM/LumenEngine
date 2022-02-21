@@ -19,15 +19,17 @@ source_group("Asset" FILES ${ASSET_FILES})
 
 add_library(${PROJECT_NAME} ${GAMEPLAY_FILES} ${WINDOWS_FILES} ${ENGINE_FILES} ${ASSET_FILES})
 
-add_dependencies (${PROJECT_NAME} Core RTTR Imgui ANTLR_Runtime ANTLR_ParserShaderLab)
+add_dependencies (${PROJECT_NAME} Core Render RTTR Imgui ANTLR_Runtime ANTLR_ParserShaderLab)
 
 target_link_libraries(${PROJECT_NAME}
     debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
+    debug ${CMAKE_SOURCE_DIR}/Lib/Render_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/RTTR_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/Imgui_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime_d.lib
     debug ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab_d.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/Render.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Imgui.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime.lib

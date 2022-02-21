@@ -5,6 +5,7 @@ project(${PROJECT_NAME})
 
 include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
+include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty")
 
 file(GLOB RENDER_GRAPH_FILES "RenderGraph/Public/*.h" "RenderGraph/Private/*.cpp")
 file(GLOB RENDER_CORE_FILES "RenderCore/Public/*.h" "RenderCore/Private/*.cpp")
@@ -23,7 +24,9 @@ add_dependencies (${PROJECT_NAME} Core)
 
 target_link_libraries(${PROJECT_NAME} 
     debug ${CMAKE_SOURCE_DIR}/Lib/Core_d.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib)
+    debug ${CMAKE_SOURCE_DIR}/Lib/RTTR_d.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/Core.lib
+    optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"

@@ -12,8 +12,8 @@ namespace Lumen::Game
 
         [[serialize(true)]]
         std::vector<Entity> entities;
-        [[serialize(true)]]
-        std::vector<Prefab> prefabs;
+
+        // TODO. Add prefabs to support entity group ref
 
         RTTR_ENABLE(BaseObject)
     };

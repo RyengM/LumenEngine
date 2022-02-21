@@ -12,9 +12,5 @@ RTTR_REGISTRATION
 		(
 			metadata("serialize", true)
 		)
-		.property("prefabs", &Scene::prefabs)
-		(
-			metadata("serialize", true)
-		)
 	;
 }

@@ -13,9 +13,15 @@ RTTR_REGISTRATION
 {
 	registration::class_<Lumen::Game::Entity>("Entity")
 		.constructor<>()
+		.method("BeginPlay", &Entity::BeginPlay)
+		.method("Tick", &Entity::Tick)
 		.method("GetName", &Entity::GetName)
 		.method("SetName", &Entity::SetName)
 		.property("mName", &Entity::mName, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
+		.property("bCanTick", &Entity::bCanTick, registration::private_access)
 		(
 			metadata("serialize", true)
 		)

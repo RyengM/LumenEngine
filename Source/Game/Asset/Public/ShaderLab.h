@@ -12,14 +12,14 @@ namespace Lumen::Game
 {
     using PropertyValue = std::variant<int, float, Vec4, std::string>;
 
-    enum class CullMode : uint8_t
+    enum class ECullMode : uint8_t
     {
         Front       = 0,
         Back        = 1,
         None        = 2
     };
 
-    enum class Comparator : uint8_t
+    enum class EComparator : uint8_t
     {
         Less        = 0,
         Greater     = 1,
@@ -30,13 +30,13 @@ namespace Lumen::Game
         Never       = 6
     };
 
-    enum class ZWriteMode : uint8_t
+    enum class EZWriteMode : uint8_t
     {
         On          = 0,
         Off         = 1
     };
 
-    enum class Channel : uint8_t
+    enum class EChannel : uint8_t
     {
         Off         = 0,
         R           = 1,
@@ -45,7 +45,7 @@ namespace Lumen::Game
         A           = 8,
     };
 
-    enum class StateType
+    enum class EStateType : uint8_t
     {
         CullMode    = 0,
         ZTest       = 1,
@@ -64,10 +64,10 @@ namespace Lumen::Game
 
     struct CommonState
     {
-        CullMode cullMode           = CullMode::Back;
-        Comparator zTestMode        = Comparator::LEqual;
-        ZWriteMode zWriteMode       = ZWriteMode::Off;
-        Channel colorMaskChannel    = Channel::Off;
+        ECullMode cullMode          = ECullMode::Back;
+        EComparator zTestMode       = EComparator::LEqual;
+        EZWriteMode zWriteMode      = EZWriteMode::Off;
+        EChannel colorMaskChannel   = EChannel::Off;
     };
 
     // Same as Pass in unity

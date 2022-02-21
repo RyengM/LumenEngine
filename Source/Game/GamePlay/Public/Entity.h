@@ -10,12 +10,17 @@ namespace Lumen::Game
     public:
         Entity();
 
+        virtual void BeginPlay() {};
+        virtual void Tick() {};
+
         inline std::string GetName() const noexcept { return mName; }
         inline void SetName(std::string_view name) noexcept { mName = name; }
 
     private:
         [[serialize(true)]]
         std::string mName;
+        [[serialize(true)]]
+        bool bCanTick = true;
         [[serialize(true)]]
         std::vector<Component*> mComponents;
         [[serialize(true)]]

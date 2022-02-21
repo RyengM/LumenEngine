@@ -11,10 +11,15 @@ namespace Lumen::Game
         BaseFramework(const wchar_t* name) : mName(name) {}
         virtual ~BaseFramework() {}
 
-        inline void PreInit() { mEngine.PreInit(); }        // Launch modules
-        inline void Init() { mEngine.Init(); }              // Load assets
+        // Launch modules
+        inline void PreInit(const WindowInfo& windowInfo) { mEngine.PreInit(windowInfo); }
+        // Load assets
+        inline void Init() { mEngine.Init(); }              
         inline void Tick() { mEngine.Tick(); }
         inline void Exit() { mEngine.Exit(); }
+
+        inline void BeginPlay() { mEngine.BeginPlay(); }
+        inline void EndPlay() { mEngine.EndPlay(); }
 
     public:
         const wchar_t* mName;

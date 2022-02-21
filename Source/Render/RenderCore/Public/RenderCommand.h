@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Core/Common/Public/RingQueue.h"
-#include "Render/RHI/Common/Public/GraphicsRHI.h"
-#include "Render/RenderCore/Public/RenderContext.h"
+#include "Render/RHI/Common/Public/RHIContext.h"
 #include <vector>
 #include <functional>
 
@@ -10,7 +9,7 @@ using namespace Lumen::Core;
 
 namespace Lumen::Render
 {
-    using LambdaFunc = std::function<void(FrameRenderContext*, GraphicsRHI*)>;
+    using LambdaFunc = std::function<void(RHIContext*)>;
 
     struct RenderTask
     {

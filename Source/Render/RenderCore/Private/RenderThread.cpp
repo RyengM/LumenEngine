@@ -1,37 +1,43 @@
 #include "Render/RenderCore/Public/RenderThread.h"
-#include "Render/RHI/D3D12/Public/D3D12GraphicsRHI.h"
+#include "Render/RHI/D3D12/Public/D3DContext.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
 
 using namespace Lumen::Render;
 
-bool RenderRunnable::Init()
+RenderRunnable::RenderRunnable(const WindowInfo& windowInfo)
 {
     // TODO. choose backend by platform
-    mGraphicsRHI = std::make_unique<D3D12GraphicsRHI>();
+    mGraphicsContext = std::make_unique<D3DContext>(windowInfo);
+}
 
+bool RenderRunnable::Init()
+{
     return true;
 }
 
 void RenderRunnable::Run()
 {
-    // If render command queue is empty, sleep a while
+    // Wait for tasks from game thread
     if (!RenderCommandQueue::GetInstance().BeginFetch()) { Sleep(100); return; }
 
-    // Once we get the render command list, do tasks
+    // Fetch render command list
     std::vector<RenderTask> renderCommandList;
     RenderCommandQueue::GetInstance().FetchCommandList(renderCommandList);
 
-    // Get current frame render context
-    mRenderContext->FetchFrameRenderContext(mCurFrameRenderContext);
+    // Wait for GPU
+    mGraphicsContext->BeginFrame();
 
-    // Change frame resource and wait for GPU fence
-    mGraphicsRHI->NewFrame();
+    // Do tasks
+    {
+        for (auto& task : renderCommandList)
+            task.mLambda(mGraphicsContext.get());
+    }
+    
+    // Show present buffer
+    mGraphicsContext->Present();
 
-    for (auto& task : renderCommandList)
-        task.mLambda(&mCurFrameRenderContext, mGraphicsRHI.get());
-
-    // Swap buffer and set a new fence point
-    mGraphicsRHI->EndFrame();
+    // Add a new fence point
+    mGraphicsContext->EndFrame();
 }
 
 void RenderRunnable::Stop()
@@ -42,9 +48,4 @@ void RenderRunnable::Stop()
 void RenderRunnable::Exit()
 {
 
-}
-
-void RenderRunnable::MakeSharedRenderContext(std::shared_ptr<RenderContext> context)
-{
-    mRenderContext = context;
 }

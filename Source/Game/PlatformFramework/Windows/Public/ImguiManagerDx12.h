@@ -23,7 +23,7 @@ namespace Lumen::Game
     class ImguiManagerDx12
     {
     public:
-        void Init(void* hWnd, int frameNum);
+        void Init(int frameNum);
         void Clear();
 
         DrawDataProxy* CreateContextDrawDataProxy(ImGuiContext* context, int currFrame);

@@ -24,7 +24,6 @@ namespace Lumen::Game
         void UpdateUI();
         // Clean operation when engine is exit
         void Clean();
-        void InitDevice();
         // GUI interaction
         void UpdateGuiWindow();
 
@@ -34,10 +33,8 @@ namespace Lumen::Game
 
         // Win32 settings
         HINSTANCE           mhAppInst = nullptr;            // Application instance handle
-        HWND                mhMainWnd = nullptr;            // Main window handle
         WNDCLASS            mWndClass;
-        int                 mClientWidth = 1920;
-        int                 mClientHeight = 1080;
+        WindowInfo          mWindowInfo;
     };
 
     // Record the address of imgui manager in framework, used for WinProc
