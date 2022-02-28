@@ -124,6 +124,6 @@ namespace ImGui
 */
 
 // We need to own ImGuiContext both in game and render thread
-struct ImGuiContext;
-extern thread_local ImGuiContext* MyImGuiTLS;
-#define GImGui MyImGuiTLS
+//struct ImGuiContext;
+//extern thread_local ImGuiContext* MyImGuiTLS;
+//#define GImGui MyImGuiTLS

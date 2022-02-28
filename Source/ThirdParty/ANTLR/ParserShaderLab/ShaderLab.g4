@@ -1,3 +1,4 @@
+// Created by demonhub
 grammar ShaderLab;
 
 // Paser rules

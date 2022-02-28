@@ -3,9 +3,12 @@
 #include "RHIDescriptorHeap.h"
 #include "RHIResourceView.h"
 #include "RHIShader.h"
-#include "RHICommandContext.h"
+#include "RHICommandBuffer.h"
 #include "RHISwapChain.h"
+#include "Game/Asset/Public/Mesh.h"
 #include <memory>
+
+using namespace Lumen::Game;
 
 namespace Lumen::Render
 {
@@ -25,6 +28,10 @@ namespace Lumen::Render
         // Signal fence and reset allocator
         virtual void EndFrame() = 0;
 
+        virtual RHICommandContext* GetContext(const EContextType& type) = 0;
+
+        virtual RHIDescriptorHeap* GetDescriptorHeap(const EHeapDescriptorType& type) = 0;
+
         virtual RHICommandBuffer* RequestCmdBuffer(const EContextType& type, std::string_view name) = 0;
 
         virtual void ReleaseCmdBuffer(RHICommandBuffer* cmdBuffer) = 0;
@@ -35,8 +42,8 @@ namespace Lumen::Render
 
         virtual RHITexture* GetBackBuffer() = 0;
 
-        virtual void WaitForGPU() = 0;
-
         virtual void Present() = 0;
+
+        virtual void CreateGeometry(Mesh* mesh) = 0;
     };
 }

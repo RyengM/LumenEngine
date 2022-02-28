@@ -21,8 +21,14 @@ void EditorEngine::PreInit(const WindowInfo& windowInfo)
 
 void EditorEngine::Init()
 {
-    // Load scene and upload info to render context
+    // Load scene, now only load components for test
+    {
+        // Load mesh
 
+        // Load shaderlab
+
+
+    }
 }
 
 void EditorEngine::Tick()
@@ -38,7 +44,7 @@ void EditorEngine::Tick()
     ENQUEUE_RENDER_COMMAND("Clear", [](RHIContext* graphicsContext) {
         RHICommandBuffer* cmdBuffer = graphicsContext->RequestCmdBuffer(EContextType::Graphics, "ClearBuffer");
 
-        cmdBuffer->ClearRenderTarget(graphicsContext->GetBackBuffer(), graphicsContext->GetBackBufferView(), Vec4(1, 0, 0, 1));
+        cmdBuffer->ClearRenderTarget(graphicsContext->GetBackBuffer(), graphicsContext->GetBackBufferView(), Vec4(0.7, 0.2, 0.4, 1));
 
         graphicsContext->ExecuteCmdBuffer(cmdBuffer);
         graphicsContext->ReleaseCmdBuffer(cmdBuffer);
@@ -62,10 +68,4 @@ void EditorEngine::EndPlay()
     bPlaying = false;
 
     // Reset entities
-}
-
-void EditorEngine::SubmitGUIPorxy(void* proxy)
-{
-    /*mCurFrameRenderContext.guiProxies.clear();
-    mCurFrameRenderContext.guiProxies.emplace_back(proxy);*/
 }

@@ -17,19 +17,15 @@ RTTR_REGISTRATION
 		.method("Tick", &Entity::Tick)
 		.method("GetName", &Entity::GetName)
 		.method("SetName", &Entity::SetName)
-		.property("mName", &Entity::mName, registration::private_access)
+		.property("mName", &Entity::mName, registration::protected_access)
 		(
 			metadata("serialize", true)
 		)
-		.property("bCanTick", &Entity::bCanTick, registration::private_access)
+		.property("mChildEntities", &Entity::mChildEntities, registration::protected_access)
 		(
 			metadata("serialize", true)
 		)
-		.property("mComponents", &Entity::mComponents, registration::private_access)
-		(
-			metadata("serialize", true)
-		)
-		.property("mChildEntities", &Entity::mChildEntities, registration::private_access)
+		.property("transform", &Entity::transform, registration::protected_access)
 		(
 			metadata("serialize", true)
 		)

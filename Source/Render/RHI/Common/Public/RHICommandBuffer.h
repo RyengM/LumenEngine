@@ -2,19 +2,14 @@
 
 #include "RHIDevice.h"
 #include "RHIResourceView.h"
+#include "RHICommandContext.h"
+#include "RHIDescriptorHeap.h"
 #include <string>
 
 using namespace Lumen::Core;
 
 namespace Lumen::Render
 {
-    enum class EContextType : uint32_t
-    {
-        Copy = 3,
-        Compute = 2,
-        Graphics = 0
-    };
-
     class RHICommandBuffer
     {
     public:
@@ -23,6 +18,8 @@ namespace Lumen::Render
         virtual void Close() = 0;
 
         virtual void ClearRenderTarget(RHITexture* texture, RHIRenderTargetView* rtvView, const Vec4& color) = 0;
+
+        virtual void DrawUI(RHIDescriptorHeap* rhiHeap, RHITexture* texture, RHIRenderTargetView* rtvView, void* data) = 0;
 
     protected:
         std::string name;

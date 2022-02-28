@@ -249,6 +249,6 @@ namespace Lumen::Render
 
     struct RHIMeshGeometry
     {
-
+        std::string name;
     };
 }

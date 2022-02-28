@@ -2,7 +2,7 @@
 
 #include "D3DCommandContext.h"
 #include "D3DResourceView.h"
-#include "Render/RHI/Common/Public/RHICommandContext.h"
+#include "Render/RHI/Common/Public/RHICommandBuffer.h"
 
 namespace Lumen::Render
 {
@@ -17,6 +17,8 @@ namespace Lumen::Render
         virtual void Clear() override;
 
         virtual void ClearRenderTarget(RHITexture* texture, RHIRenderTargetView* rtvView, const Vec4& color) override;
+
+        virtual void DrawUI(RHIDescriptorHeap* rhiHeap, RHITexture* texture, RHIRenderTargetView* rtvView, void* data) override;
 
     public:
         size_t                                                  indexInPool;

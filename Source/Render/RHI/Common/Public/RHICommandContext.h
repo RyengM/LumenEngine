@@ -1,15 +1,20 @@
 #pragma once
 
-#include "RHICommandBuffer.h"
+//#include "RHICommandBuffer.h"
 #include <string>
 
 namespace Lumen::Render
 {
+    enum class EContextType : uint32_t
+    {
+        Copy = 3,
+        Compute = 2,
+        Graphics = 0
+    };
+
     class RHICommandContext
     {
     public:
-        virtual void ExecuteQueue(RHICommandBuffer* cmdBuffer) = 0;
-
         virtual void BeginFrame() = 0;
 
         virtual void EndFrame() = 0;
@@ -18,6 +23,6 @@ namespace Lumen::Render
 
     public:
         std::string name;
-        static const int numFrameResource = 3;
+        int numFrameResource = 3;
     };
 }

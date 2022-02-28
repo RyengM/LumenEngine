@@ -2,7 +2,6 @@
 
 #include "Core/Common/Public/Config.h"
 #include "Game/Asset/Public/Scene.h"
-//#include "Render/RenderCore/Public/RenderContext.h"
 #include "Render/RenderCore/Public/RenderThread.h"
 #include <memory>
 
@@ -26,23 +25,13 @@ namespace Lumen::Game
         void BeginPlay();
         void EndPlay();
 
-        // Helper function for GUI proxy transmission
-        void SubmitGUIPorxy(void* proxy);
-
-        inline int GetCurrFrame() const noexcept { return mCurrFrame; }
         inline Config GetConfig() const noexcept { return mConfig; }
 
     private:
-        // Current frame index in render queue
-        int mCurrFrame = 0;
         // If editor is in playing mode, entity will not tick if beginplay is not activated
         bool bPlaying = false;
         // Config data
         Config mConfig;
         std::unique_ptr<Scene> mScene;
-        // Proxy data in the scene
-        //std::shared_ptr<RenderContext> mRenderContext;
-        // Current frame proxy data produced from game thread
-        //FrameRenderContext mCurFrameRenderContext;
     };
 }

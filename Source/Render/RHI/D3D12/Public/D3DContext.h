@@ -5,7 +5,7 @@
 #include "D3DShader.h"
 #include "D3DCommandBuffer.h"
 #include "D3DSwapChain.h"
-//#include "D3DPipelineState.h"
+#include "D3DPipelineState.h"
 #include "Render/RHI/Common/Public/RHIContext.h"
 
 namespace Lumen::Render
@@ -20,6 +20,10 @@ namespace Lumen::Render
 
         virtual void EndFrame() override;
 
+        virtual RHICommandContext* GetContext(const EContextType& type) override;
+
+        virtual RHIDescriptorHeap* GetDescriptorHeap(const EHeapDescriptorType& type) override;
+
         virtual RHICommandBuffer* RequestCmdBuffer(const EContextType& type, std::string_view name) override;
 
         virtual void ReleaseCmdBuffer(RHICommandBuffer* cmdBuffer) override;
@@ -30,9 +34,9 @@ namespace Lumen::Render
 
         virtual RHITexture* GetBackBuffer() override;
 
-        virtual void WaitForGPU() override;
-
         virtual void Present() override;
+
+        virtual void CreateGeometry(Mesh* mesh) override;
 
     private:
         std::unique_ptr<D3DDevice>                          mDevice;
@@ -47,10 +51,9 @@ namespace Lumen::Render
         std::unique_ptr<D3DDescriptorHeap>                  mDsvDescriptorHeap;
         std::unique_ptr<D3DDescriptorHeap>                  mSamplerDescriptorHeap;
 
-        std::unordered_map<std::string, D3DTexture>         mTextures;
-        std::unordered_map<std::string, D3DMeshGeometry>    mMeshes;
-        std::unordered_map<std::string, D3DMaterial>        mMaterials;
-        std::unordered_map<std::string, D3DGraphicsShader>  mGraphicsShaders;
-        //std::unordered_map<std::string, D3DPipelienState>   mPSOs;
+        std::unordered_map<std::string, std::unique_ptr<D3DTexture>>            mTextures;
+        std::unordered_map<std::string, std::unique_ptr<D3DMeshGeometry>>       mMeshes;
+        std::unordered_map<std::string, std::unique_ptr<D3DMaterial>>           mMaterials;
+        std::unordered_map<std::string, std::unique_ptr<D3DPipelineState>>      mPSOs;
     };
 }

@@ -16,15 +16,14 @@ namespace Lumen::Game
         inline std::string GetName() const noexcept { return mName; }
         inline void SetName(std::string_view name) noexcept { mName = name; }
 
-    private:
+    protected:
         [[serialize(true)]]
         std::string mName;
         [[serialize(true)]]
-        bool bCanTick = true;
+        std::vector<Entity> mChildEntities;
+
         [[serialize(true)]]
-        std::vector<Component*> mComponents;
-        [[serialize(true)]]
-        std::vector<Entity*> mChildEntities;
+        TransformComponent transform;
 
         RTTR_REGISTRATION_FRIEND
         RTTR_ENABLE(BaseObject)

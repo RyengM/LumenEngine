@@ -24,14 +24,6 @@ D3DCommandContext::D3DCommandContext(RHIDevice* rhiDevice, EContextType type, st
         frameResource.push_back(std::make_unique<D3DFrameResource>(device));
 }
 
-void D3DCommandContext::ExecuteQueue(RHICommandBuffer* cmdBuffer)
-{
-    D3DCommandBuffer* buffer = static_cast<D3DCommandBuffer*>(cmdBuffer);
-    buffer->Close();
-    ID3D12CommandList* cmdsLists[] = { buffer->commandList.Get() };
-    commandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-}
-
 void D3DCommandContext::BeginFrame()
 {
     currentFrameResourceIndex = (currentFrameResourceIndex + 1) % numFrameResource;

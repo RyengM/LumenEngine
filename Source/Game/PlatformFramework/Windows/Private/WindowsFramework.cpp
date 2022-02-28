@@ -1,4 +1,5 @@
 #include "Game/PlatformFramework/Windows/Public/WindowsFramework.h"
+#include "Game/PlatformFramework/Windows/Public/imgui_impl_win32.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
 #include "Render/RHI/D3D12/Public/D3DContext.h"
 #include <cassert>
@@ -8,7 +9,7 @@ using namespace Lumen::Game;
 using namespace Lumen::Core;
 using namespace Lumen::Render;
 
-thread_local ImGuiContext* MyImGuiTLS = NULL;
+D3D12_CPU_DESCRIPTOR_HANDLE gSceneBufferHandle;
 
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
@@ -16,9 +17,11 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
     if (!pFramework->InitMainWindow())
         return 0;
  
+    // We need to assign gImGui first, which will be used in render thread for gpu resource initialization
+    pFramework->InitUI();
+
     pFramework->PreInit(pFramework->mWindowInfo);
     pFramework->Init();
-    //pFramework->InitUI();
 
     // Main loop
     MSG msg = { 0 };
@@ -34,8 +37,8 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
         {
             // If command queue is full, do nothing, else start this frame
             if (!RenderCommandQueue::GetInstance().BeginEnqueue()) continue;
-            //pFramework->UpdateUI();
             pFramework->Tick();
+            pFramework->UpdateUI();
             RenderCommandQueue::GetInstance().EndEnqueue();
         }
     }
@@ -64,13 +67,6 @@ void WindowsFramework::InitUI()
     unsigned char* pixels;
     int width, height;
     ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-    
-    //ENQUEUE_RENDER_COMMAND("InitUI", [this](GraphicsRHI* graphicsRHI) {
-    //    graphicsRHI->InitUI();
-    //    graphicsRHI->OnResize();    // This line should be modified, i dont know why there is memory leak
-    //    graphicsRHI->CreateUIDeviceObject();
-    //    LOG_INFO("UI iniatialized");
-    //});
 }
 
 void WindowsFramework::UpdateUI()
@@ -78,21 +74,27 @@ void WindowsFramework::UpdateUI()
     for (auto context : mImguiManager.GetContexts())
     {
         ImGui::SetCurrentContext(context);
+        ImGui_ImplDX12_NewFrame();
         ImGui_ImplWin32_NewFrame();
 
         ImGui::NewFrame();
         UpdateGuiWindow();
-        ImGui::EndFrame();
         // Prepare data to current context.DrawData
-        //ImGui::Render();
+        ImGui::Render();
         // Create proxy and submit to render context
-        /*DrawDataProxy* proxy = mImguiManager.CreateContextDrawDataProxy(context, mEngine.GetCurrFrame());
-        mEngine.SubmitGUIPorxy(proxy->mDrawData);*/
+        DrawDataProxy* proxy = mImguiManager.CreateContextDrawDataProxy(context);
+
+        if (proxy->mDrawData->CmdListsCount == 0) continue;
 
         // Update UI in render thread
-        //ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
-        //    //graphicsRHI->DrawUI(static_cast<ImDrawData*>(proxy->mDrawData));
-        //});
+        ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
+            RHICommandBuffer* cmdBuffer = graphicsContext->RequestCmdBuffer(EContextType::Graphics, "UpdateUI");
+
+            cmdBuffer->DrawUI(graphicsContext->GetDescriptorHeap(EHeapDescriptorType::CBV_SRV_UAV), graphicsContext->GetBackBuffer(), graphicsContext->GetBackBufferView(), proxy->mDrawData);
+
+            graphicsContext->ExecuteCmdBuffer(cmdBuffer);
+            graphicsContext->ReleaseCmdBuffer(cmdBuffer);
+        });
     }
 }
 
@@ -143,6 +145,14 @@ void WindowsFramework::UpdateGuiWindow()
             bShowAnotherWindow = false;
         ImGui::End();
     }
+
+    // 4. Show render tagret
+    /*if (bShowAnotherWindow)
+    {
+        ImGui::Begin("Render Target");
+        ImGui::Image((ImTextureID)gBackBufferGpuHandle.ptr, ImVec2(1024,768));
+        ImGui::End();
+    }*/
 }
 
 bool WindowsFramework::InitMainWindow()
@@ -184,16 +194,19 @@ bool WindowsFramework::InitMainWindow()
     return true;
 }
 
-// Forward declare message handler from imgui_impl_win32.cpp
-//extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler_Context(ImGuiContext* ctx, bool ingore_mouse, bool ingore_keyboard, HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+// Forward declare message handler from imgui_impl_win32.h
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Message handler
 LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    //if (gImguiManager)
-    //    for (auto context : gImguiManager->GetContexts())
-    //        if (ImGui_ImplWin32_WndProcHandler_Context(context, false, false, hWnd, message, wParam, lParam))
-    //            return true;
+    if (gImguiManager)
+        for (auto context : gImguiManager->GetContexts())
+        {
+            ImGui::SetCurrentContext(context);
+            if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+                return true;
+        }
 
     switch (message)
     {

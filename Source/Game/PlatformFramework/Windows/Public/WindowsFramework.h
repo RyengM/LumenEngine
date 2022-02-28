@@ -22,7 +22,6 @@ namespace Lumen::Game
         // Do some work with GUI and d3d12 backend
         void InitUI();
         void UpdateUI();
-        // Clean operation when engine is exit
         void Clean();
         // GUI interaction
         void UpdateGuiWindow();

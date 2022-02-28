@@ -2,7 +2,7 @@
 
 #include "D3DFence.h"
 #include "D3DFrameResource.h"
-#include "Render/RHI/Common/Public/RHICommandContext.h"
+#include "Render/RHI/Common/Public/RHICommandBuffer.h"
 
 namespace Lumen::Render
 {
@@ -13,7 +13,7 @@ namespace Lumen::Render
         D3DCommandContext(RHIDevice* rhiDevice, EContextType type, std::string_view name);
 
     public:
-        virtual void ExecuteQueue(RHICommandBuffer* cmdBuffer) override;
+        //virtual void ExecuteQueue(RHICommandBuffer* cmdBuffer) override;
 
         virtual void BeginFrame() override;
 

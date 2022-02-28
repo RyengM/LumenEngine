@@ -21,8 +21,8 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
     D3D12_DESCRIPTOR_HEAP_TYPE heapType = GetD3DDescriptorHeapType(type);
     descriptorSize = device->d3dDevice->GetDescriptorHandleIncrementSize(heapType);
 
-    mFreeElements.resize(count);
-    for (int i = 0; i < count; i++) mFreeElements[i] = i;
+    freeElements.resize(count);
+    for (int i = 0; i < count; i++) freeElements[i] = i;
 
     D3D12_DESCRIPTOR_HEAP_DESC descriptorCPU;
     {
@@ -31,8 +31,8 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
         descriptorCPU.NumDescriptors    = count;
         descriptorCPU.NodeMask          = 0;
     }
-    ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorCPU, IID_PPV_ARGS(&mCPUDescriptorHeap)));
-    cpuHeapStartHandle = mCPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorCPU, IID_PPV_ARGS(&cpuDescriptorHeap)));
+    cpuHeapStartHandle = cpuDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
     if (type != EHeapDescriptorType::CBV_SRV_UAV) return;
 
@@ -43,18 +43,18 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
         descriptorGPU.NumDescriptors    = count;
         descriptorGPU.NodeMask          = 0;
     }
-    ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorGPU, IID_PPV_ARGS(&mGPUDescriptorHeap)));
-    gpuHeapStartHandle = mGPUDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+    ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorGPU, IID_PPV_ARGS(&gpuDescriptorHeap)));
+    gpuHeapStartHandle = gpuDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
 
 size_t D3DDescriptorHeap::RequestElement()
 {
-    size_t index = mFreeElements.back();
-    mFreeElements.pop_back();
+    size_t index = freeElements.back();
+    freeElements.pop_back();
     return index;
 }
 
 void D3DDescriptorHeap::ReturnElement(size_t index)
 {
-    mFreeElements.push_back(index);
+    freeElements.push_back(index);
 }

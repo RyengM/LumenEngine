@@ -18,6 +18,8 @@ namespace Lumen::Render
     {
         D3DBuffer(RHIDevice* rhiDevice, const BufferDescriptor& descriptor);
 
+
+
         Microsoft::WRL::ComPtr<ID3D12Resource>              defaultResource;
         Microsoft::WRL::ComPtr<ID3D12Resource>              uploadResource;
         Microsoft::WRL::ComPtr<ID3D12Resource>              readbackResource;

@@ -16,12 +16,11 @@ namespace Lumen::Render
     public:
         D3D12_CPU_DESCRIPTOR_HANDLE                         cpuHeapStartHandle;
         D3D12_GPU_DESCRIPTOR_HANDLE                         gpuHeapStartHandle;
-        size_t                                              descriptorSize;
+        UINT                                                descriptorSize;
 
-    private:
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        mCPUDescriptorHeap;
-        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        mGPUDescriptorHeap;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        cpuDescriptorHeap;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>        gpuDescriptorHeap;
         // Avaliable space in descripter heap
-        std::vector<size_t>                                 mFreeElements;
+        std::vector<size_t>                                 freeElements;
     };
 }

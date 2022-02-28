@@ -1,4 +1,5 @@
 #include "Render/RHI/D3D12/Public/D3DCommandBuffer.h"
+#include "Game/PlatformFramework/Windows/Public/imgui_impl_dx12.h"
 
 using namespace Lumen::Render;
 
@@ -38,9 +39,31 @@ void D3DCommandBuffer::ClearRenderTarget(RHITexture* texture, RHIRenderTargetVie
 
     CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->defaultResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    
+    commandList->ResourceBarrier(1, &beforeBarrier);
+    commandList->ClearRenderTargetView(view->descriptorHandle, clearColor, 0, nullptr);
+    commandList->ResourceBarrier(1, &afterBarrier);
+}
+
+void D3DCommandBuffer::DrawUI(RHIDescriptorHeap* rhiHeap, RHITexture* texture, RHIRenderTargetView* rtvView, void* data)
+{
+    D3DDescriptorHeap* heap = static_cast<D3DDescriptorHeap*>(rhiHeap);
+    D3DRenderTargetView* view = static_cast<D3DRenderTargetView*>(rtvView);
+    D3DTexture* resource = static_cast<D3DTexture*>(texture);
+
+    const float clearColor[4] = { 0.2, 0.3, 0.4, 1.0 };
+
+    CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->defaultResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
     commandList->ResourceBarrier(1, &beforeBarrier);
     commandList->ClearRenderTargetView(view->descriptorHandle, clearColor, 0, nullptr);
+    commandList->OMSetRenderTargets(1, &view->descriptorHandle, FALSE, NULL);
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { heap->gpuDescriptorHeap.Get()};
+    commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    ImGui_ImplDX12_RenderDrawData(static_cast<ImDrawData*>(data), commandList.Get());
     commandList->ResourceBarrier(1, &afterBarrier);
 }
 

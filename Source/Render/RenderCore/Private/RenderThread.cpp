@@ -24,7 +24,7 @@ void RenderRunnable::Run()
     std::vector<RenderTask> renderCommandList;
     RenderCommandQueue::GetInstance().FetchCommandList(renderCommandList);
 
-    // Wait for GPU
+    // Wait for GPU fence
     mGraphicsContext->BeginFrame();
 
     // Do tasks

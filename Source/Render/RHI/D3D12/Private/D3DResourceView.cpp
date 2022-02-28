@@ -7,7 +7,7 @@ D3DRenderTargetView::D3DRenderTargetView(RHIDevice* rhiDevice, D3DDescriptorHeap
     D3DDevice* device = static_cast<D3DDevice*>(rhiDevice);
 
     ownedDescriptorHeap = descriptorHeap;
-    size_t offset = descriptorHeap->RequestElement();
+    INT offset = descriptorHeap->RequestElement();
     descriptorHandle = descriptorHeap->cpuHeapStartHandle;
     descriptorHandle.ptr += offset * descriptorHeap->descriptorSize;
 

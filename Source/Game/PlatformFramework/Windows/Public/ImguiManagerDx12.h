@@ -26,11 +26,12 @@ namespace Lumen::Game
         void Init(int frameNum);
         void Clear();
 
-        DrawDataProxy* CreateContextDrawDataProxy(ImGuiContext* context, int currFrame);
+        DrawDataProxy* CreateContextDrawDataProxy(ImGuiContext* context);
 
         inline std::vector<ImGuiContext*>& GetContexts() noexcept { return mContexts; }
 
     private:
+        int mCurrentFrameNum = 0;
         int mFrameNum = 0;
 
         // Collection of all contexts

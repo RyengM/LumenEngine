@@ -6,9 +6,4 @@ namespace Lumen::Render
     {
 
     };
-
-    struct RHIGraphicsShader : public RHIShader
-    {
-    
-    };
 }
