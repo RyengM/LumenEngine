@@ -1,4 +1,5 @@
 #include "Render/RHI/D3D12/Public/D3DCommandBuffer.h"
+#include "Render/RHI/D3D12/Public/D3DPipelineState.h"
 #include "Game/PlatformFramework/Windows/Public/imgui_impl_dx12.h"
 
 using namespace Lumen::Render;
@@ -65,6 +66,50 @@ void D3DCommandBuffer::DrawUI(RHIDescriptorHeap* rhiHeap, RHITexture* texture, R
 
     ImGui_ImplDX12_RenderDrawData(static_cast<ImDrawData*>(data), commandList.Get());
     commandList->ResourceBarrier(1, &afterBarrier);
+}
+
+void D3DCommandBuffer::DrawIndexed(RHIResource* rhiResource, RHIRenderTargetView* rhiRtvView, RHIDepthStencilView* rhiDsvView, RHIDescriptorHeap* rhiHeap, RHIPipelineState* rhiPso, RHIMeshGeometry* rhiGeo)
+{
+    //D3DTexture* resource = static_cast<D3DTexture*>(rhiResource);
+    //D3DRenderTargetView* rtvView = static_cast<D3DRenderTargetView*>(rhiRtvView);
+    //D3DDepthStencilView* dsvView = static_cast<D3DDepthStencilView*>(rhiDsvView);
+    //D3DDescriptorHeap* heap = static_cast<D3DDescriptorHeap*>(rhiHeap);
+    //D3DPipelineState* pso = static_cast<D3DPipelineState*>(rhiPso);
+    //D3DMeshGeometry* geo = static_cast<D3DMeshGeometry*>(rhiGeo);
+
+    //CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->defaultResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    //CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+    //commandList->Close();
+    //ThrowIfFailed(commandList->Reset(commandAllocator.Get(), pso->d3dPso.Get()));
+
+    //D3D12_VIEWPORT mScreenViewport;
+    //mScreenViewport.TopLeftX = 0;
+    //mScreenViewport.TopLeftY = 0;
+    //mScreenViewport.Width = static_cast<float>(1920);
+    //mScreenViewport.Height = static_cast<float>(1080);
+    //mScreenViewport.MinDepth = 0.0f;
+    //mScreenViewport.MaxDepth = 1.0f;
+    //D3D12_RECT mScissorRect = { 0, 0, 1920, 1080 };
+    //commandList->RSSetViewports(1, &mScreenViewport);
+    //commandList->RSSetScissorRects(1, &mScissorRect);
+
+    //commandList->ResourceBarrier(1, &beforeBarrier);
+    //commandList->OMSetRenderTargets(1, &rtvView->descriptorHandle, true, &dsvView->descriptorHandle);
+    //ID3D12DescriptorHeap* descriptorHeaps[] = { heap->gpuDescriptorHeap.Get()};
+    //commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    //commandList->SetGraphicsRootSignature(pso->rootSignature.Get());
+
+    //auto vBufferView = geo->VertexBufferView();
+    //auto iBufferView = geo->IndexBufferView();
+    //commandList->IASetVertexBuffers(0, 1, &vBufferView);
+    //commandList->IASetIndexBuffer(&iBufferView);
+    //commandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    //commandList->SetGraphicsRootDescriptorTable(0, heap->gpuDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    //commandList->DrawIndexedInstanced(geo->indexBufferByteSize, 1, 0, 0, 0);
+    //commandList->ResourceBarrier(1, &afterBarrier);
 }
 
 D3DCommandBufferPool::D3DCommandBufferPool(RHIDevice* rhiDevice, RHICommandContext* rhiContext, EContextType inContextType, size_t capacity)

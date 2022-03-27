@@ -1,4 +1,5 @@
 #include "Render/RHI/D3D12/Public/D3DResource.h"
+#include "Render/RHI/D3D12/Public/D3DCommandBuffer.h"
 
 using namespace Lumen::Render;
 
@@ -16,6 +17,8 @@ DXGI_FORMAT D3DResourceUtility::GetTextureFormat(EGraphicsFormat format)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8_TYPELESS;
     else if (format == EGraphicsFormat::R8G8B8A8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_TYPELESS;
+    else if (format == EGraphicsFormat::D24_S8_UNorm)
+        return DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT;
 
     return DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
 }
@@ -60,6 +63,30 @@ D3D12_RTV_DIMENSION D3DResourceUtility::GetRTVDimension(ETextureType type)
     return D3D12_RTV_DIMENSION::D3D12_RTV_DIMENSION_UNKNOWN;
 }
 
+D3D12_SRV_DIMENSION D3DResourceUtility::GetSRVDimension(ETextureType type)
+{
+    if (type == ETextureType::Tex2D)
+        return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+    else if (type == ETextureType::Tex2DArray)
+        return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+    else if (type == ETextureType::Tex3D)
+        return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE3D;
+
+    return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_UNKNOWN;
+}
+
+D3D12_RESOURCE_FLAGS D3DResourceUtility::GetTextureFlags(EUsageType type)
+{
+    if (type == EUsageType::DeptnStencil)
+        return D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    else if (type == EUsageType::RenderTarget)
+        return D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    else if (type == EUsageType::UnorderedAccess)
+        return D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    return D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+}
+
 D3DBuffer::D3DBuffer(RHIDevice* rhiDevice, const BufferDescriptor& inDescriptor)
 {
     D3DDevice* device = static_cast<D3DDevice*>(rhiDevice);
@@ -87,7 +114,7 @@ D3DBuffer::D3DBuffer(RHIDevice* rhiDevice, const BufferDescriptor& inDescriptor)
             defaultResourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
             defaultResourceDesc.SampleDesc.Count = 1;
             defaultResourceDesc.SampleDesc.Quality = 0;
-            defaultResourceDesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+            defaultResourceDesc.Flags = D3DResourceUtility::GetTextureFlags(descriptor.usageType);
             defaultResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         }
         ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&defaultHeapProperties, D3D12_HEAP_FLAG_NONE,
@@ -116,7 +143,7 @@ D3DBuffer::D3DBuffer(RHIDevice* rhiDevice, const BufferDescriptor& inDescriptor)
             uploadResourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
             uploadResourceDesc.SampleDesc.Count = 1;
             uploadResourceDesc.SampleDesc.Quality = 0;
-            uploadResourceDesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+            uploadResourceDesc.Flags = D3DResourceUtility::GetTextureFlags(descriptor.usageType);
             uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         }
         ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
@@ -145,11 +172,27 @@ D3DBuffer::D3DBuffer(RHIDevice* rhiDevice, const BufferDescriptor& inDescriptor)
             readbackResourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
             readbackResourceDesc.SampleDesc.Count = 1;
             readbackResourceDesc.SampleDesc.Quality = 0;
-            readbackResourceDesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+            readbackResourceDesc.Flags = D3DResourceUtility::GetTextureFlags(descriptor.usageType);
             readbackResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         }
         ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&readbackHeapProperties, D3D12_HEAP_FLAG_NONE,
             &readbackResourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(readbackResource.GetAddressOf())));
+    }
+}
+
+void D3DBuffer::UploadData(RHICommandBuffer* cmdBuffer)
+{
+    if ((uint32_t)descriptor.storageType & (uint32_t)EStorageType::Default &&
+        ((uint32_t)descriptor.storageType & (uint32_t)EStorageType::Static || (uint32_t)descriptor.storageType & (uint32_t)EStorageType::Dynamic))
+    {
+        D3DCommandBuffer* cmdList = static_cast<D3DCommandBuffer*>(cmdBuffer);
+
+        CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+        CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
+
+        cmdList->commandList->ResourceBarrier(1, &beforeBarrier);
+        cmdList->commandList->CopyBufferRegion(defaultResource.Get(), 0, uploadResource.Get(), 0, descriptor.count * descriptor.stride);
+        cmdList->commandList->ResourceBarrier(1, &afterBarrier);
     }
 }
 
@@ -180,11 +223,24 @@ D3DTexture::D3DTexture(RHIDevice* rhiDevice, const TextureDescriptor& inDescript
             defaultResourceDesc.Format = D3DResourceUtility::GetTextureFormat(descriptor.format);
             defaultResourceDesc.SampleDesc.Count = (UINT)descriptor.sample;
             defaultResourceDesc.SampleDesc.Quality = 0;
-            defaultResourceDesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+            defaultResourceDesc.Flags = D3DResourceUtility::GetTextureFlags(descriptor.usageType);
             defaultResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_UNKNOWN;
         }
-        ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&defaultHeapProperties, D3D12_HEAP_FLAG_NONE,
-            &defaultResourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(defaultResource.GetAddressOf())));
+
+        if (descriptor.usageType == EUsageType::DeptnStencil)
+        {
+            D3D12_CLEAR_VALUE clearValue;
+            clearValue.Format = D3DResourceUtility::GetTextureFormat(descriptor.format);
+            clearValue.DepthStencil.Depth = 1.0f;
+            clearValue.DepthStencil.Stencil = 0;
+            ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&defaultHeapProperties, D3D12_HEAP_FLAG_NONE,
+                &defaultResourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(defaultResource.GetAddressOf())));
+        }
+        else
+        {
+            ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&defaultHeapProperties, D3D12_HEAP_FLAG_NONE,
+                &defaultResourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(defaultResource.GetAddressOf())));
+        }
     }
     // Upload memory
     if ((uint32_t)descriptor.storageType & ((uint32_t)EStorageType::Static | (uint32_t)EStorageType::Dynamic))
@@ -208,7 +264,7 @@ D3DTexture::D3DTexture(RHIDevice* rhiDevice, const TextureDescriptor& inDescript
             uploadResourceDesc.Format = D3DResourceUtility::GetTextureFormat(descriptor.format);
             uploadResourceDesc.SampleDesc.Count = (UINT)descriptor.sample;
             uploadResourceDesc.SampleDesc.Quality = 0;
-            uploadResourceDesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+            uploadResourceDesc.Flags = D3DResourceUtility::GetTextureFlags(descriptor.usageType);
             uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_UNKNOWN;
         }
         ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
@@ -236,7 +292,7 @@ D3DTexture::D3DTexture(RHIDevice* rhiDevice, const TextureDescriptor& inDescript
             readbackResourceDesc.Format = D3DResourceUtility::GetTextureFormat(descriptor.format);
             readbackResourceDesc.SampleDesc.Count = (UINT)descriptor.sample;
             readbackResourceDesc.SampleDesc.Quality = 0;
-            readbackResourceDesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+            readbackResourceDesc.Flags = D3DResourceUtility::GetTextureFlags(descriptor.usageType);
             readbackResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_UNKNOWN;
         }
         ThrowIfFailed(device->d3dDevice->CreateCommittedResource(&readbackHeapProperties, D3D12_HEAP_FLAG_NONE,

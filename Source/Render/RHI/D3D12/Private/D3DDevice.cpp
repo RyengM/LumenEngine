@@ -20,7 +20,7 @@ D3DDevice::D3DDevice()
     {
         Microsoft::WRL::ComPtr<IDXGIAdapter> warpAdapter;
         ThrowIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
+        
         ThrowIfFailed(D3D12CreateDevice(warpAdapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&d3dDevice)));
     }
 }

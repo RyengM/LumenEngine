@@ -56,7 +56,7 @@ antlrcpp::Any ShaderLabGenerator::visitShader(ShaderLabParser::ShaderContext* ct
     if (ctx->category())
     {
         Category category = visitCategory(ctx->category());
-        shaderLab.categories = std::move(category);
+        shaderLab.category = std::move(category);
     }
 
     return shaderLab;

@@ -21,7 +21,10 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
     pFramework->InitUI();
 
     pFramework->PreInit(pFramework->mWindowInfo);
+
+    RenderCommandQueue::GetInstance().BeginEnqueue();
     pFramework->Init();
+    RenderCommandQueue::GetInstance().EndEnqueue();
 
     // Main loop
     MSG msg = { 0 };
@@ -87,14 +90,14 @@ void WindowsFramework::UpdateUI()
         if (proxy->mDrawData->CmdListsCount == 0) continue;
 
         // Update UI in render thread
-        ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
+        /*ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
             RHICommandBuffer* cmdBuffer = graphicsContext->RequestCmdBuffer(EContextType::Graphics, "UpdateUI");
 
             cmdBuffer->DrawUI(graphicsContext->GetDescriptorHeap(EHeapDescriptorType::CBV_SRV_UAV), graphicsContext->GetBackBuffer(), graphicsContext->GetBackBufferView(), proxy->mDrawData);
 
             graphicsContext->ExecuteCmdBuffer(cmdBuffer);
             graphicsContext->ReleaseCmdBuffer(cmdBuffer);
-        });
+        });*/
     }
 }
 
@@ -145,14 +148,13 @@ void WindowsFramework::UpdateGuiWindow()
             bShowAnotherWindow = false;
         ImGui::End();
     }
-
+    
     // 4. Show render tagret
-    /*if (bShowAnotherWindow)
     {
         ImGui::Begin("Render Target");
-        ImGui::Image((ImTextureID)gBackBufferGpuHandle.ptr, ImVec2(1024,768));
+        ImGui::Image((ImTextureID)mEngine.GetSceneBufferHandle(), ImVec2(800, 600));
         ImGui::End();
-    }*/
+    }
 }
 
 bool WindowsFramework::InitMainWindow()

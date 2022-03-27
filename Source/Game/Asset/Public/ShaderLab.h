@@ -90,6 +90,9 @@ namespace Lumen::Game
     {
         std::string name;
         std::unordered_map<std::string, Property> properties;
-        Category categories;
+        Category category;
+
+        ShaderLab() {};
+        ShaderLab(const ShaderLab& shader);
     };
 }

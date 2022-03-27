@@ -3,6 +3,7 @@
 #include "Core/Thread/Public/RunnableThread.h"
 #include "Core/Logger/Public/Logger.h"
 #include "Render/RHI/Common/Public/RHIContext.h"
+#include "RenderPipeline.h"
 
 using namespace Lumen::Core;
 

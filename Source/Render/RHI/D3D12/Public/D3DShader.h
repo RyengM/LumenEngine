@@ -7,7 +7,7 @@ namespace Lumen::Render
 {
     struct D3DShader : public RHIShader
     {
-        D3DShader(std::string_view sourceFile);
+        D3DShader(std::string_view hlsl);
 
         Microsoft::WRL::ComPtr<ID3DBlob>                    vertexShader;
         Microsoft::WRL::ComPtr<ID3DBlob>                    pixelShader;

@@ -12,10 +12,10 @@ namespace Lumen::Render
 
     struct PassConstants
     {
-        DirectX::XMFLOAT4X4 view = MathHelper::Identity4x4();
-        DirectX::XMFLOAT4X4 proj = MathHelper::Identity4x4();
+        //DirectX::XMFLOAT4X4 view = MathHelper::Identity4x4();
+        //DirectX::XMFLOAT4X4 proj = MathHelper::Identity4x4();
         DirectX::XMFLOAT4X4 viewProj = MathHelper::Identity4x4();
-        DirectX::XMFLOAT3 eyePos = { 0.0f, 0.0f, 0.0f };
+        //DirectX::XMFLOAT3 eyePos = { 0.0f, 0.0f, 0.0f };
     };
 
     // Stores the resources needed for the CPU to build the command lists for a frame.  
@@ -28,6 +28,10 @@ namespace Lumen::Render
         D3DFrameResource& operator=(const D3DFrameResource& rhs) = delete;
         ~D3DFrameResource();
 
+    private:
+        // Constant buffer elements need to be multiples of 256 bytes.
+        size_t CalcStride(size_t stride);
+
     public:
         // We cannot reset the allocator until the GPU is done processing the commands.
         // So each frame needs their own allocator.
@@ -35,7 +39,8 @@ namespace Lumen::Render
 
         // We cannot update a cbuffer until the GPU is done processing the commands
         // that reference it.  So each frame needs their own cbuffers.
-        std::vector<D3DBuffer> constantBuffers;
+        std::unique_ptr<D3DBuffer> passBuffers;
+        std::unique_ptr<D3DBuffer> objectBuffers;
 
         // Fence value to mark commands up to this fence point.  This lets us
         // check if these frame resources are still in use by the GPU.

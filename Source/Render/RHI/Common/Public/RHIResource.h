@@ -205,6 +205,7 @@ namespace Lumen::Render
         RGB_BC6H_SFloat         = 107,
         RGBA_BC7_SRGB           = 108,
         RGBA_BC7_UNorm          = 109,
+        D24_S8_UNorm            = 110,
     };
 
     struct BufferDescriptor
@@ -232,12 +233,17 @@ namespace Lumen::Render
         EGraphicsFormat format;
     };
 
-    struct RHIBuffer
+    struct RHIResource
+    {
+
+    };
+
+    struct RHIBuffer : RHIResource
     {
         BufferDescriptor descriptor;
     };
 
-    struct RHITexture
+    struct RHITexture : RHIResource
     {
         TextureDescriptor descriptor;
     };

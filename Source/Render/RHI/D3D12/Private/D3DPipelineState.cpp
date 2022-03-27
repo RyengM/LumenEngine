@@ -1,4 +1,5 @@
 #include "Render/RHI/D3D12/Public/D3DPipelineState.h"
+#include "Render/RHI/D3D12/Public/D3DShader.h"
 
 using namespace Lumen::Render;
 
@@ -12,9 +13,36 @@ D3D12_CULL_MODE GetCullMode(ECullMode mode)
 	return D3D12_CULL_MODE_NONE;
 }
 
-D3DPipelineState::D3DPipelineState(RHIDevice* rhiDevice, std::string_view name, Kernel* shaderlabKernel) : mName(name)
+D3DPipelineState::D3DPipelineState(RHIDevice* rhiDevice, std::string_view name, Kernel* shaderlabKernel, RHIShader* rhiShader) : name(name)
 {
 	D3DDevice* device = static_cast<D3DDevice*>(rhiDevice);
+	D3DShader* shader = static_cast<D3DShader*>(rhiShader);
+
+	// Fix input layout and rootsignature here, be removed later
+	inputLayout =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENTU", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
+	slotRootParameter[0].InitAsConstantBufferView(0);
+	slotRootParameter[1].InitAsConstantBufferView(1);
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
+	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+	if (errorBlob != nullptr)
+	{
+		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+	}
+	ThrowIfFailed(hr);
+
+	ThrowIfFailed(device->d3dDevice->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
 
 	// Need to be adjusted by shaderlab config later
 	D3D12_RASTERIZER_DESC rasterizerDescriptor;
@@ -64,28 +92,28 @@ D3DPipelineState::D3DPipelineState(RHIDevice* rhiDevice, std::string_view name, 
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDescriptor;
 
- //   ZeroMemory(&psoDescriptor, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	//psoDescriptor.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-	//psoDescriptor.pRootSignature = mRootSignature.Get();
-	//psoDescriptor.VS =
-	//{
-	//	reinterpret_cast<BYTE*>(mShaders["standardVS"]->GetBufferPointer()),
-	//	mShaders["standardVS"]->GetBufferSize()
-	//};
-	//psoDescriptor.PS =
-	//{
-	//	reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
-	//	mShaders["opaquePS"]->GetBufferSize()
-	//};
-	//psoDescriptor.RasterizerState = rasterizerDescriptor;
-	//psoDescriptor.BlendState = blendDescriptor;
-	//psoDescriptor.DepthStencilState = depthStencilDescriptor;
-	//psoDescriptor.SampleMask = UINT_MAX;
-	//psoDescriptor.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	//psoDescriptor.NumRenderTargets = 1;
-	//psoDescriptor.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	//psoDescriptor.SampleDesc.Count = 1;
-	//psoDescriptor.SampleDesc.Quality = 0;
-	//psoDescriptor.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	//ThrowIfFailed(device->d3dDevice->CreateGraphicsPipelineState(&psoDescriptor, IID_PPV_ARGS(&mPSO)));
+    ZeroMemory(&psoDescriptor, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	psoDescriptor.InputLayout = { inputLayout.data(), (UINT)inputLayout.size() };
+	psoDescriptor.pRootSignature = rootSignature.Get();
+	psoDescriptor.VS =
+	{
+		reinterpret_cast<BYTE*>(shader->vertexShader->GetBufferPointer()),
+		shader->vertexShader->GetBufferSize()
+	};
+	psoDescriptor.PS =
+	{
+		reinterpret_cast<BYTE*>(shader->pixelShader->GetBufferPointer()),
+		shader->pixelShader->GetBufferSize()
+	};
+	psoDescriptor.RasterizerState = rasterizerDescriptor;
+	psoDescriptor.BlendState = blendDescriptor;
+	psoDescriptor.DepthStencilState = depthStencilDescriptor;
+	psoDescriptor.SampleMask = UINT_MAX;
+	psoDescriptor.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDescriptor.NumRenderTargets = 1;
+	psoDescriptor.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDescriptor.SampleDesc.Count = 1;
+	psoDescriptor.SampleDesc.Quality = 0;
+	psoDescriptor.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	ThrowIfFailed(device->d3dDevice->CreateGraphicsPipelineState(&psoDescriptor, IID_PPV_ARGS(&d3dPso)));
 }

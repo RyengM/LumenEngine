@@ -21,5 +21,5 @@ void ShaderLabCompiler::Compile(ShaderLab* shaderLab, std::string_view sourceFil
     ShaderLab shaderTmp = mShaderLabGenerator.Compile(buf.str());
     shaderLab->name = std::move(shaderTmp.name);
     shaderLab->properties = std::move(shaderTmp.properties);
-    shaderLab->categories = std::move(shaderTmp.categories);
+    shaderLab->category = std::move(shaderTmp.category);
 }

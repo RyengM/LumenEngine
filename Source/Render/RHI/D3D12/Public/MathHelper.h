@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Core/Math/Public/Matrix.h"
 #include <Windows.h>
 #include <DirectXMath.h>
 #include <cstdint>
@@ -66,6 +67,17 @@ public:
             1.0f);
     }
 
+    static DirectX::XMMATRIX ConvertToDxMatrix(Lumen::Core::Mat4 mat)
+    {
+        // Matrix should be transposed
+        DirectX::XMMATRIX A;
+        A.r[0] = DirectX::XMVECTOR{ mat.data[0][0], mat.data[1][0], mat.data[2][0], mat.data[3][0] };
+        A.r[1] = DirectX::XMVECTOR{ mat.data[0][1], mat.data[1][1], mat.data[2][1], mat.data[3][1] };
+        A.r[2] = DirectX::XMVECTOR{ mat.data[0][2], mat.data[1][2], mat.data[2][2], mat.data[3][2] };
+        A.r[3] = DirectX::XMVECTOR{ mat.data[0][3], mat.data[1][3], mat.data[2][3], mat.data[3][3] };
+        return A;
+    }
+
     static DirectX::XMMATRIX InverseTranspose(DirectX::CXMMATRIX M)
     {
         // Inverse-transpose is just applied to normals.  So zero out 
@@ -94,7 +106,5 @@ public:
 
     static const float Infinity;
     static const float Pi;
-
-
 };
 

@@ -26,7 +26,7 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
 
     D3D12_DESCRIPTOR_HEAP_DESC descriptorCPU;
     {
-        descriptorCPU.Flags             = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        descriptorCPU.Flags             = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descriptorCPU.Type              = heapType;
         descriptorCPU.NumDescriptors    = count;
         descriptorCPU.NodeMask          = 0;

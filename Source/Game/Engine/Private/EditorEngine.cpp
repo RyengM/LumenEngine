@@ -21,14 +21,47 @@ void EditorEngine::PreInit(const WindowInfo& windowInfo)
 
 void EditorEngine::Init()
 {
-    // Load scene, now only load components for test
+    // Load scene
     {
+        // Prepare scene buffer
+        mSceneBuffer = std::make_unique<VisualBuffer>("scene");
+        auto sceneBufferPtr = mSceneBuffer.get();
+        ENQUEUE_RENDER_COMMAND("CreateSceneBuffer", [sceneBufferPtr](RHIContext* graphicsContext) {
+            graphicsContext->CreateVisualBuffer(sceneBufferPtr);
+        });
+
         // Load mesh
+        mBox = std::make_unique<Mesh>();
+        mBox->name = "box";
+        MeshLoader::LoadObj(mBox.get(), "../../Assets/box.obj");
+       
 
         // Load shaderlab
+        mShaderLab = std::make_unique<ShaderLab>();
+        ShaderLabCompiler::GetInstance().Compile(mShaderLab.get(), "../../Assets/SimpleForward.shader");
 
+        // Load camera
+        mCamera = std::make_unique<Camera>(90.f, 16.f / 9.f, 0.1f, 100.f);
 
+        // Render prepare
+        ENQUEUE_RENDER_COMMAND("RenderPrepare", [](RHIContext* graphicsContext) {
+            graphicsContext->Prepare();
+        });
+
+        // Tranfer data to render thread
+        ENQUEUE_RENDER_COMMAND("CreateGeo", [meshProxy = Mesh(*mBox.get())](RHIContext* graphicsContext) {
+            RHICommandBuffer* cmdBuffer = graphicsContext->RequestCmdBuffer(EContextType::Graphics, "CreateGeo");
+
+            graphicsContext->CreateGeometry(cmdBuffer, meshProxy);
+
+            graphicsContext->ExecuteCmdBuffer(cmdBuffer);
+            graphicsContext->ReleaseCmdBuffer(cmdBuffer);
+        });
+        ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*mShaderLab.get())](RHIContext* graphicsContext) {
+            graphicsContext->CreateShaders(shaderProxy);
+        });
     }
+
 }
 
 void EditorEngine::Tick()
@@ -40,14 +73,14 @@ void EditorEngine::Tick()
             entity.Tick();
     }
 
-    // Enqueue render cmdlist
-    ENQUEUE_RENDER_COMMAND("Clear", [](RHIContext* graphicsContext) {
-        RHICommandBuffer* cmdBuffer = graphicsContext->RequestCmdBuffer(EContextType::Graphics, "ClearBuffer");
+    // Update render data
+    ENQUEUE_RENDER_COMMAND("UpdatePassCB", [proxy = Camera(*mCamera.get())](RHIContext* graphicsContext) {
+        graphicsContext->UpdatePassCB(proxy);
+    });
 
-        cmdBuffer->ClearRenderTarget(graphicsContext->GetBackBuffer(), graphicsContext->GetBackBufferView(), Vec4(0.7, 0.2, 0.4, 1));
-
-        graphicsContext->ExecuteCmdBuffer(cmdBuffer);
-        graphicsContext->ReleaseCmdBuffer(cmdBuffer);
+    // Render scene
+    ENQUEUE_RENDER_COMMAND("RenderScene", [](RHIContext* graphicsContext) {
+        graphicsContext->RenderScene();
     });
 }
 

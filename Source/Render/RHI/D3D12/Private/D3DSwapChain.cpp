@@ -49,14 +49,32 @@ D3DSwapChain::D3DSwapChain(RHIDevice* rhiDevice, RHICommandContext* rhiCmdContex
         mSwapChainBuffer[i]->descriptor = texDescriptor;
         ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i]->defaultResource)));
     }
+
+    TextureDescriptor depthStencilDesc;
+    {
+        depthStencilDesc.width = (int)width;
+        depthStencilDesc.height = (int)height;
+        depthStencilDesc.slices = 1;
+        depthStencilDesc.sparse = false;
+        depthStencilDesc.mipLevel = 1;
+        depthStencilDesc.anisoLevel = 1;
+        depthStencilDesc.sample = EMSAASample::None;
+        depthStencilDesc.usageType = EUsageType::DeptnStencil;
+        depthStencilDesc.textureType = ETextureType::Tex2D;
+        depthStencilDesc.storageType = EStorageType::Default;
+        depthStencilDesc.format = EGraphicsFormat::D24_S8_UNorm;
+    }
+    mDepthStencilBuffer = std::make_unique<D3DTexture>(device, depthStencilDesc);
 }
 
-void D3DSwapChain::InitResourceView(RHIDevice* rhiDevice, D3DDescriptorHeap* descriptorHeap)
+void D3DSwapChain::InitResourceView(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap)
 {
     D3DDevice* device = static_cast<D3DDevice*>(rhiDevice);
 
     for (int i = 0; i < mSwapChainBufferCount; i++)
-        mSwapChainBufferView[i] = std::make_unique<D3DRenderTargetView>(rhiDevice, descriptorHeap, mSwapChainBuffer[i].get());
+        mSwapChainBufferView[i] = std::make_unique<D3DRenderTargetView>(rhiDevice, rtvDescriptorHeap, mSwapChainBuffer[i].get());
+
+    mDepthStencilView = std::make_unique<D3DDepthStencilView>(rhiDevice, dsvDescriptorHeap, mDepthStencilBuffer.get());
 }
 
 D3DRenderTargetView* D3DSwapChain::GetCurrentBackBufferView()
@@ -67,6 +85,16 @@ D3DRenderTargetView* D3DSwapChain::GetCurrentBackBufferView()
 D3DTexture* D3DSwapChain::GetCurrentBuffer()
 {
     return mSwapChainBuffer[mCurBackBufferIndex].get();
+}
+
+D3DDepthStencilView* D3DSwapChain::GetDepthStencilView()
+{
+    return mDepthStencilView.get();
+}
+
+D3DTexture* D3DSwapChain::GetDepthStencilBuffer()
+{
+    return mDepthStencilBuffer.get();
 }
 
 void D3DSwapChain::Present()
