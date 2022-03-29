@@ -5,6 +5,26 @@
 
 using namespace Lumen::Game;
 
+Texture::Texture(const Texture& rhs)
+{
+	name = rhs.name;
+	width = rhs.width;
+	height = rhs.height;
+	channel = rhs.channel;
+	data = new uint8_t[rhs.width * rhs.height * rhs.channel];
+	memcpy(data, rhs.data, rhs.width * rhs.height * rhs.channel);
+}
+
+Texture::Texture(Texture&& rhs)
+{
+	name = std::move(rhs.name);
+	width = rhs.width;
+	height = rhs.height;
+	channel = rhs.channel;
+	data = rhs.data;
+	rhs.data = nullptr;
+}
+
 Texture::~Texture()
 {
 	if (data)
@@ -23,8 +43,7 @@ void TextureLoader::LoadTexture(Texture* tex, std::string_view sourceFile)
 	}
 	
 	tex->data = new uint8_t[tex->width * tex->height * tex->channel];
-	for (int i = 0; i < tex->width * tex->height * tex->channel; i++)
-		tex->data[i] = input[i];
+	memcpy(tex->data, input, tex->width * tex->height * tex->channel);
 
 	stbi_image_free(input);
 }

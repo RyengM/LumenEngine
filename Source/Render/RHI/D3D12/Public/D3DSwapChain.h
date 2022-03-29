@@ -14,16 +14,16 @@ namespace Lumen::Render
 
         void InitResourceView(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap);
         D3DRenderTargetView* GetCurrentBackBufferView();
-        D3DTexture* GetCurrentBuffer();
+        D3DTextureResource* GetCurrentBuffer();
         D3DDepthStencilView* GetDepthStencilView();
-        D3DTexture* GetDepthStencilBuffer();
+        D3DTextureResource* GetDepthStencilBuffer();
         void Present();
 
     private:
         Microsoft::WRL::ComPtr<IDXGISwapChain>              mSwapChain;
-        std::unique_ptr<D3DTexture>                         mSwapChainBuffer[mSwapChainBufferCount];
+        std::unique_ptr<D3DTextureResource>                 mSwapChainBuffer[mSwapChainBufferCount];
         std::unique_ptr<D3DRenderTargetView>                mSwapChainBufferView[mSwapChainBufferCount];
-        std::unique_ptr<D3DTexture>                         mDepthStencilBuffer;
+        std::unique_ptr<D3DTextureResource>                 mDepthStencilBuffer;
         std::unique_ptr<D3DDepthStencilView>                mDepthStencilView;
         DXGI_FORMAT                                         mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
         int                                                 mCurBackBufferIndex = 0;

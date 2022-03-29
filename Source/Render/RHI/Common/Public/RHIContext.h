@@ -8,7 +8,9 @@
 #include "Render/RenderCore/Public/VisualBuffer.h"
 #include "Game/Asset/Public/ShaderLab.h"
 #include "Game/Asset/Public/Mesh.h"
+#include "Game/Asset/Public/Texture.h"
 #include "Game/GamePlay/Public/Camera.h"
+#include "Game/GamePlay/Public/Light.h"
 #include <memory>
 
 using namespace Lumen::Game;
@@ -39,29 +41,24 @@ namespace Lumen::Render
 
         virtual void Present() = 0;
 
-        virtual void Prepare() = 0;
+        virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) = 0;
 
-        virtual void UpdatePassCB(const Camera& camera) = 0;
+        virtual void RenderScene(uint32_t width, uint32_t height) = 0;
 
-        virtual void RenderScene() = 0;
+        virtual void DrawUI(void* data) = 0;
 
-        // Create texture both with srv and rtv for display convenience
-        virtual void CreateVisualBuffer(VisualBuffer* buffer) = 0;
+        // Create scene buffer for display
+        virtual void CreateSceneBuffer(VisualBuffer* buffer) = 0;
+
+        // Create texture
+        virtual void CreatePlainTexture(Texture& texture) = 0;
 
         // Create geometry
-        virtual void CreateGeometry(RHICommandBuffer* cmdBuffer, const Mesh& mesh) = 0;
+        virtual void CreateGeometry(const Mesh& mesh) = 0;
 
         // Create shaders
-        virtual void CreateShaders(const ShaderLab& shaderlab) = 0;
+        virtual void CreateShaderlab(const ShaderLab& shaderlab) = 0;
 
         virtual RHICommandContext* GetContext(const EContextType& type) = 0;
-
-        virtual RHIDescriptorHeap* GetDescriptorHeap(const EHeapDescriptorType& type) = 0;
-
-        virtual RHIRenderTargetView* GetBackBufferView() = 0;
-
-        virtual RHITexture* GetBackBuffer() = 0;
-
-        virtual RHIDepthStencilView* GetBackDepthStencilView() = 0;
     };
 }

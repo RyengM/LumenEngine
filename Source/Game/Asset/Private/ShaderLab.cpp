@@ -2,9 +2,16 @@
 
 using namespace Lumen::Game;
 
-ShaderLab::ShaderLab(const ShaderLab& shader)
+ShaderLab::ShaderLab(const ShaderLab& rhs)
 {
-    name = shader.name;
-    properties = shader.properties;
-    category = shader.category;
+    name = rhs.name;
+    properties = rhs.properties;
+    category = rhs.category;
+}
+
+ShaderLab::ShaderLab(ShaderLab&& rhs)
+{
+    name = std::move(rhs.name);
+    properties = std::move(rhs.properties);
+    category = std::move(rhs.category);
 }

@@ -2,7 +2,9 @@
 
 #include "Game/Asset/Public/ShaderLabCompiler.h"
 #include "Game/Asset/Public/Scene.h"
+#include "Game/Asset/Public/Texture.h"
 #include "Game/GamePlay/Public/Camera.h"
+#include "Game/GamePlay/Public/Light.h"
 #include "Core/Common/Public/Config.h"
 #include "Render/RenderCore/Public/RenderThread.h"
 #include "Render/RenderCore/Public/VisualBuffer.h"
@@ -30,7 +32,7 @@ namespace Lumen::Game
         void EndPlay();
 
         inline Config GetConfig() const noexcept { return mConfig; }
-        inline size_t GetSceneBufferHandle() const noexcept { return mSceneBuffer->srvHandle; }
+        inline VisualBuffer* GetSceneBufferPtr() const noexcept { return mSceneBuffer.get(); }
 
     private:
         // If editor is in playing mode, entity will not tick if beginplay is not activated
@@ -39,9 +41,11 @@ namespace Lumen::Game
         Config mConfig;
         std::unique_ptr<Scene> mScene;
         std::unique_ptr<VisualBuffer> mSceneBuffer;
-        // Objects for test
+        // Objects for test, remove later
         std::unique_ptr<Mesh> mBox;
+        std::unique_ptr<Texture> mTexture;
         std::unique_ptr<Camera> mCamera;
         std::unique_ptr<ShaderLab> mShaderLab;
+        std::unique_ptr<DirectionalLight> mDirectionalLight;
     };
 }

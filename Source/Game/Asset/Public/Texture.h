@@ -14,6 +14,9 @@ namespace Lumen::Game
 
         uint8_t* data;
 
+        Texture() = default;
+        Texture(const Texture& rhs);
+        Texture(Texture&& rhs);
         ~Texture();
     };
 

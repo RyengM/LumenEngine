@@ -3,15 +3,23 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 
 using namespace Lumen::Game;
 
-Mesh::Mesh(const Mesh& mesh)
+Mesh::Mesh(const Mesh& rhs)
 {
-    name = mesh.name.c_str();
-    vertices = mesh.vertices;
-    indices = mesh.indices;
+    name = rhs.name;
+    bTangent = rhs.bTangent;
+    vertices = rhs.vertices;
+    indices = rhs.indices;
+}
+
+Mesh::Mesh(Mesh&& rhs)
+{
+    name = std::move(rhs.name);
+    bTangent = rhs.bTangent;
+    vertices = std::move(rhs.vertices);
+    indices = std::move(rhs.indices);
 }
 
 void MeshLoader::LoadObj(Mesh* mesh, std::string_view sourceFile)

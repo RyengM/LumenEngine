@@ -6,6 +6,23 @@ namespace Lumen::Core
 {
 #define PI 3.1415926535
 
+	// Vector in math is inherited from baseObject whose size the not the same as vector itself
+	// Declare pure vector structure here as Float
+	struct Float2
+	{
+		float x = 0, y = 0;
+	};
+
+	struct Float3
+	{
+		float x = 0, y = 0, z = 0;
+	};
+
+	struct Float4
+	{
+		float x = 0, y = 0, z = 0, w = 0;
+	};
+
 	class MathUtil
 	{
 	public:

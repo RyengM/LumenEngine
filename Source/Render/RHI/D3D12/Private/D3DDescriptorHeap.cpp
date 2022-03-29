@@ -22,7 +22,7 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
     descriptorSize = device->d3dDevice->GetDescriptorHandleIncrementSize(heapType);
 
     freeElements.resize(count);
-    for (int i = 0; i < count; i++) freeElements[i] = i;
+    for (int i = 0; i < count; i++) freeElements[i] = count - i - 1;
 
     D3D12_DESCRIPTOR_HEAP_DESC descriptorCPU;
     {
@@ -32,7 +32,8 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
         descriptorCPU.NodeMask          = 0;
     }
     ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorCPU, IID_PPV_ARGS(&cpuDescriptorHeap)));
-    cpuHeapStartHandle = cpuDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    cpuHeapStartHandleCPU = cpuDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    gpuHeapStartHandleCPU = cpuDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
     if (type != EHeapDescriptorType::CBV_SRV_UAV) return;
 
@@ -44,7 +45,8 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
         descriptorGPU.NodeMask          = 0;
     }
     ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorGPU, IID_PPV_ARGS(&gpuDescriptorHeap)));
-    gpuHeapStartHandle = gpuDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+    cpuHeapStartHandleGPU = gpuDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    gpuHeapStartHandleGPU = gpuDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
 
 size_t D3DDescriptorHeap::RequestElement()

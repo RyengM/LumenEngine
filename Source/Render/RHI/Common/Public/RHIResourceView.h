@@ -8,7 +8,8 @@ namespace Lumen::Render
     {
     public:
         int offset;
-        size_t gpuAddress;
+        // CPU descriptor heap
+        uint64_t gpuAddress;
     };
 
     class RHIRenderTargetView : public RHIResourceView

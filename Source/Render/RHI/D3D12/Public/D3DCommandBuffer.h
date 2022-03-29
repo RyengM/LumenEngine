@@ -16,12 +16,6 @@ namespace Lumen::Render
 
         virtual void Clear() override;
 
-        virtual void ClearRenderTarget(RHITexture* texture, RHIRenderTargetView* rtvView, const Vec4& color) override;
-
-        virtual void DrawUI(RHIDescriptorHeap* rhiHeap, RHITexture* texture, RHIRenderTargetView* rtvView, void* data) override;
-
-        virtual void DrawIndexed(RHIResource* rhiResource, RHIRenderTargetView* rhiRtvView, RHIDepthStencilView* rhiDsvView, RHIDescriptorHeap* rhiHeap, RHIPipelineState* rhiPso, RHIMeshGeometry* rhiGeo) override;
-
     public:
         size_t                                                  indexInPool;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>       commandList;

@@ -1,27 +1,13 @@
 #pragma once
 
+#include "Core/Math/Public/MathUtil.h"
 #include <vector>
 #include <string>
 
+using namespace Lumen::Core;
+
 namespace Lumen::Game
 {
-    // Vector in math is inherited from baseObject whose size the not the same as vector itself
-    // So declare pure vector structure here as Float
-    struct Float2
-    {
-        float x = 0, y = 0;
-    };
-
-    struct Float3
-    {
-        float x = 0, y = 0, z = 0;
-    };
-
-    struct Float4
-    {
-        float x = 0, y = 0, z = 0, w = 0;
-    };
-
     struct Vertex
     {
         Float3 pos;
@@ -40,10 +26,12 @@ namespace Lumen::Game
         bool bTangent = false;
 
         std::vector<Vertex> vertices;
-        std::vector<std::uint16_t> indices;
+        std::vector<std::uint32_t> indices;
 
         Mesh() {}
-        Mesh(const Mesh& mesh);
+        Mesh(const Mesh& rhs);
+        Mesh(Mesh&& rhs);
+        ~Mesh() {}
     };
 
     class MeshLoader

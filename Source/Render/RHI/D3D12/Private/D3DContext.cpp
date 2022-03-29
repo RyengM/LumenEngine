@@ -24,7 +24,7 @@ D3DContext::D3DContext(const WindowInfo& windowInfo)
     mSwapChain = std::make_unique<D3DSwapChain>(mDevice.get(), mGraphicsContext.get(), windowInfo.mainWnd, windowInfo.clientWidth, windowInfo.clientHeight);
     mSwapChain->InitResourceView(mDevice.get(), mRtvDescriptorHeap.get(), mDsvDescriptorHeap.get());
 
-    // Allocate an element of srv heap for imgui
+    // Allocate an element of srv heap for imgui: font
     INT offset = mCbvSrvUavDescriptorHeap->RequestElement();
     D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle = mCbvSrvUavDescriptorHeap->gpuDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     cpuDescriptorHandle.ptr += offset * mCbvSrvUavDescriptorHeap->descriptorSize;
@@ -70,32 +70,50 @@ void D3DContext::Present()
     mSwapChain->Present();
 }
 
-void D3DContext::Prepare()
-{
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetDepthStencilBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-    auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "PrepareRender"));
-    auto cmdList = cmdBuffer->commandList;
-
-    // Change depth buffer state to depth write
-    cmdList->ResourceBarrier(1, &barrier);
-
-    ExecuteCmdBuffer(cmdBuffer);
-    ReleaseCmdBuffer(cmdBuffer);
-}
-
-void D3DContext::UpdatePassCB(const Camera& camera)
+void D3DContext::UpdatePassCB(const Camera& camera, const DirectionalLight& light)
 {
     auto passCB = mGraphicsContext->currentFrameResource->passBuffers.get();
     PassConstants constants;
-    XMStoreFloat4x4(&constants.viewProj, MathHelper::ConvertToDxMatrix(camera.GetViewProjMatrix()));
+
+    DirectX::XMMATRIX view = MathHelper::ConvertToDxMatrix(camera.GetViewMatrix());
+    DirectX::XMMATRIX proj = MathHelper::ConvertToDxMatrix(camera.GetProjMatrix());
+    DirectX::XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+    DirectX::XMVECTOR viewDet = XMMatrixDeterminant(view);
+    DirectX::XMVECTOR projDet = XMMatrixDeterminant(proj);
+    DirectX::XMVECTOR viewProjDet = XMMatrixDeterminant(viewProj);
+    DirectX::XMMATRIX invView = XMMatrixInverse(&viewDet, view);
+    DirectX::XMMATRIX invProj = XMMatrixInverse(&projDet, proj);
+    DirectX::XMMATRIX invViewProj = XMMatrixInverse(&viewProjDet, viewProj);
+    // Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+    DirectX::XMMATRIX T(
+        0.5f, 0.0f, 0.0f, 0.0f,
+        0.0f, -0.5f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.0f, 1.0f);
+
+    DirectX::XMMATRIX viewProjTex = XMMatrixMultiply(viewProj, T);
+
+    XMStoreFloat4x4(&constants.view, view);
+    XMStoreFloat4x4(&constants.invView, invView);
+    XMStoreFloat4x4(&constants.proj, proj);
+    XMStoreFloat4x4(&constants.invProj,invProj);
+    XMStoreFloat4x4(&constants.viewProj, viewProj);
+    XMStoreFloat4x4(&constants.invViewProj, invViewProj);
+    constants.eyePosW = MathHelper::ConvertToDxFloat3(camera.GetPos());
+    constants.nearZ = camera.GetNearZ();
+    constants.farZ = camera.GetFarZ();
+    constants.ambientLight = { 0.4f, 0.4f, 0.6f, 1.0f };
+    constants.light[0].position = MathHelper::ConvertToDxFloat3(light.GetPosition());
+    constants.light[0].direction = MathHelper::ConvertToDxFloat3(light.GetDirection());
+    constants.light[0].strength = MathHelper::ConvertToDxFloat3(light.strength);
+
     passCB->SetData<PassConstants>(0, constants, true);
 }
 
-void D3DContext::RenderScene()
+void D3DContext::RenderScene(uint32_t width, uint32_t height)
 {
-    CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetCurrentBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetCurrentBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSceneRT->colorBuffer->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSceneRT->colorBuffer->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "RenderScene"));
     auto cmdList = cmdBuffer->commandList;
@@ -105,27 +123,26 @@ void D3DContext::RenderScene()
     auto frameResource = mGraphicsContext->currentFrameResource;
 
     cmdList->Close();
-    //ThrowIfFailed(frameResource->commandAllocator->Reset());
     ThrowIfFailed(cmdList->Reset(frameResource->commandAllocator.Get(), pso->d3dPso.Get()));
 
     D3D12_VIEWPORT mScreenViewport;
     mScreenViewport.TopLeftX = 0;
     mScreenViewport.TopLeftY = 0;
-    mScreenViewport.Width = static_cast<float>(1920);
-    mScreenViewport.Height = static_cast<float>(1080);
+    mScreenViewport.Width = static_cast<float>(width);
+    mScreenViewport.Height = static_cast<float>(height);
     mScreenViewport.MinDepth = 0.0f;
     mScreenViewport.MaxDepth = 1.0f;
-    D3D12_RECT mScissorRect = { 0, 0, 1920, 1080 };
+    D3D12_RECT mScissorRect = { 0, 0, (LONG)width, (LONG)height };
     cmdList->RSSetViewports(1, &mScreenViewport);
     cmdList->RSSetScissorRects(1, &mScissorRect);
 
     cmdList->ResourceBarrier(1, &beforeBarrier);
 
-    const float clearColor[4] = { 0.9f, 0.3f, 0.5f, 1.0f };
-    cmdList->ClearRenderTargetView(mSwapChain->GetCurrentBackBufferView()->descriptorHandle, clearColor, 0, nullptr);
-    cmdList->ClearDepthStencilView(mSwapChain->GetDepthStencilView()->descriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
+    const float clearColor[4] = { 0, 0, 0, 0 };
+    cmdList->ClearRenderTargetView(mSceneRT->colorBuffer->rtvView->descriptorHandle, clearColor, 0, nullptr);
+    cmdList->ClearDepthStencilView(mSceneRT->depthBuffer->dsvView->descriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
-    cmdList->OMSetRenderTargets(1, &mSwapChain->GetCurrentBackBufferView()->descriptorHandle, true, &mSwapChain->GetDepthStencilView()->descriptorHandle);
+    cmdList->OMSetRenderTargets(1, &mSceneRT->colorBuffer->rtvView->descriptorHandle, true, &mSceneRT->depthBuffer->dsvView->descriptorHandle);
     ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvUavDescriptorHeap->gpuDescriptorHeap.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
@@ -137,7 +154,8 @@ void D3DContext::RenderScene()
     cmdList->IASetIndexBuffer(&iBufferView);
     cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    cmdList->SetGraphicsRootConstantBufferView(0, frameResource->passBuffers->uploadResource->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootConstantBufferView(1, frameResource->passBuffers->uploadResource->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("boxBaseColor")->srvView->gpuDescriptorHandleGPU);
     cmdList->DrawIndexedInstanced(geo->indexCount, 1, 0, 0, 0);
     cmdList->ResourceBarrier(1, &afterBarrier);
 
@@ -145,108 +163,138 @@ void D3DContext::RenderScene()
     ReleaseCmdBuffer(cmdBuffer);
 }
 
-void D3DContext::CreateVisualBuffer(VisualBuffer* buffer)
+void D3DContext::DrawUI(void* data)
 {
-    TextureDescriptor desc;
-    {
-        desc.width = (int)800;
-        desc.height = (int)600;
-        desc.slices = 1;
-        desc.sparse = false;
-        desc.mipLevel = 1;
-        desc.anisoLevel = 1;
-        desc.sample = EMSAASample::None;
-        desc.usageType = EUsageType::RenderTarget;
-        desc.textureType = ETextureType::Tex2D;
-        desc.storageType = EStorageType::Default;
-        desc.format = EGraphicsFormat::R8G8B8A8_UNorm;
-    }
-    auto tex = std::make_unique<D3DTexture>(mDevice.get(), desc);
+    auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "RenderScene"));
+    auto cmdList = cmdBuffer->commandList;
 
-    buffer->srv = std::make_unique<D3DShaderResourceView>(mDevice.get(), mCbvSrvUavDescriptorHeap.get(), tex.get());
-    buffer->rtv = std::make_unique<D3DRenderTargetView>(mDevice.get(), mRtvDescriptorHeap.get(), tex.get());
-    buffer->srvHandle = buffer->srv->gpuAddress;
-    buffer->rtvHandle = buffer->rtv->gpuAddress;
+    const float clearColor[4] = { 0.2, 0.3, 0.4, 1.0 };
 
-    mTextures[buffer->name] = std::move(tex);
+    CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetCurrentBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetCurrentBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+    cmdList->ResourceBarrier(1, &beforeBarrier);
+    cmdList->ClearRenderTargetView(mSwapChain->GetCurrentBackBufferView()->descriptorHandle, clearColor, 0, nullptr);
+    cmdList->ClearDepthStencilView(mSwapChain->GetDepthStencilView()->descriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
+
+    cmdList->OMSetRenderTargets(1, &mSwapChain->GetCurrentBackBufferView()->descriptorHandle, true, &mSwapChain->GetDepthStencilView()->descriptorHandle);
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvUavDescriptorHeap->gpuDescriptorHeap.Get() };
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    ImGui_ImplDX12_RenderDrawData(static_cast<ImDrawData*>(data), cmdList.Get());
+    cmdList->ResourceBarrier(1, &afterBarrier);
+
+    ExecuteCmdBuffer(cmdBuffer);
+    ReleaseCmdBuffer(cmdBuffer);
 }
 
-// No obj load version
-void D3DContext::CreateGeometry(RHICommandBuffer* cmdBuffer, const Mesh& mesh)
+void D3DContext::CreateSceneBuffer(VisualBuffer* buffer)
 {
-    D3DCommandBuffer* cmdList = static_cast<D3DCommandBuffer*>(cmdBuffer);
+    TextureDescriptor colorDescriptor;
+    {
+        colorDescriptor.width = buffer->width;
+        colorDescriptor.height = buffer->height;
+        colorDescriptor.slices = 1;
+        colorDescriptor.sparse = false;
+        colorDescriptor.mipLevel = 1;
+        colorDescriptor.anisoLevel = 1;
+        colorDescriptor.sample = EMSAASample::None;
+        colorDescriptor.usageType = EUsageType::RenderTarget;
+        colorDescriptor.textureType = ETextureType::Tex2D;
+        colorDescriptor.storageType = EStorageType::Default;
+        colorDescriptor.format = EGraphicsFormat::R8G8B8A8_UNorm;
+        colorDescriptor.initState = ETextureInitState::PixelShaderResource;
+    }
+    TextureDescriptor depthStencilDesc = colorDescriptor;
+    {
+        depthStencilDesc.usageType = EUsageType::DepthStencil;
+        depthStencilDesc.format = EGraphicsFormat::D24_S8_UNorm;
+        depthStencilDesc.initState = ETextureInitState::DepthWrite;
+    }
+    mSceneRT = std::make_unique<D3DDepthRenderTarget>(mDevice.get(), mCbvSrvUavDescriptorHeap.get(), mRtvDescriptorHeap.get(), mDsvDescriptorHeap.get(), colorDescriptor, depthStencilDesc);
+    buffer->srvHandle = mSceneRT->colorBuffer->srvView->gpuDescriptorHandleGPU.ptr;
+}
+
+void D3DContext::CreatePlainTexture(Texture& texture)
+{
+    auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreatePlainTexture"));
+    auto cmdList = cmdBuffer->commandList;
+
+    TextureDescriptor texDescriptor;
+    {
+        texDescriptor.width = texture.width;
+        texDescriptor.height = texture.height;
+        texDescriptor.slices = 1;
+        texDescriptor.sparse = false;
+        texDescriptor.mipLevel = 1;
+        texDescriptor.anisoLevel = 1;
+        texDescriptor.sample = EMSAASample::None;
+        texDescriptor.usageType = EUsageType::Default;
+        texDescriptor.textureType = ETextureType::Tex2D;
+        texDescriptor.storageType = EStorageType((uint32_t)EStorageType::Default | (uint32_t)EStorageType::Static);
+        texDescriptor.format = EGraphicsFormat::R8G8B8A8_UNorm;
+        texDescriptor.initState = ETextureInitState::CopyDest;
+    }
+    auto tex = std::make_unique<D3DPlainTexture>(mDevice.get(), mCbvSrvUavDescriptorHeap.get(), texDescriptor);
+
+    // Copy data from upload buffer to default buffer
+    {
+        D3D12_SUBRESOURCE_DATA texData = {};
+        texData.pData = texture.data;
+        texData.RowPitch = texture.width * 4;   // RGBA
+        texData.SlicePitch = texture.height * texData.RowPitch;
+        UpdateSubresources(cmdList.Get(), tex->resource->defaultResource.Get(), tex->resource->uploadResource.Get(), 0, 0, 1, &texData);
+    }
+
+    // Change texture state to pixel shader resource
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    cmdList->ResourceBarrier(1, &barrier);
+
+    mTextures[texture.name] = std::move(tex);
+
+    ExecuteCmdBuffer(cmdBuffer);
+    ReleaseCmdBuffer(cmdBuffer);
+}
+
+void D3DContext::CreateGeometry(const Mesh& mesh)
+{
+    auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreateGeo"));
+    auto cmdList = cmdBuffer->commandList;
 
     auto geometry = std::make_unique<D3DMeshGeometry>();
     geometry->name = mesh.name;
 
-    std::array<Vertex, 8> vertices =
-    {
-        Vertex(Float3(-1.f, -1.f, -1.f)),
-        Vertex(Float3(-1.f, +1.f, -1.f)),
-        Vertex(Float3(+1.f, +1.f, -1.f)),
-        Vertex(Float3(+1.f, -1.f, -1.f)),
-        Vertex(Float3(-1.f, -1.f, +1.f)),
-        Vertex(Float3(-1.f, +1.f, +1.f)),
-        Vertex(Float3(+1.f, +1.f, +1.f)),
-        Vertex(Float3(+1.f, -1.f, +1.f))
-    };
-
-    std::array<std::uint16_t, 36> indices =
-    {
-        // front face
-        0, 1, 2,
-        0, 2, 3,
-
-        // back face
-        4, 6, 5,
-        4, 7, 6,
-
-        // left face
-        4, 5, 1,
-        4, 1, 0,
-
-        // right face
-        3, 2, 6,
-        3, 6, 7,
-
-        // top face
-        1, 5, 6,
-        1, 6, 2,
-
-        // bottom face
-        4, 0, 3,
-        4, 3, 7
-    };
-
-    const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-    const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+    const UINT vbByteSize = (UINT)mesh.vertices.size() * sizeof(Vertex);
+    const UINT ibByteSize = (UINT)mesh.indices.size() * sizeof(std::uint32_t);
 
     geometry->vertexByteStride = sizeof(Vertex);
     geometry->vertexBufferByteSize = vbByteSize;
-    geometry->indexFormat = DXGI_FORMAT_R16_UINT;
+    geometry->indexFormat = DXGI_FORMAT_R32_UINT;
     geometry->indexBufferByteSize = ibByteSize;
-    geometry->indexCount = indices.size();
+    geometry->indexCount = mesh.indices.size();
 
     ThrowIfFailed(D3DCreateBlob(vbByteSize, &geometry->vertexBufferCPU));
-    CopyMemory(geometry->vertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+    CopyMemory(geometry->vertexBufferCPU->GetBufferPointer(), mesh.vertices.data(), vbByteSize);
 
     ThrowIfFailed(D3DCreateBlob(ibByteSize, &geometry->indexBufferCPU));
-    CopyMemory(geometry->indexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+    CopyMemory(geometry->indexBufferCPU->GetBufferPointer(), mesh.indices.data(), ibByteSize);
 
-    // Create resource buffer and upload buffer
+    // Create resource buffer
     BufferDescriptor desc;
     {
         desc.name = mesh.name;
-        desc.count = vertices.size();
+        desc.count = (UINT)mesh.vertices.size();
         desc.stride = sizeof(Vertex);
         desc.usageType = EUsageType::Default;
         desc.bufferType = EBufferType::Vertex;
         desc.storageType = EStorageType((uint32_t)EStorageType::Static | (uint32_t)EStorageType::Default);
+        desc.initState = EBufferInitState::CopyDest;
     };
     geometry->vertexBufferGPU = std::make_unique<D3DBuffer>(mDevice.get(), desc);
     {
-        desc.count = indices.size();
-        desc.stride = sizeof(std::uint16_t);
+        desc.count = (UINT)mesh.indices.size();
+        desc.stride = sizeof(uint32_t);
         desc.bufferType = EBufferType::Index;
     }
     geometry->indexBufferGPU = std::make_unique<D3DBuffer>(mDevice.get(), desc);
@@ -254,105 +302,41 @@ void D3DContext::CreateGeometry(RHICommandBuffer* cmdBuffer, const Mesh& mesh)
     // Copy data from upload buffer to default buffer
     {   // Vertex
         D3D12_SUBRESOURCE_DATA subResourceData = {};
-        subResourceData.pData = vertices.data();
+        subResourceData.pData = mesh.vertices.data();
         subResourceData.RowPitch = vbByteSize;
         subResourceData.SlicePitch = subResourceData.RowPitch;
 
-        CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->vertexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-        CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->vertexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->vertexBufferGPU->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
 
-        cmdList->commandList->ResourceBarrier(1, &beforeBarrier);
-        UpdateSubresources<1>(cmdList->commandList.Get(), geometry->vertexBufferGPU->defaultResource.Get(), geometry->vertexBufferGPU->uploadResource.Get(), 0, 0, 1, &subResourceData);
-        cmdList->commandList->ResourceBarrier(1, &afterBarrier);
+        UpdateSubresources(cmdList.Get(), geometry->vertexBufferGPU->resource->defaultResource.Get(), geometry->vertexBufferGPU->resource->uploadResource.Get(), 0, 0, 1, &subResourceData);
+        cmdList->ResourceBarrier(1, &barrier);
     }
     {   // Index
         D3D12_SUBRESOURCE_DATA subResourceData = {};
-        subResourceData.pData = indices.data();
+        subResourceData.pData = mesh.indices.data();
         subResourceData.RowPitch = ibByteSize;
         subResourceData.SlicePitch = subResourceData.RowPitch;
 
-        CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->indexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-        CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->indexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->indexBufferGPU->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
 
-        cmdList->commandList->ResourceBarrier(1, &beforeBarrier);
-        UpdateSubresources<1>(cmdList->commandList.Get(), geometry->indexBufferGPU->defaultResource.Get(), geometry->indexBufferGPU->uploadResource.Get(), 0, 0, 1, &subResourceData);
-        cmdList->commandList->ResourceBarrier(1, &afterBarrier);
+        UpdateSubresources(cmdList.Get(), geometry->indexBufferGPU->resource->defaultResource.Get(), geometry->indexBufferGPU->resource->uploadResource.Get(), 0, 0, 1, &subResourceData);
+        cmdList->ResourceBarrier(1, &barrier);
     }
 
     mMeshes[mesh.name] = std::move(geometry);
+
+    ExecuteCmdBuffer(cmdBuffer);
+    ReleaseCmdBuffer(cmdBuffer);
 }
 
-//void D3DContext::CreateGeometry(RHICommandBuffer* cmdBuffer, const Mesh& mesh)
-//{
-//    D3DCommandBuffer* cmdList = static_cast<D3DCommandBuffer*>(cmdBuffer);
-//
-//    auto geometry = std::make_unique<D3DMeshGeometry>();
-//    geometry->name = mesh.name;
-//
-//    const UINT vbByteSize = (UINT)mesh.vertices.size() * sizeof(Vertex);
-//    const UINT ibByteSize = (UINT)mesh.indices.size() * sizeof(std::uint16_t);
-//
-//    geometry->vertexByteStride = sizeof(Vertex);
-//    geometry->vertexBufferByteSize = vbByteSize;
-//    geometry->indexBufferByteSize = ibByteSize;
-//
-//    ThrowIfFailed(D3DCreateBlob(vbByteSize, &geometry->vertexBufferCPU));
-//    CopyMemory(geometry->vertexBufferCPU->GetBufferPointer(), mesh.vertices.data(), vbByteSize);
-//
-//    ThrowIfFailed(D3DCreateBlob(ibByteSize, &geometry->indexBufferCPU));
-//    CopyMemory(geometry->indexBufferCPU->GetBufferPointer(), mesh.indices.data(), ibByteSize);
-//
-//    // Create resource buffer
-//    BufferDescriptor desc;
-//    {
-//        desc.name = mesh.name;
-//        desc.count = (UINT)mesh.vertices.size();
-//        desc.stride = sizeof(Vertex);
-//        desc.usageType = EUsageType::Default;
-//        desc.bufferType = EBufferType::Vertex;
-//        desc.storageType = EStorageType((uint32_t)EStorageType::Static | (uint32_t)EStorageType::Default);
-//    };
-//    geometry->vertexBufferGPU = std::make_unique<D3DBuffer>(mDevice.get(), desc);
-//    {
-//        desc.count = (UINT)mesh.indices.size();
-//        desc.stride = sizeof(uint16_t);
-//        desc.bufferType = EBufferType::Index;
-//    }
-//    geometry->indexBufferGPU = std::make_unique<D3DBuffer>(mDevice.get(), desc);
-//
-//    // Copy data from upload buffer to default buffer
-//    {   // Vertex
-//        D3D12_SUBRESOURCE_DATA subResourceData = {};
-//        subResourceData.pData = mesh.vertices.data();
-//        subResourceData.RowPitch = vbByteSize;
-//        subResourceData.SlicePitch = subResourceData.RowPitch;
-//
-//        CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->vertexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-//        CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->vertexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-//
-//        cmdList->commandList->ResourceBarrier(1, &beforeBarrier);
-//        UpdateSubresources<1>(cmdList->commandList.Get(), geometry->vertexBufferGPU->defaultResource.Get(), geometry->vertexBufferGPU->uploadResource.Get(), 0, 0, 1, &subResourceData);
-//        cmdList->commandList->ResourceBarrier(1, &afterBarrier);
-//    }
-//    {   // Index
-//        D3D12_SUBRESOURCE_DATA subResourceData = {};
-//        subResourceData.pData = mesh.indices.data();
-//        subResourceData.RowPitch = ibByteSize;
-//        subResourceData.SlicePitch = subResourceData.RowPitch;
-//
-//        CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->indexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-//        CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(geometry->indexBufferGPU->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-//
-//        cmdList->commandList->ResourceBarrier(1, &beforeBarrier);
-//        UpdateSubresources<1>(cmdList->commandList.Get(), geometry->indexBufferGPU->defaultResource.Get(), geometry->indexBufferGPU->uploadResource.Get(), 0, 0, 1, &subResourceData);
-//        cmdList->commandList->ResourceBarrier(1, &afterBarrier);
-//    }
-//
-//    mMeshes[mesh.name] = std::move(geometry);
-//}
-
-void D3DContext::CreateShaders(const ShaderLab& shaderlab)
+void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
 {
+    Texture tex;
+    auto baseTexture = std::get<std::string>(shaderlab.properties.at("_MainTex").value);
+    TextureLoader::LoadTexture(&tex, baseTexture);
+    tex.name = "boxBaseColor";
+    CreatePlainTexture(tex);
+
     for (auto kernel : shaderlab.category.kernels)
     {
         auto shader = std::make_unique<D3DShader>(kernel.hlsl);
@@ -366,31 +350,4 @@ RHICommandContext* D3DContext::GetContext(const EContextType& type)
 {
     // There is only graphics buffer pool now, need to be expanded
     return mGraphicsContext.get();
-}
-
-RHIDescriptorHeap* D3DContext::GetDescriptorHeap(const EHeapDescriptorType& type)
-{
-    if (type == EHeapDescriptorType::CBV_SRV_UAV)
-        return mCbvSrvUavDescriptorHeap.get();
-    else if (type == EHeapDescriptorType::DSV)
-        return mDsvDescriptorHeap.get();
-    else if (type == EHeapDescriptorType::RTV)
-        return mRtvDescriptorHeap.get();
-
-    return mSamplerDescriptorHeap.get();
-}
-
-RHIRenderTargetView* D3DContext::GetBackBufferView()
-{
-    return mSwapChain->GetCurrentBackBufferView();
-}
-
-RHITexture* D3DContext::GetBackBuffer()
-{
-    return mSwapChain->GetCurrentBuffer();
-}
-
-RHIDepthStencilView* D3DContext::GetBackDepthStencilView()
-{
-    return mSwapChain->GetDepthStencilView();
 }

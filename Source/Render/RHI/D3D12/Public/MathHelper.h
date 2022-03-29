@@ -67,7 +67,16 @@ public:
             1.0f);
     }
 
-    static DirectX::XMMATRIX ConvertToDxMatrix(Lumen::Core::Mat4 mat)
+    static DirectX::XMFLOAT3 ConvertToDxFloat3(const Lumen::Core::Vec3& vec)
+    {
+        DirectX::XMFLOAT3 A;
+        A.x = vec.x;
+        A.y = vec.y;
+        A.z = vec.z;
+        return A;
+    }
+
+    static DirectX::XMMATRIX ConvertToDxMatrix(const Lumen::Core::Mat4& mat)
     {
         // Matrix should be transposed
         DirectX::XMMATRIX A;

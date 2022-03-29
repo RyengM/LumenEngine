@@ -9,8 +9,6 @@ using namespace Lumen::Game;
 using namespace Lumen::Core;
 using namespace Lumen::Render;
 
-D3D12_CPU_DESCRIPTOR_HANDLE gSceneBufferHandle;
-
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
 {
@@ -90,14 +88,9 @@ void WindowsFramework::UpdateUI()
         if (proxy->mDrawData->CmdListsCount == 0) continue;
 
         // Update UI in render thread
-        /*ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
-            RHICommandBuffer* cmdBuffer = graphicsContext->RequestCmdBuffer(EContextType::Graphics, "UpdateUI");
-
-            cmdBuffer->DrawUI(graphicsContext->GetDescriptorHeap(EHeapDescriptorType::CBV_SRV_UAV), graphicsContext->GetBackBuffer(), graphicsContext->GetBackBufferView(), proxy->mDrawData);
-
-            graphicsContext->ExecuteCmdBuffer(cmdBuffer);
-            graphicsContext->ReleaseCmdBuffer(cmdBuffer);
-        });*/
+        ENQUEUE_RENDER_COMMAND("UpdateUI", [proxy](RHIContext* graphicsContext) {
+            graphicsContext->DrawUI(proxy->mDrawData);
+        });
     }
 }
 
@@ -106,53 +99,23 @@ void WindowsFramework::Clean()
     mImguiManager.Clear();
 }
 
-bool bShowDemoWindow = true;
-bool bShowAnotherWindow = false;
-ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 void WindowsFramework::UpdateGuiWindow()
 {
-    // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-    if (bShowDemoWindow)
-        ImGui::ShowDemoWindow(&bShowDemoWindow);
-
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    // Show a simple window
     {
-        static float f = 0.0f;
-        static int counter = 0;
-
-        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &bShowDemoWindow);       // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &bShowAnotherWindow);
-
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clearColor);  // Edit 3 floats representing a color
-
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-
+        ImGui::Begin("Profiler");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
     }
-
-    // 3. Show another simple window.
-    if (bShowAnotherWindow)
-    {
-        ImGui::Begin("Another Window", &bShowAnotherWindow);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            bShowAnotherWindow = false;
-        ImGui::End();
-    }
     
-    // 4. Show render tagret
+    // Show render tagret
     {
-        ImGui::Begin("Render Target");
-        ImGui::Image((ImTextureID)mEngine.GetSceneBufferHandle(), ImVec2(800, 600));
+        ImGui::Begin("Scene");
+        if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
+        {
+            auto sceneBufPtr = mEngine.GetSceneBufferPtr();
+            ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, ImVec2(sceneBufPtr->width, sceneBufPtr->height));
+        }
         ImGui::End();
     }
 }

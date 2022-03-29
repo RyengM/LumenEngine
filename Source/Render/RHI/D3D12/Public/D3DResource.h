@@ -1,59 +1,74 @@
 #pragma once
 
-#include "D3DDevice.h"
-#include "Render/RHI/Common/Public/RHIResource.h"
-#include "Render/RHI/Common/Public/RHICommandBuffer.h"
+#include "D3DResourceView.h"
+#include <DirectXMath.h>
 
 namespace Lumen::Render
 {
-    class D3DResourceUtility
-    {
-    public:
-        static DXGI_FORMAT GetTextureFormat(EGraphicsFormat format);
-        static DXGI_FORMAT GetTextureViewFormat(EGraphicsFormat format);
-        static D3D12_RESOURCE_DIMENSION GetResourceDimension(ETextureType type);
-        static D3D12_RTV_DIMENSION GetRTVDimension(ETextureType type);
-        static D3D12_SRV_DIMENSION GetSRVDimension(ETextureType type);
-        static D3D12_RESOURCE_FLAGS GetTextureFlags(EUsageType flag);
-    };
-
     struct D3DBuffer : public RHIBuffer
     {
+        D3DBuffer() = default;
         D3DBuffer(RHIDevice* rhiDevice, const BufferDescriptor& descriptor);
-        // Update buffer field, constant buffer must be multiplies of 256 bytes
-        template<typename T>
-        void SetData(int index, const T& data, bool bConstant)
-        {
-            if ((uint32_t)descriptor.storageType & (uint32_t)EStorageType::Static || (uint32_t)descriptor.storageType & (uint32_t)EStorageType::Dynamic)
-            {
-                int bytesize = bConstant ? ((sizeof(T) + 255) & ~255) : sizeof(T);
-                BYTE* uploadData;
-                // Map cpu pointer to gpu upload resource so we can copy data to resource
-                ThrowIfFailed(uploadResource->Map(0, nullptr, reinterpret_cast<void**>(&uploadData)));
-                memcpy(&uploadData[index * bytesize] , &data, sizeof(T));
-                uploadResource->Unmap(0, nullptr);
-            }
-        }
-        void UploadData(RHICommandBuffer* rhiCmdBuffer);
 
-        Microsoft::WRL::ComPtr<ID3D12Resource>              defaultResource;
-        Microsoft::WRL::ComPtr<ID3D12Resource>              uploadResource;
-        Microsoft::WRL::ComPtr<ID3D12Resource>              readbackResource;
+        std::unique_ptr<D3DBufferResource>                  resource;
     };
 
-    struct D3DTexture : public RHITexture
+    struct D3DPlainTexture : public RHIPlainTexture
     {
-        D3DTexture() = default;
-        D3DTexture(RHIDevice* rhiDevice, const TextureDescriptor& descriptor);
+        D3DPlainTexture() = default;
+        D3DPlainTexture(RHIDevice* rhiDevice, D3DDescriptorHeap* srvDescHeap, const TextureDescriptor& desc);
 
-        Microsoft::WRL::ComPtr<ID3D12Resource>              defaultResource;
-        Microsoft::WRL::ComPtr<ID3D12Resource>              uploadResource;
-        Microsoft::WRL::ComPtr<ID3D12Resource>              readbackResource;
+        //void Set2DData(RHIDevice* device, const void* data);
+
+        std::unique_ptr<D3DTextureResource>                 resource;
+        std::unique_ptr<D3DShaderResourceView>              srvView;
+    };
+
+    struct D3DRenderTarget : public RHIRenderTarget
+    {
+        D3DRenderTarget() = default;
+        D3DRenderTarget(RHIDevice* rhiDevice, D3DDescriptorHeap* srvDescHeap, D3DDescriptorHeap* rtvDescHeap, const TextureDescriptor& desc);
+
+        std::unique_ptr<D3DTextureResource>                 resource;
+        std::unique_ptr<D3DShaderResourceView>              srvView;
+        std::unique_ptr<D3DRenderTargetView>                rtvView;
+    };
+
+    struct D3DDepthBuffer : public RHIDepthBuffer
+    {
+        D3DDepthBuffer() = default;
+        D3DDepthBuffer(RHIDevice* rhiDevice, D3DDescriptorHeap* srvDescHeap, D3DDescriptorHeap* dsvDescHeap, const TextureDescriptor& desc);
+
+        std::unique_ptr<D3DTextureResource>                 resource;
+        std::unique_ptr<D3DDepthStencilView>                dsvView;
+    };
+
+    struct D3DDepthRenderTarget : public RHIDepthRenderTarget
+    {
+        D3DDepthRenderTarget() = default;
+        D3DDepthRenderTarget(RHIDevice* rhiDevice, D3DDescriptorHeap* srvDescHeap, D3DDescriptorHeap* rtvDescHeap, D3DDescriptorHeap* dsvDescHeap, const TextureDescriptor& colorDesc, const TextureDescriptor& depthDesc);
+
+        TextureDescriptor                                   depthDescriptor;
+        std::unique_ptr<D3DRenderTarget>                    colorBuffer;
+        std::unique_ptr<D3DDepthBuffer>                     depthBuffer;
     };
 
     struct D3DMaterial : public RHIMaterial
     {
+        D3DMaterial() = default;
+        
+        // Index to constant buffer
+        int matCBIndex = -1;
 
+        // Index to SRV heap for diffuse texture
+        int diffuseSrvHeapIndex = -1;
+
+        // Index to SRV heap for normal texture
+        int normalSrvHeapIndex = -1;
+        
+        DirectX::XMFLOAT4 diffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+        DirectX::XMFLOAT3 fresnelR0 = { 0.01f, 0.01f, 0.01f };
+        float roughness = 0.25f;
     };
 
     struct D3DMeshGeometry : public RHIMeshGeometry
@@ -73,7 +88,7 @@ namespace Lumen::Render
         D3D12_VERTEX_BUFFER_VIEW VertexBufferView() const
         {
             D3D12_VERTEX_BUFFER_VIEW view;
-            view.BufferLocation = vertexBufferGPU->defaultResource->GetGPUVirtualAddress();
+            view.BufferLocation = vertexBufferGPU->resource->defaultResource->GetGPUVirtualAddress();
             view.StrideInBytes = vertexByteStride;
             view.SizeInBytes = vertexBufferByteSize;
             return view;
@@ -82,10 +97,20 @@ namespace Lumen::Render
         D3D12_INDEX_BUFFER_VIEW IndexBufferView()const
         {
             D3D12_INDEX_BUFFER_VIEW view;
-            view.BufferLocation = indexBufferGPU->defaultResource->GetGPUVirtualAddress();
+            view.BufferLocation = indexBufferGPU->resource->defaultResource->GetGPUVirtualAddress();
             view.Format = indexFormat;
             view.SizeInBytes = indexBufferByteSize;
             return view;
         }
+    };
+
+    struct D3DLight
+    {
+        DirectX::XMFLOAT3 strength = { 0.5f, 0.5f, 0.5f };
+        float falloffStart = 1.0f;
+        DirectX::XMFLOAT3 direction = { 0.0f, -1.0f, 0.0f };
+        float falloffEnd = 10.0f;
+        DirectX::XMFLOAT3 position = { 0.0f, 0.0f, 0.0f };
+        float spotPower = 64.0f;
     };
 }

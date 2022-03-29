@@ -41,11 +41,12 @@ D3DSwapChain::D3DSwapChain(RHIDevice* rhiDevice, RHICommandContext* rhiCmdContex
         texDescriptor.textureType = ETextureType::Tex2D;
         texDescriptor.storageType = EStorageType::Default;
         texDescriptor.format = EGraphicsFormat::R8G8B8A8_UNorm;
+        texDescriptor.initState = ETextureInitState::Common;
     }
 
     for (int i = 0; i < mSwapChainBufferCount; i++)
     {
-        mSwapChainBuffer[i] = std::make_unique<D3DTexture>();
+        mSwapChainBuffer[i] = std::make_unique<D3DTextureResource>();
         mSwapChainBuffer[i]->descriptor = texDescriptor;
         ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i]->defaultResource)));
     }
@@ -59,12 +60,14 @@ D3DSwapChain::D3DSwapChain(RHIDevice* rhiDevice, RHICommandContext* rhiCmdContex
         depthStencilDesc.mipLevel = 1;
         depthStencilDesc.anisoLevel = 1;
         depthStencilDesc.sample = EMSAASample::None;
-        depthStencilDesc.usageType = EUsageType::DeptnStencil;
+        depthStencilDesc.usageType = EUsageType::DepthStencil;
         depthStencilDesc.textureType = ETextureType::Tex2D;
         depthStencilDesc.storageType = EStorageType::Default;
         depthStencilDesc.format = EGraphicsFormat::D24_S8_UNorm;
+        depthStencilDesc.initState = ETextureInitState::DepthWrite;
     }
-    mDepthStencilBuffer = std::make_unique<D3DTexture>(device, depthStencilDesc);
+    mDepthStencilBuffer = std::make_unique<D3DTextureResource>(device, depthStencilDesc);
+    mDepthStencilBuffer->descriptor = depthStencilDesc;
 }
 
 void D3DSwapChain::InitResourceView(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap)
@@ -82,7 +85,7 @@ D3DRenderTargetView* D3DSwapChain::GetCurrentBackBufferView()
     return mSwapChainBufferView[mCurBackBufferIndex].get();
 }
 
-D3DTexture* D3DSwapChain::GetCurrentBuffer()
+D3DTextureResource* D3DSwapChain::GetCurrentBuffer()
 {
     return mSwapChainBuffer[mCurBackBufferIndex].get();
 }
@@ -92,7 +95,7 @@ D3DDepthStencilView* D3DSwapChain::GetDepthStencilView()
     return mDepthStencilView.get();
 }
 
-D3DTexture* D3DSwapChain::GetDepthStencilBuffer()
+D3DTextureResource* D3DSwapChain::GetDepthStencilBuffer()
 {
     return mDepthStencilBuffer.get();
 }

@@ -28,27 +28,21 @@ namespace Lumen::Render
 
         virtual void Present() override;
 
-        virtual void Prepare() override;
+        virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) override;
 
-        virtual void UpdatePassCB(const Camera& camera) override;
+        virtual void RenderScene(uint32_t width, uint32_t height) override;
 
-        virtual void RenderScene() override;
+        virtual void DrawUI(void* data) override;
 
-        virtual void CreateVisualBuffer(VisualBuffer* buffer) override;
+        virtual void CreateSceneBuffer(VisualBuffer* buffer) override;
 
-        virtual void CreateGeometry(RHICommandBuffer* cmdBuffer, const Mesh& mesh) override;
+        virtual void CreatePlainTexture(Texture& texture) override;
 
-        virtual void CreateShaders(const ShaderLab& shaderlab) override;
+        virtual void CreateGeometry(const Mesh& mesh) override;
+
+        virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
         virtual RHICommandContext* GetContext(const EContextType& type) override;
-
-        virtual RHIDescriptorHeap* GetDescriptorHeap(const EHeapDescriptorType& type) override;
-
-        virtual RHIRenderTargetView* GetBackBufferView() override;
-
-        virtual RHITexture* GetBackBuffer() override;
-        
-        virtual RHIDepthStencilView* GetBackDepthStencilView() override;
 
     private:
         std::unique_ptr<D3DDevice>                          mDevice;
@@ -58,12 +52,14 @@ namespace Lumen::Render
         std::unique_ptr<D3DCommandBufferPool>               mGraphicsBufferPool;
         std::unique_ptr<D3DCommandContext>                  mGraphicsContext;
 
+        std::unique_ptr<D3DDepthRenderTarget>               mSceneRT;
+
         std::unique_ptr<D3DDescriptorHeap>                  mCbvSrvUavDescriptorHeap;
         std::unique_ptr<D3DDescriptorHeap>                  mRtvDescriptorHeap;
         std::unique_ptr<D3DDescriptorHeap>                  mDsvDescriptorHeap;
         std::unique_ptr<D3DDescriptorHeap>                  mSamplerDescriptorHeap;
 
-        std::unordered_map<std::string, std::unique_ptr<D3DTexture>>            mTextures;
+        std::unordered_map<std::string, std::unique_ptr<D3DPlainTexture>>       mTextures;
         std::unordered_map<std::string, std::unique_ptr<D3DMeshGeometry>>       mMeshes;
         std::unordered_map<std::string, std::unique_ptr<D3DMaterial>>           mMaterials;
         std::unordered_map<std::string, std::unique_ptr<D3DShader>>             mShaders;

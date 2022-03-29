@@ -36,11 +36,11 @@ namespace Lumen::Game
 
         // Collection of all contexts
         std::vector<ImGuiContext*> mContexts;
-        ImGuiContext* mEditorContext;
+        ImGuiContext* mEditorContext = nullptr;
         std::unordered_map<ImGuiContext*, int> mContext2IndexMap;
 
         // Real place to store proxy memory
-        DrawDataProxy* mProxyStorage;
+        DrawDataProxy* mProxyStorage = nullptr;
         
         static int const mContextNum = 1;
     };

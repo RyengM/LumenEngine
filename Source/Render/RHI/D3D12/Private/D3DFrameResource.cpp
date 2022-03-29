@@ -17,13 +17,13 @@ D3DFrameResource::D3DFrameResource(RHIDevice* rhiDevice)
         desc.bufferType = EBufferType::Constant;
         desc.storageType = EStorageType::Dynamic;
     };
-    passBuffers = std::make_unique<D3DBuffer>(device, desc);
+    passBuffers = std::make_unique<D3DBufferResource>(device, desc);
     {
         desc.name = "objectCB";
         desc.count = 1024;
         desc.stride = CalcStride(sizeof(ObjectConstants));
     }
-    objectBuffers = std::make_unique<D3DBuffer>(device, desc);
+    objectBuffers = std::make_unique<D3DBufferResource>(device, desc);
 }
 
 D3DFrameResource::~D3DFrameResource()

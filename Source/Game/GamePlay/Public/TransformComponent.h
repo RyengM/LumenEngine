@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "Core/Math/Public/Vector.h"
+#include "Core/Math/Public/MathUtil.h"
 
 namespace Lumen::Game
 {
@@ -12,11 +12,11 @@ namespace Lumen::Game
 
     public:
         [[serialize(true)]]
-        Vec4 position;
+        Vec3 position;
         [[serialize(true)]]
-        Vec4 rotation;
+        Vec3 rotation;
         [[serialize(true)]]
-        Vec4 scale;
+        Vec3 scale;
 
         RTTR_REGISTRATION_FRIEND
         RTTR_ENABLE(Component)

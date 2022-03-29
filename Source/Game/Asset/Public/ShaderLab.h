@@ -93,6 +93,7 @@ namespace Lumen::Game
         Category category;
 
         ShaderLab() {};
-        ShaderLab(const ShaderLab& shader);
+        ShaderLab(const ShaderLab& rhs);
+        ShaderLab(ShaderLab&& rhs);
     };
 }
