@@ -9,6 +9,8 @@ namespace Lumen::Game
 {
     struct Material : public BaseObject
     {
+        std::string name;
+
         [[serialize(true)]]
         std::string shaderLabGuid;
     };

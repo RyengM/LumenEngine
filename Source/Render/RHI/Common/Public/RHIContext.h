@@ -6,6 +6,7 @@
 #include "RHICommandBuffer.h"
 #include "RHISwapChain.h"
 #include "Render/RenderCore/Public/VisualBuffer.h"
+#include "Game/Asset/Public/Scene.h"
 #include "Game/Asset/Public/ShaderLab.h"
 #include "Game/Asset/Public/Mesh.h"
 #include "Game/Asset/Public/Texture.h"
@@ -22,6 +23,12 @@ namespace Lumen::Render
         void*               mainWnd = nullptr;
         int                 clientWidth = 1920;
         int                 clientHeight = 1080;
+    };
+
+    struct ProfileData
+    {
+        float               gameThreadTickTime;
+        float               renderThreadTickTime;
     };
 
     class RHIContext

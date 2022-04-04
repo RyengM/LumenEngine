@@ -259,11 +259,11 @@ RTTR_INLINE bool array_range<T, Predicate>::empty() const
     if (m_pred(*itr))
         return false;
 
-    ++itr.m_ptr;
-    while(itr.m_ptr != m_end && !m_pred(*itr.m_ptr))
-    {
-        ++itr.m_ptr;
-    }
+    //++itr.m_ptr;
+    //while(itr.m_ptr != m_end && !m_pred(*itr.m_ptr))
+    //{
+    //    ++itr.m_ptr;
+    //}
 
     return (itr == cend());
 }

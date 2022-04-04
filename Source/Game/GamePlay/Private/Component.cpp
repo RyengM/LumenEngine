@@ -21,9 +21,5 @@ RTTR_REGISTRATION
 	;
 	registration::class_<Lumen::Game::Component>("Component")
 		.constructor<>()
-		.property("owner", &Component::owner)
-		(
-			metadata("serialize", true)
-		)
 	;
 }

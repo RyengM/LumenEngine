@@ -1,15 +1,9 @@
 #pragma once
 
-#include "Game/Asset/Public/ShaderLabCompiler.h"
-#include "Game/Asset/Public/Scene.h"
-#include "Game/Asset/Public/Texture.h"
-#include "Game/GamePlay/Public/Camera.h"
-#include "Game/GamePlay/Public/Light.h"
+#include "Game/Asset/Public/AssetManager.h"
 #include "Core/Common/Public/Config.h"
 #include "Render/RenderCore/Public/RenderThread.h"
 #include "Render/RenderCore/Public/VisualBuffer.h"
-
-#include <memory>
 
 using namespace Lumen::Render;
 
@@ -19,7 +13,7 @@ namespace Lumen::Game
     class EditorEngine
     {
     public:
-        // Launch modules, DO NOT submit render task at preinit stage except device initialization
+        // Launch modules
         void PreInit(const WindowInfo& windowInfo);
         // Load assets
         void Init();
@@ -32,20 +26,24 @@ namespace Lumen::Game
         void EndPlay();
 
         inline Config GetConfig() const noexcept { return mConfig; }
+        inline ProfileData* GetProfileData() noexcept { return &profileData; }
+        inline Scene* GetScene() noexcept { return mAssetManager->GetScene(); }
         inline VisualBuffer* GetSceneBufferPtr() const noexcept { return mSceneBuffer.get(); }
+
+    private:
+        // Use scene data from asset manager to build gpu resource
+        void CreateScene();
 
     private:
         // If editor is in playing mode, entity will not tick if beginplay is not activated
         bool bPlaying = false;
         // Config data
         Config mConfig;
-        std::unique_ptr<Scene> mScene;
+        // Profile data
+        ProfileData profileData;
+        // Scene display buffer
         std::unique_ptr<VisualBuffer> mSceneBuffer;
-        // Objects for test, remove later
-        std::unique_ptr<Mesh> mBox;
-        std::unique_ptr<Texture> mTexture;
-        std::unique_ptr<Camera> mCamera;
-        std::unique_ptr<ShaderLab> mShaderLab;
-        std::unique_ptr<DirectionalLight> mDirectionalLight;
+        // Asset data
+        std::unique_ptr<AssetManager> mAssetManager;
     };
 }

@@ -80,7 +80,7 @@ void Serializer::SerializeInternal(PrettyWriter<StringBuffer>& writer, const rtt
 
             writer.String(p.get_name().data(), static_cast<rapidjson::SizeType>(p.get_name().length()), false);
             if (!WriteVariant(writer, var))
-                LOG_WARN("cannot seralize property [" + std::string(p.get_name()) + "]");
+                LOG_WARN("cannot serialize property [" + std::string(p.get_name()) + "]");
         }
     }
     writer.EndObject();
@@ -126,7 +126,6 @@ void Serializer::DeserializeInternal(rttr::instance obj, Value& json)
                     auto associativeView = var.create_associative_view();
                     ReadAssociative(associativeView, jsonValue);
                 }
-
                 p.set_value(obj, var);
                 break;
             }
@@ -154,7 +153,7 @@ bool Serializer::WriteVariant(PrettyWriter<StringBuffer>& writer, const rttr::va
     auto wrappedType = valueType.is_wrapper() ? valueType.get_wrapped_type() : valueType;
     bool bWrapper = wrappedType != valueType;
 
-    // Atithmetic type
+    // Arithmetic type
     if (WriteAtomicTypes(writer, bWrapper ? wrappedType : valueType, bWrapper ? var.extract_wrapped_value() : var)) {}
     // Array type
     else if (var.is_sequential_container())

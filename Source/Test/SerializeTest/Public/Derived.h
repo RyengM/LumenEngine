@@ -12,6 +12,8 @@ namespace Lumen::Test
 {
     struct DerivedComponent : Component
     {
+        DerivedComponent();
+
         [[serialize(true)]]
         int mSub = 10;
 
@@ -35,7 +37,7 @@ namespace Lumen::Test
     class Derived : public Entity
     {
     public:
-        Derived() = default;
+        Derived();
         Derived(std::string_view name);
 
         void Func();
@@ -61,7 +63,7 @@ namespace Lumen::Test
         DerivedSubComponent mObj;
 
         [[serialize(true)]]
-        std::vector<DerivedSubComponent*> mObjs;
+        std::vector<DerivedSubComponent> mObjs;
 
     private:
         [[serialize(true)]]

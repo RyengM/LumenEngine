@@ -36,6 +36,7 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
         }
         else
         {
+            pFramework->HandleIO();
             // If command queue is full, do nothing, else start this frame
             if (!RenderCommandQueue::GetInstance().BeginEnqueue()) continue;
             pFramework->Tick();
@@ -101,10 +102,14 @@ void WindowsFramework::Clean()
 
 void WindowsFramework::UpdateGuiWindow()
 {
-    // Show a simple window
+    static int selected = 0;
+
+    // Show simple profiler
     {
         ImGui::Begin("Profiler");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("GameThread Tick %.2f (ms)", mEngine.GetProfileData()->gameThreadTickTime / 1000.f);
+        ImGui::Text("RenderThread Tick %.2f (ms)", mEngine.GetProfileData()->renderThreadTickTime / 1000.f);
         ImGui::End();
     }
     
@@ -117,6 +122,60 @@ void WindowsFramework::UpdateGuiWindow()
             ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, ImVec2(sceneBufPtr->width, sceneBufPtr->height));
         }
         ImGui::End();
+    }
+
+    // Show scene hierarchy
+    {
+        
+        ImGui::Begin("Hierarchy");
+        if (mEngine.GetScene())
+        {
+            for (int i = 0; i < mEngine.GetScene()->entities.size(); i++)
+            {
+                auto& entity = mEngine.GetScene()->entities[i];
+                if (ImGui::Selectable(entity.GetName().c_str(), selected == i))
+                    selected = i;
+            }
+        }
+        ImGui::End();
+    }
+
+    // Show object detail
+    {
+        ImGui::Begin("Detail");
+        ImGui::Text(mEngine.GetScene()->entities[selected].GetName().c_str());
+        Entity* selectedEntity = &mEngine.GetScene()->entities[selected];
+        if (ImGui::CollapsingHeader("Transform"))
+        {
+            auto transform = selectedEntity->GetTransform();
+            ImGui::LabelText("label", "Value");
+            {
+                ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position));
+                ImGui::DragFloat3("rotation", reinterpret_cast<float*>(&transform->rotation));
+                ImGui::DragFloat3("scale", reinterpret_cast<float*>(&transform->scale));
+            }
+        }
+        ImGui::End();
+    }
+
+    // Show asset manager
+    {
+        ImGui::Begin("Asset maneger");
+        ImGui::End();
+    }
+}
+
+// TODO
+void WindowsFramework::HandleIO()
+{
+    ImGuiContext& g = *GImGui;
+
+    for (auto& inputEvent : g.InputEventsQueue)
+    {
+        if (inputEvent.Type == ImGuiInputEventType::ImGuiInputEventType_MousePos)
+        {
+
+        }
     }
 }
 

@@ -1,0 +1,116 @@
+{
+    "camera": {
+        "mName": "",
+        "mChildEntities": [],
+        "mTransform": {
+            "position": {
+                "x": -6.0,
+                "y": 6.0,
+                "z": -6.0
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        "mMeshContainer": {
+            "meshRef": {
+                "guid": ""
+            }
+        },
+        "mMeshRenderer": {
+            "materialRef": {
+                "guid": ""
+            }
+        },
+        "mUp": {
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+        },
+        "mFront": {
+            "x": 1.0,
+            "y": -1.0,
+            "z": 1.0
+        },
+        "mFov": 90.0,
+        "mAspectRatio": 1.7777777910232544,
+        "mNearPlane": 0.10000000149011612,
+        "mFarPlane": 100.0
+    },
+    "light": {
+        "mName": "",
+        "mChildEntities": [],
+        "mTransform": {
+            "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rotation": {
+                "x": 1.0,
+                "y": -1.0,
+                "z": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "mMeshContainer": {
+            "meshRef": {
+                "guid": ""
+            }
+        },
+        "mMeshRenderer": {
+            "materialRef": {
+                "guid": ""
+            }
+        },
+        "strength": {
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+        }
+    },
+    "entities": [
+        {
+            "mName": "box",
+            "mChildEntities": [],
+            "mTransform": {
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "scale": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            },
+            "mMeshContainer": {
+                "meshRef": {
+                    "guid": "fbcc47a7-c788-4222-8f6d-ec8c86c283c8"
+                }
+            },
+            "mMeshRenderer": {
+                "materialRef": {
+                    "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
+                }
+            }
+        }
+    ]
+}

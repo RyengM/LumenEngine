@@ -7,7 +7,7 @@ namespace Lumen::Game
     class MeshRendererComponent : public Component
     {
     public:
-        MeshRendererComponent() = default;
+        MeshRendererComponent();
 
     public:
         [[serialize(true)]]

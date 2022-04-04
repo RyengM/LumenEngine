@@ -15,15 +15,24 @@ namespace Lumen::Game
     class AssetManager
     {
     public:
-        static AssetManager& GetInstance();
-
-        bool LoadAsset(std::filesystem::path path);
-
-    private:
-        AssetManager() {};
-        ~AssetManager() {};
+        AssetManager();
         AssetManager(const AssetManager&) = delete;
         AssetManager& operator=(const AssetManager&) = delete;
+        // Release allocated data and return view to memory pool, do later
+        ~AssetManager() {}
+
+        bool LoadAsset(std::filesystem::path path);
+        // Scan assets folder and build resource map
+        void BuildResourceMap();
+
+        Mesh* GetMeshByGUID(xg::Guid guid);
+        Texture* GetTextureByGUID(xg::Guid guid);
+        ShaderLab* GetShaderlabByGUID(xg::Guid guid);
+        
+        inline Scene* GetScene() noexcept { return mScene.get(); }
+
+    private:
+        void EnterDictRecur(const std::string& dir);
 
     private:
         // There can be only one scene at one time
@@ -35,7 +44,7 @@ namespace Lumen::Game
         std::unordered_map<xg::Guid, Material*> mGuid2MaterialMap;
         std::unordered_map<xg::Guid, ShaderLab*> mGuid2ShaderLabMap;
 
-        // Shared memory storage, use shared_ptr with custom deleter to manage resource
+        // Resource memory pool
         MemoryPool<Mesh> mMeshStorage;
         MemoryPool<Texture> mTextureStorage;
         MemoryPool<Material> mMaterialStorage;

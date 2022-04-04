@@ -21,9 +21,6 @@ namespace Lumen::Game
     {
         Component();
 
-        [[serialize(true)]]
-        std::shared_ptr<BaseObject> owner;
-
         RTTR_REGISTRATION_FRIEND
         RTTR_ENABLE(BaseObject)
     };

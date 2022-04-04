@@ -2,7 +2,7 @@ Shader "SimpleForward"
 {
     Properties
     {
-        [NoScaleOffset] _MainTex("BaseColor Map", 2D) = "../../Assets/boxBaseColor.png" {}
+        [NoScaleOffset] _MainTex("BaseColor Map", 2D) = "../../Assets/Texture/boxBaseColor.png" {}
     }
 
     Category
@@ -15,7 +15,7 @@ Shader "SimpleForward"
             ColorMask RGB
 
             HLSLPROGRAM
-            #include "../../Assets/Common.hlsl"
+            #include "../../Assets/Shader/Common.hlsl"
 
             struct VertexIn
             {

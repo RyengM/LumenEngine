@@ -8,7 +8,7 @@ namespace Lumen::Game
     class TransformComponent : public Component
     {
     public:
-        TransformComponent() =  default;
+        TransformComponent();
 
     public:
         [[serialize(true)]]

@@ -3,9 +3,19 @@
 
 using namespace Lumen::Test;
 
+DerivedComponent::DerivedComponent()
+{
+
+}
+
 DerivedSubComponent::DerivedSubComponent()
 {
     mAssetRef.guid = xg::newGuid();
+}
+
+Derived::Derived()
+{
+
 }
 
 Derived::Derived(std::string_view name)
@@ -14,7 +24,7 @@ Derived::Derived(std::string_view name)
     name = "sub";
 
     for (int i = 0; i < 2; i++)
-        mObjs.emplace_back(new DerivedSubComponent(2));
+        mObjs.emplace_back(2);
 };
 
 void Derived::Func()
@@ -29,11 +39,11 @@ using namespace Lumen::Test;
 RTTR_REGISTRATION
 {
 	registration::class_<Lumen::Test::DerivedComponent>("DerivedComponent")
+		.constructor<>()
 		.property("mSub", &DerivedComponent::mSub)
 		(
 			metadata("serialize", true)
 		)
-		.constructor<>()
 	;
 	registration::class_<Lumen::Test::DerivedSubComponent>("DerivedSubComponent")
 		.constructor<>()

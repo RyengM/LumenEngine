@@ -12,7 +12,7 @@ namespace Lumen::Render
     class RenderRunnable : public Runnable
     {
     public:
-        RenderRunnable(const WindowInfo& windowInfo);
+        RenderRunnable(const WindowInfo& windowInfo, ProfileData* profileData);
 
         virtual bool Init() override;
         // Consume command and execute them
@@ -22,6 +22,7 @@ namespace Lumen::Render
         virtual ~RenderRunnable() override {}
 
     private:
+        ProfileData* profileData;
         std::unique_ptr<RHIContext> mGraphicsContext;
     };
 }

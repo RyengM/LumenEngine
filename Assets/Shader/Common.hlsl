@@ -16,7 +16,7 @@
 #endif
 
 // Include structures and functions for lighting.
-#include "../../Assets/LightingUtil.hlsl"
+#include "../../Assets/Shader/LightingUtil.hlsl"
 
 struct MaterialData
 {
