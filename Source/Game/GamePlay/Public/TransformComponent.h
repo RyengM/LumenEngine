@@ -16,7 +16,7 @@ namespace Lumen::Game
         [[serialize(true)]]
         Vec3 rotation;
         [[serialize(true)]]
-        Vec3 scale;
+        Vec3 scale = Vec3(1.f);
 
         RTTR_REGISTRATION_FRIEND
         RTTR_ENABLE(Component)

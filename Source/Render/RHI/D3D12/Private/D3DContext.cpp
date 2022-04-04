@@ -70,6 +70,24 @@ void D3DContext::Present()
     mSwapChain->Present();
 }
 
+void D3DContext::UpdateObjectCB(const std::vector<Entity>& entities)
+{
+    auto objectCB = mGraphicsContext->currentFrameResource->objectBuffers.get();
+
+    for (auto entity : entities)
+    {
+        ObjectConstants constants;
+
+        Mat4 world = Mat4(1.f).Scale(entity.GetTransform()->scale).Translate(entity.GetTransform()->position);
+        DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
+        XMStoreFloat4x4(&constants.model, model);
+
+        auto item = mRenderItems[entity.GetName()].get();
+        item->world = constants.model;
+        objectCB->SetData<ObjectConstants>(item->objectCBIndex, constants, true);
+    }
+}
+
 void D3DContext::UpdatePassCB(const Camera& camera, const DirectionalLight& light)
 {
     auto passCB = mGraphicsContext->currentFrameResource->passBuffers.get();
@@ -119,7 +137,6 @@ void D3DContext::RenderScene(uint32_t width, uint32_t height)
     auto cmdList = cmdBuffer->commandList;
 
     auto pso = mPSOs.at("SimpleForward").get();
-    auto geo = mMeshes.at("box").get();
     auto frameResource = mGraphicsContext->currentFrameResource;
 
     cmdList->Close();
@@ -148,19 +165,31 @@ void D3DContext::RenderScene(uint32_t width, uint32_t height)
 
     cmdList->SetGraphicsRootSignature(pso->rootSignature.Get());
 
-    auto vBufferView = geo->VertexBufferView();
-    auto iBufferView = geo->IndexBufferView();
-    cmdList->IASetVertexBuffers(0, 1, &vBufferView);
-    cmdList->IASetIndexBuffer(&iBufferView);
-    cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
     cmdList->SetGraphicsRootConstantBufferView(1, frameResource->passBuffers->uploadResource->GetGPUVirtualAddress());
-    cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("boxBaseColor")->srvView->gpuDescriptorHandleGPU);
-    cmdList->DrawIndexedInstanced(geo->indexCount, 1, 0, 0, 0);
+    DrawRenderTargets(cmdList.Get());
     cmdList->ResourceBarrier(1, &afterBarrier);
 
     ExecuteCmdBuffer(cmdBuffer);
     ReleaseCmdBuffer(cmdBuffer);
+}
+
+void D3DContext::DrawRenderTargets(ID3D12GraphicsCommandList* cmdList)
+{
+    for (auto& item : mRenderItems)
+    {
+        auto geo = item.second->mesh;
+
+        auto vBufferView = geo->VertexBufferView();
+        auto iBufferView = geo->IndexBufferView();
+        cmdList->IASetVertexBuffers(0, 1, &vBufferView);
+        cmdList->IASetIndexBuffer(&iBufferView);
+        cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        D3D12_GPU_VIRTUAL_ADDRESS objectCBAddress = mGraphicsContext->currentFrameResource->objectBuffers->uploadResource->GetGPUVirtualAddress();
+        cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item.second->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
+        cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("boxBaseColor")->srvView->gpuDescriptorHandleGPU);
+        cmdList->DrawIndexedInstanced(geo->indexCount, 1, 0, 0, 0);
+    }
 }
 
 void D3DContext::DrawUI(void* data)
@@ -218,6 +247,8 @@ void D3DContext::CreateSceneBuffer(VisualBuffer* buffer)
 
 void D3DContext::CreatePlainTexture(Texture& texture)
 {
+    if (mTextures.find(texture.name) != mTextures.end()) return;
+
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreatePlainTexture"));
     auto cmdList = cmdBuffer->commandList;
 
@@ -259,6 +290,8 @@ void D3DContext::CreatePlainTexture(Texture& texture)
 
 void D3DContext::CreateGeometry(const Mesh& mesh)
 {
+    if (mMeshes.find(mesh.name) != mMeshes.end()) return;
+
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreateGeo"));
     auto cmdList = cmdBuffer->commandList;
 
@@ -344,6 +377,15 @@ void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
         mShaders[kernel.tags.at("Name")] = std::move(shader);
         mPSOs[kernel.tags.at("Name")] = std::move(pso);
     }
+}
+
+void D3DContext::CreateRenderItem(Entity& entity)
+{
+    auto item = std::make_unique<D3DRenderItem>();
+    item->name = entity.GetName();
+    item->mesh = mMeshes.at(entity.GetMeshContainer()->meshRef.name).get();
+    item->objectCBIndex = mIncreRenderItemIndex++;
+    mRenderItems[item->name] = std::move(item);
 }
 
 RHICommandContext* D3DContext::GetContext(const EContextType& type)

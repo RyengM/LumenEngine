@@ -1,7 +1,6 @@
 #include "Game/Engine/Public/EditorEngine.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
 #include "Core/Logger/Public/Logger.h"
-#include "Game/Asset/Public/Serializer.h"
 #include <chrono>
 
 using namespace Lumen::Game;
@@ -35,26 +34,8 @@ void EditorEngine::Init()
         graphicsContext->CreateSceneBuffer(sceneBufferPtr);
     });
 
-    // Load scene
-    {
-        // Load scene
-        Scene* scene = mAssetManager->GetScene();
-        //Entity box;
-        //box.SetName("box");
-        //box.SetMeshGUID("fbcc47a7-c788-4222-8f6d-ec8c86c283c8");
-        //box.SetShaderGUID("2beb9da1-9752-4012-95f3-eb14e00140de");
-        //scene->entities.emplace_back(box);
-        //scene->light = DirectionalLight(Vec3(0.f, 0.f, 0.f), Vec3(1.f, -1.f, 1.f), Vec3(1.f, 1.f, 1.f), Vec3(0.5f, 0.5f, 0.5f));
-        //scene->camera = Camera(90.f, 16.f / 9.f, 0.1f, 100.f);
-        //scene->camera.SetPos(Vec3(- 6.f, 6.f, -6.f));
-        //Serializer::GetInstance().Serialize(scene, "../../Assets/Scene/simpleScene.scene");
-        Serializer::GetInstance().Deserialize(scene, "../../Assets/Scene/simpleScene.scene");
-        scene->camera.UpdateProjMatrix();
-        scene->camera.Update();
-
-        // Tranfer data to render thread
-        CreateScene();
-    }
+    // Tranfer scene data to render thread
+    CreateScene();
 }
 
 void EditorEngine::Tick()
@@ -68,7 +49,13 @@ void EditorEngine::Tick()
             entity.Tick();
     }
 
-    // Update render data
+    // Update object constant buffer
+    auto entities = mAssetManager->GetScene()->entities;
+    ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entities](RHIContext* graphicsContext) {
+        graphicsContext->UpdateObjectCB(entities);
+    });
+
+    // Update pass constant buffer
     auto camera = mAssetManager->GetScene()->camera;
     auto light = mAssetManager->GetScene()->light;
     auto updatePassCBLambda = [camProxy = Camera(camera), lightProxy = DirectionalLight(light)](RHIContext* graphicsContext) {
@@ -121,6 +108,10 @@ void EditorEngine::CreateScene()
         ShaderLab* shader = mAssetManager->GetShaderlabByGUID(xg::Guid(meshRenderer->materialRef.guid));
         ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
             graphicsContext->CreateShaderlab(shaderProxy);
+        });
+
+        ENQUEUE_RENDER_COMMAND("CreateRenderItem", [entity](RHIContext* graphicsContext) {
+            graphicsContext->CreateRenderItem(const_cast<Entity&>(entity));
         });
     }
 }

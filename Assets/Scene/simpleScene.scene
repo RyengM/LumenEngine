@@ -14,9 +14,9 @@
                 "z": 0.0
             },
             "scale": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
             }
         },
         "mMeshContainer": {
@@ -96,18 +96,20 @@
                     "z": 0.0
                 },
                 "scale": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
                 }
             },
             "mMeshContainer": {
                 "meshRef": {
+                    "name": "box",
                     "guid": "fbcc47a7-c788-4222-8f6d-ec8c86c283c8"
                 }
             },
             "mMeshRenderer": {
                 "materialRef": {
+                    "name": "boxBaseColor",
                     "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
                 }
             }

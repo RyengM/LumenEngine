@@ -110,7 +110,10 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
     // Scene
     else if (ext == ".scene")
     {
-        
+        mScene = std::make_unique<Scene>();
+        Serializer::GetInstance().Deserialize(mScene.get(), path.string());
+        mScene->camera.UpdateProjMatrix();
+        mScene->camera.Update();
     }
 
     return true;

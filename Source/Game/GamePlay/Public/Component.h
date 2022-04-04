@@ -11,8 +11,9 @@ namespace Lumen::Game
     struct AssetRef : public BaseObject
     {
         [[serialize(true)]]
+        std::string name;
+        [[serialize(true)]]
         std::string guid;
-        std::shared_ptr<BaseObject> ref;
     };
 
     // Base class of all components

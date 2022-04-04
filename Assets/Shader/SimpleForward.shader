@@ -37,7 +37,7 @@ Shader "SimpleForward"
                 VertexOut Out;
 
                 Out.texC = In.texC;
-                float4 posw = float4(In.posL, 1.0);
+                float4 posw = mul(gWorld, float4(In.posL, 1.0));
                 Out.posW = posw.xyz;
                 Out.posH = mul(gViewProj, posw);
                 Out.normalW = normalize(In.normalL);

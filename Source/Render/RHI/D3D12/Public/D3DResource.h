@@ -1,6 +1,7 @@
 #pragma once
 
 #include "D3DResourceView.h"
+#include "MathHelper.h"
 #include <DirectXMath.h>
 
 namespace Lumen::Render
@@ -102,6 +103,16 @@ namespace Lumen::Render
             view.SizeInBytes = indexBufferByteSize;
             return view;
         }
+    };
+
+    struct D3DRenderItem : public RHIRenderItem
+    {
+        DirectX::XMFLOAT4X4 world = MathHelper::Identity4x4();
+
+        UINT objectCBIndex = -1;
+
+        D3DMeshGeometry* mesh;
+        D3D12_PRIMITIVE_TOPOLOGY primitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     };
 
     struct D3DLight

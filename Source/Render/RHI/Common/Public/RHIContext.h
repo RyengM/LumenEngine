@@ -48,6 +48,8 @@ namespace Lumen::Render
 
         virtual void Present() = 0;
 
+        virtual void UpdateObjectCB(const std::vector<Entity>& entities) = 0;
+
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) = 0;
 
         virtual void RenderScene(uint32_t width, uint32_t height) = 0;
@@ -65,6 +67,9 @@ namespace Lumen::Render
 
         // Create shaders
         virtual void CreateShaderlab(const ShaderLab& shaderlab) = 0;
+
+        // Create render item
+        virtual void CreateRenderItem(Entity& entity) = 0;
 
         virtual RHICommandContext* GetContext(const EContextType& type) = 0;
     };

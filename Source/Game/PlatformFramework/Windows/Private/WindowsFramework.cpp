@@ -150,9 +150,9 @@ void WindowsFramework::UpdateGuiWindow()
             auto transform = selectedEntity->GetTransform();
             ImGui::LabelText("label", "Value");
             {
-                ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position));
-                ImGui::DragFloat3("rotation", reinterpret_cast<float*>(&transform->rotation));
-                ImGui::DragFloat3("scale", reinterpret_cast<float*>(&transform->scale));
+                ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position.x));
+                ImGui::DragFloat3("rotation", reinterpret_cast<float*>(&transform->rotation.x));
+                ImGui::DragFloat3("scale", reinterpret_cast<float*>(&transform->scale.x));
             }
         }
         ImGui::End();

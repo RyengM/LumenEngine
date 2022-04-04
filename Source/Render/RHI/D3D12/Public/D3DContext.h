@@ -28,6 +28,8 @@ namespace Lumen::Render
 
         virtual void Present() override;
 
+        virtual void UpdateObjectCB(const std::vector<Entity>& entities) override;
+
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) override;
 
         virtual void RenderScene(uint32_t width, uint32_t height) override;
@@ -42,7 +44,12 @@ namespace Lumen::Render
 
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
+        virtual void CreateRenderItem(Entity& entity) override;
+
         virtual RHICommandContext* GetContext(const EContextType& type) override;
+
+    private:
+        void DrawRenderTargets(ID3D12GraphicsCommandList* cmdList);
 
     private:
         std::unique_ptr<D3DDevice>                          mDevice;
@@ -64,5 +71,8 @@ namespace Lumen::Render
         std::unordered_map<std::string, std::unique_ptr<D3DMaterial>>           mMaterials;
         std::unordered_map<std::string, std::unique_ptr<D3DShader>>             mShaders;
         std::unordered_map<std::string, std::unique_ptr<D3DPipelineState>>      mPSOs;
+        std::unordered_map<std::string, std::unique_ptr<D3DRenderItem>>         mRenderItems;
+
+        UINT                                                                    mIncreRenderItemIndex = 0;
     };
 }

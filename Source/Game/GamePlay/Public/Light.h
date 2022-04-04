@@ -9,7 +9,7 @@ namespace Lumen::Game
     struct DirectionalLight : public Entity
     {
         [[serialize(true)]]
-        Vec3 strength = Vec3(0, 0, 0);
+        Vec3 strength;
 
         DirectionalLight();
         DirectionalLight(const Vec3& pos, const Vec3& direction, const Vec3& scale, const Vec3& strength) : strength(strength)

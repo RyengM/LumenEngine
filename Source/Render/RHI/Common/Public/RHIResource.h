@@ -284,8 +284,13 @@ namespace Lumen::Render
     
     };
 
-    struct RHIMeshGeometry
+    struct RHIMeshGeometry : public RHIResource
     {
-        std::string name;
+
+    };
+
+    struct RHIRenderItem : public RHIResource
+    {
+
     };
 }
