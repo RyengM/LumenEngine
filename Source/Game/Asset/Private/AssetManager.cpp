@@ -4,6 +4,15 @@
 using namespace Lumen::Game;
 using namespace std::filesystem;
 
+std::string GetFileType(file_type type)
+{
+    if (type == file_type::directory)
+        return "Directory";
+    else if (type == file_type::regular)
+        return "Regular";
+    else return "None";
+}
+
 AssetManager::AssetManager()
 {
     mScene = std::make_unique<Scene>();
@@ -13,17 +22,30 @@ void AssetManager::BuildResourceMap()
 {
     const char assetFolder[] = "../../Assets";
 
-    EnterDictRecur(assetFolder);
+    auto entry = directory_entry(assetFolder);
+    mAssetTree = std::make_unique<AssetTreeNode>(0,
+        entry.path().filename().string(), entry.path().string(), GetFileType(entry.status().type()));
+    EnterDictRecur(assetFolder, mAssetTree.get());
 }
 
-void AssetManager::EnterDictRecur(const std::string& dir) {
+void AssetManager::EnterDictRecur(const std::string& dir, AssetTreeNode* node) {
     directory_iterator list(dir);
     for (auto& it : list) {
         auto path = it.path().string();
+        auto childNode = std::make_shared<AssetTreeNode>(node->depth + 1,
+            it.path().filename().string(), path, GetFileType(it.status().type()));
+
         if (it.status().type() == file_type::directory)
-            EnterDictRecur(path);
+            EnterDictRecur(path, childNode.get());
         else if (it.status().type() == file_type::regular)
+        {
+            if (it.path().extension() == ".meta")
+                continue;
+            // Load asset and build resource map
             LoadAsset(path);
+        }
+        // Build asset tree
+        node->children.emplace_back(childNode);
     }
 }
 

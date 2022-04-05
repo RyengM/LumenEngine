@@ -25,6 +25,7 @@ namespace Lumen::Game
         void UpdateUI();
         void Clean();
         // GUI interaction
+        void EnterDictRecur(AssetTreeNode* node);
         void UpdateGuiWindow();
 
     public:

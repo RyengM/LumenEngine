@@ -4,10 +4,12 @@
 #include "Render/RHI/D3D12/Public/D3DContext.h"
 #include <cassert>
 #include <WindowsX.h>
+#include <filesystem>
 
 using namespace Lumen::Game;
 using namespace Lumen::Core;
 using namespace Lumen::Render;
+using namespace std::filesystem;
 
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
@@ -100,6 +102,21 @@ void WindowsFramework::Clean()
     mImguiManager.Clear();
 }
 
+void WindowsFramework::EnterDictRecur(AssetTreeNode* node)
+{
+    for (auto childNode : node->children)
+    {
+        if (childNode->fileType == "Directory")
+        {
+            if (ImGui::TreeNode(childNode->fileName.data()))
+                EnterDictRecur(childNode.get());
+        }
+        else if (childNode->fileType == "Regular")
+            ImGui::Text(childNode->fileName.data());
+    }
+    ImGui::TreePop();
+}
+
 void WindowsFramework::UpdateGuiWindow()
 {
     static int selected = 0;
@@ -161,6 +178,10 @@ void WindowsFramework::UpdateGuiWindow()
     // Show asset manager
     {
         ImGui::Begin("Asset maneger");
+        if (ImGui::TreeNode("Assets"))
+        {
+            EnterDictRecur(mEngine.GetAssetTree());
+        }
         ImGui::End();
     }
 }

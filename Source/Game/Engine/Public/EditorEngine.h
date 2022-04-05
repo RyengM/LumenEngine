@@ -28,6 +28,7 @@ namespace Lumen::Game
         inline Config GetConfig() const noexcept { return mConfig; }
         inline ProfileData* GetProfileData() noexcept { return &profileData; }
         inline Scene* GetScene() noexcept { return mAssetManager->GetScene(); }
+        inline AssetTreeNode* GetAssetTree() noexcept { return mAssetManager->GetAssetTree(); }
         inline VisualBuffer* GetSceneBufferPtr() const noexcept { return mSceneBuffer.get(); }
 
     private:
