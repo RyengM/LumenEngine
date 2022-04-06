@@ -62,6 +62,9 @@ namespace Lumen::Render
         // Create texture
         virtual void CreatePlainTexture(Texture& texture) = 0;
 
+        // Create cubemap
+        virtual void CreateCubeMap(std::vector<Texture>& textures) = 0;
+
         // Create geometry
         virtual void CreateGeometry(const Mesh& mesh) = 0;
 
@@ -70,6 +73,9 @@ namespace Lumen::Render
 
         // Create render item
         virtual void CreateRenderItem(Entity& entity) = 0;
+
+        // Create sky render item
+        virtual void CreateSkyItem() = 0;
 
         virtual RHICommandContext* GetContext(const EContextType& type) = 0;
     };

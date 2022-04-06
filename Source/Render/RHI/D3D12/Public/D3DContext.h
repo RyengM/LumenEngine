@@ -10,6 +10,13 @@
 
 namespace Lumen::Render
 {
+    enum class ERenderLayer : uint32_t
+    {
+        Opaque  = 0,
+        Sky     = 1,
+        Count   = 2
+    };
+
     class D3DContext : public RHIContext
     {
     public:
@@ -40,16 +47,20 @@ namespace Lumen::Render
 
         virtual void CreatePlainTexture(Texture& texture) override;
 
+        virtual void CreateCubeMap(std::vector<Texture>& textures) override;
+
         virtual void CreateGeometry(const Mesh& mesh) override;
 
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
         virtual void CreateRenderItem(Entity& entity) override;
 
+        virtual void CreateSkyItem() override;
+
         virtual RHICommandContext* GetContext(const EContextType& type) override;
 
     private:
-        void DrawRenderTargets(ID3D12GraphicsCommandList* cmdList);
+        void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<D3DRenderItem*>& renderItems);
 
     private:
         std::unique_ptr<D3DDevice>                          mDevice;
@@ -71,7 +82,8 @@ namespace Lumen::Render
         std::unordered_map<std::string, std::unique_ptr<D3DMaterial>>           mMaterials;
         std::unordered_map<std::string, std::unique_ptr<D3DShader>>             mShaders;
         std::unordered_map<std::string, std::unique_ptr<D3DPipelineState>>      mPSOs;
-        std::unordered_map<std::string, std::unique_ptr<D3DRenderItem>>         mRenderItems;
+        std::unordered_map<std::string, std::unique_ptr<D3DRenderItem>>         mAllRenderItems;
+        std::vector<D3DRenderItem*>                                             mRenderItems[(uint32_t)ERenderLayer::Count];
 
         UINT                                                                    mIncreRenderItemIndex = 0;
     };

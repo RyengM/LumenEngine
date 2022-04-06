@@ -13,6 +13,23 @@ D3D12_CULL_MODE GetCullMode(ECullMode mode)
 	return D3D12_CULL_MODE_NONE;
 }
 
+D3D12_COMPARISON_FUNC GetCompFunc(EComparator comp)
+{
+	if (comp == EComparator::Always)
+		return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_ALWAYS;
+	else if (comp == EComparator::GEqual)
+		return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	else if (comp == EComparator::Greater)
+		return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_GREATER;
+	else if (comp == EComparator::LEqual)
+		return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	else if (comp == EComparator::Less)
+		return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_LESS;
+	else if (comp == EComparator::NotEqual)
+		return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	return D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_NEVER;
+}
+
 std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> GetStaticSamplers()
 {
 	// Applications usually only need a handful of samplers.  So just define them all up front
@@ -109,7 +126,6 @@ D3DPipelineState::D3DPipelineState(RHIDevice* rhiDevice, std::string_view name, 
 
 	auto staticSamplers = GetStaticSamplers();
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter, (UINT)staticSamplers.size(), staticSamplers.data(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	//CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 	
 	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
 	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
@@ -160,7 +176,7 @@ D3DPipelineState::D3DPipelineState(RHIDevice* rhiDevice, std::string_view name, 
 	{
 		depthStencilDescriptor.DepthEnable = TRUE;
 		depthStencilDescriptor.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		depthStencilDescriptor.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+		depthStencilDescriptor.DepthFunc = GetCompFunc(shaderlabKernel->commonState.zTestMode);
 		depthStencilDescriptor.StencilEnable = FALSE;
 		depthStencilDescriptor.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
 		depthStencilDescriptor.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;

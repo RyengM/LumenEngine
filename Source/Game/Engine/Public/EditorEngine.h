@@ -26,14 +26,16 @@ namespace Lumen::Game
         void EndPlay();
 
         inline Config GetConfig() const noexcept { return mConfig; }
-        inline ProfileData* GetProfileData() noexcept { return &profileData; }
-        inline Scene* GetScene() noexcept { return mAssetManager->GetScene(); }
-        inline AssetTreeNode* GetAssetTree() noexcept { return mAssetManager->GetAssetTree(); }
+        inline ProfileData* GetProfileData() noexcept { return &mProfileData; }
         inline VisualBuffer* GetSceneBufferPtr() const noexcept { return mSceneBuffer.get(); }
 
     private:
         // Use scene data from asset manager to build gpu resource
         void CreateScene();
+
+    public:
+        // Record device IO status
+        std::shared_ptr<DeviceStatus> deviceStatus;
 
     private:
         // If editor is in playing mode, entity will not tick if beginplay is not activated
@@ -41,10 +43,8 @@ namespace Lumen::Game
         // Config data
         Config mConfig;
         // Profile data
-        ProfileData profileData;
+        ProfileData mProfileData;
         // Scene display buffer
         std::unique_ptr<VisualBuffer> mSceneBuffer;
-        // Asset data
-        std::unique_ptr<AssetManager> mAssetManager;
     };
 }

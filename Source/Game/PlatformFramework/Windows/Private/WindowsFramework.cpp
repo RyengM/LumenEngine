@@ -35,10 +35,10 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
         {
             TranslateMessage(&msg);                             // Translate keystroke messages into the right format            
             DispatchMessage(&msg);                              // Send the message to the WindowProc function
+            if (!pFramework->HandleIO()) break;
         }
         else
         {
-            pFramework->HandleIO();
             // If command queue is full, do nothing, else start this frame
             if (!RenderCommandQueue::GetInstance().BeginEnqueue()) continue;
             pFramework->Tick();
@@ -47,8 +47,9 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
         }
     }
 
-    // Wait for render thread finish all work, need to consider GPU side, do later
-    /*while (!RenderCommandQueue::GetInstance().IsEmpty());*/
+    // Wait for render thread and GPU finish all work, do later
+    // Now just sleep for a while
+    Sleep(100);
 
     // Exit
     pFramework->Exit();
@@ -129,27 +130,17 @@ void WindowsFramework::UpdateGuiWindow()
         ImGui::Text("RenderThread Tick %.2f (ms)", mEngine.GetProfileData()->renderThreadTickTime / 1000.f);
         ImGui::End();
     }
-    
-    // Show render tagret
-    {
-        ImGui::Begin("Scene");
-        if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
-        {
-            auto sceneBufPtr = mEngine.GetSceneBufferPtr();
-            ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, ImVec2(sceneBufPtr->width, sceneBufPtr->height));
-        }
-        ImGui::End();
-    }
 
     // Show scene hierarchy
     {
         
         ImGui::Begin("Hierarchy");
-        if (mEngine.GetScene())
+        auto scene = AssetManager::GetInstance().GetScene();
+        if (scene)
         {
-            for (int i = 0; i < mEngine.GetScene()->entities.size(); i++)
+            for (int i = 0; i < scene->entities.size(); i++)
             {
-                auto& entity = mEngine.GetScene()->entities[i];
+                auto& entity = scene->entities[i];
                 if (ImGui::Selectable(entity.GetName().c_str(), selected == i))
                     selected = i;
             }
@@ -160,16 +151,20 @@ void WindowsFramework::UpdateGuiWindow()
     // Show object detail
     {
         ImGui::Begin("Detail");
-        ImGui::Text(mEngine.GetScene()->entities[selected].GetName().c_str());
-        Entity* selectedEntity = &mEngine.GetScene()->entities[selected];
-        if (ImGui::CollapsingHeader("Transform"))
+        auto scene = AssetManager::GetInstance().GetScene();
+        if (scene)
         {
-            auto transform = selectedEntity->GetTransform();
-            ImGui::LabelText("label", "Value");
+            ImGui::Text(scene->entities[selected].GetName().c_str());
+            Entity* selectedEntity = &scene->entities[selected];
+            if (ImGui::CollapsingHeader("Transform"))
             {
-                ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position.x));
-                ImGui::DragFloat3("rotation", reinterpret_cast<float*>(&transform->rotation.x));
-                ImGui::DragFloat3("scale", reinterpret_cast<float*>(&transform->scale.x));
+                auto transform = selectedEntity->GetTransform();
+                ImGui::LabelText("label", "Value");
+                {
+                    ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position.x));
+                    ImGui::DragFloat3("rotation", reinterpret_cast<float*>(&transform->rotation.x));
+                    ImGui::DragFloat3("scale", reinterpret_cast<float*>(&transform->scale.x));
+                }
             }
         }
         ImGui::End();
@@ -180,24 +175,79 @@ void WindowsFramework::UpdateGuiWindow()
         ImGui::Begin("Asset maneger");
         if (ImGui::TreeNode("Assets"))
         {
-            EnterDictRecur(mEngine.GetAssetTree());
+            EnterDictRecur(AssetManager::GetInstance().GetAssetTree());
+        }
+        ImGui::End();
+    }
+
+    // Show render tagret
+    {
+        ImGui::Begin("Scene");
+
+        if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
+        {
+            auto sceneBufPtr = mEngine.GetSceneBufferPtr();
+            ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, ImVec2(sceneBufPtr->width, sceneBufPtr->height));
         }
         ImGui::End();
     }
 }
 
-// TODO
-void WindowsFramework::HandleIO()
+bool WindowsFramework::HandleIO()
 {
     ImGuiContext& g = *GImGui;
 
+    auto status = mEngine.deviceStatus.get();
+    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
+
+    // Deal with responsive interaction
     for (auto& inputEvent : g.InputEventsQueue)
     {
         if (inputEvent.Type == ImGuiInputEventType::ImGuiInputEventType_MousePos)
         {
+            float x = inputEvent.MousePos.PosX;
+            float y = inputEvent.MousePos.PosY;
 
+            status->ProcessMouseMovement(x, y);
+            camera->ProcessMouseMovement();
+        }
+        else if (inputEvent.Type == ImGuiInputEventType::ImGuiInputEventType_MouseButton)
+        {
+            if (inputEvent.MouseButton.Button == 1)
+            {
+                if (inputEvent.MouseButton.Down)
+                    status->rightMouseActive = true;
+                else status->rightMouseActive = false;
+            }
+        }
+        else if (inputEvent.Type == ImGuiInputEventType::ImGuiInputEventType_Key)
+        {
+            if (inputEvent.Key.Key == ImGuiKey_Escape)
+                return false;
+            if (inputEvent.Key.Key == ImGuiKey_W)
+            {
+                if (inputEvent.Key.Down) status->wPressed = true;
+                else status->wPressed = false;
+            }
+            if (inputEvent.Key.Key == ImGuiKey_S)
+            {
+                if (inputEvent.Key.Down) status->sPressed = true;
+                else status->sPressed = false;
+            }
+            if (inputEvent.Key.Key == ImGuiKey_A)
+            {
+                if (inputEvent.Key.Down) status->aPressed = true;
+                else status->aPressed = false;
+            }
+            if (inputEvent.Key.Key == ImGuiKey_D)
+            {
+                if (inputEvent.Key.Down) status->dPressed = true;
+                else status->dPressed = false;
+            }
         }
     }
+
+    return true;
 }
 
 bool WindowsFramework::InitMainWindow()
@@ -253,6 +303,7 @@ LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wP
                 return true;
         }
 
+    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
     switch (message)
     {
     case WM_COMMAND:
@@ -265,6 +316,19 @@ LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wP
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
     }
+    break;
+    // Deal with persistent interaction, windows will count 100 and then respond continuously
+    // However, ImGui::IsKeyPressed is slow here, we need a better way to deal with long press later
+    case WM_KEYDOWN:
+        switch (wParam)
+        {
+        case 'W':
+        case 'S':
+        case 'A':
+        case 'D':
+            camera->ProcessKeyboard();
+            break;
+        }
     break;
     case WM_SIZE:
     {

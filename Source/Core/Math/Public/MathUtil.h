@@ -48,5 +48,7 @@ namespace Lumen::Core
 
 		static Mat4 LookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
 		static Mat4 Ortho(float left, float right, float bottom, float top, float nearPlane, float farPlane);
+
+		static Float3 Normalize(const Float3& vec);
 	};
 }

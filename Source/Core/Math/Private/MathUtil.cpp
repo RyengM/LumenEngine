@@ -144,3 +144,13 @@ Mat4 MathUtil::Ortho(float left, float right, float bottom, float top, float nea
 
 	return orthoScale * orthoTranslate;;
 }
+
+Float3 MathUtil::Normalize(const Float3& vec)
+{
+	Float3 ret;
+	float n = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+	ret.x /= n;
+	ret.y /= n;
+	ret.z /= n;
+	return ret;
+}

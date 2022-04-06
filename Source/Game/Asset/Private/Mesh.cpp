@@ -202,3 +202,104 @@ Mesh MeshGenerator::CreateGrid(float width, float depth, float m, float n)
 
     return mesh;
 }
+
+Mesh MeshGenerator::CreateSphere(float radius, uint32_t sliceCount, uint32_t stackCount)
+{
+    Mesh mesh;
+
+    // Compute the vertices stating at the top pole and moving down the stacks.
+    // Poles: note that there will be texture coordinate distortion as there is
+    // not a unique point on the texture map to assign to the pole when mapping
+    // a rectangular texture onto a sphere.
+    Vertex topVertex;
+    topVertex.pos = Float3(0.f, radius, 0.f);
+    topVertex.normal = Float3(0.f, 1.f, 0.f);
+    topVertex.tangentU = Float3(1.f, 0.f, 0.f);
+    topVertex.texCoord = Float2(0.f, 0.f);
+    Vertex bottomVertex = topVertex;
+    bottomVertex.pos.y = -radius;
+    bottomVertex.normal.y = -1.f;
+    bottomVertex.texCoord.y = 1.f;
+
+    mesh.vertices.push_back(topVertex);
+    float phiStep = PI / stackCount;
+    float thetaStep = 2.0f * PI / sliceCount;
+
+    // Compute vertices for each stack ring (do not count the poles as rings).
+    for (uint32_t i = 1; i <= stackCount - 1; ++i)
+    {
+        float phi = i * phiStep;
+
+        // Vertices of ring.
+        for (uint32_t j = 0; j <= sliceCount; ++j)
+        {
+            float theta = j * thetaStep;
+
+            Vertex v;
+
+            // spherical to cartesian
+            v.pos.x = radius * sinf(phi) * cosf(theta);
+            v.pos.y = radius * cosf(phi);
+            v.pos.z = radius * sinf(phi) * sinf(theta);
+
+            // Partial derivative of P with respect to theta
+            v.tangentU.x = -radius * sinf(phi) * sinf(theta);
+            v.tangentU.y = 0.0f;
+            v.tangentU.z = +radius * sinf(phi) * cosf(theta);
+            v.tangentU = MathUtil::Normalize(v.tangentU);
+
+            v.normal = MathUtil::Normalize(v.pos);
+
+            v.texCoord.x = theta / (2.f * PI);
+            v.texCoord.y = phi / PI;
+
+            mesh.vertices.push_back(v);
+        }
+    }
+
+    mesh.vertices.push_back(bottomVertex);
+
+    // Compute indices for top stack.  The top stack was written first to the vertex buffer
+    // and connects the top pole to the first ring.
+    for (uint32_t i = 1; i <= sliceCount; ++i)
+    {
+        mesh.indices.push_back(0);
+        mesh.indices.push_back(i + 1);
+        mesh.indices.push_back(i);
+    }
+
+    // Compute indices for inner stacks (not connected to poles).
+    // Offset the indices to the index of the first vertex in the first ring.
+    // This is just skipping the top pole vertex.
+    uint32_t baseIndex = 1;
+    uint32_t ringVertexCount = sliceCount + 1;
+    for (uint32_t i = 0; i < stackCount - 2; ++i)
+    {
+        for (uint32_t j = 0; j < sliceCount; ++j)
+        {
+            mesh.indices.push_back(baseIndex + i * ringVertexCount + j);
+            mesh.indices.push_back(baseIndex + i * ringVertexCount + j + 1);
+            mesh.indices.push_back(baseIndex + (i + 1) * ringVertexCount + j);
+
+            mesh.indices.push_back(baseIndex + (i + 1) * ringVertexCount + j);
+            mesh.indices.push_back(baseIndex + i * ringVertexCount + j + 1);
+            mesh.indices.push_back(baseIndex + (i + 1) * ringVertexCount + j + 1);
+        }
+    }
+
+    // Compute indices for bottom stack.  The bottom stack was written last to the vertex buffer
+    // and connects the bottom pole to the bottom ring.
+    // South pole vertex was added last.
+    uint32_t southPoleIndex = (uint32_t)mesh.vertices.size() - 1;
+    // Offset the indices to the index of the first vertex in the last ring.
+    baseIndex = southPoleIndex - ringVertexCount;
+
+    for (uint32_t i = 0; i < sliceCount; ++i)
+    {
+        mesh.indices.push_back(southPoleIndex);
+        mesh.indices.push_back(baseIndex + i);
+        mesh.indices.push_back(baseIndex + i + 1);
+    }
+
+    return mesh;
+}

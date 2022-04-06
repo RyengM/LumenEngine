@@ -1,3 +1,4 @@
+#include "Game/Asset/Public/AssetManager.h"
 #include "Render/RHI/D3D12/Public/D3DContext.h"
 #include "Game/PlatformFramework/Windows/Public/imgui_impl_dx12.h"
 
@@ -74,6 +75,16 @@ void D3DContext::UpdateObjectCB(const std::vector<Entity>& entities)
 {
     auto objectCB = mGraphicsContext->currentFrameResource->objectBuffers.get();
 
+    {
+        ObjectConstants constants;
+
+        Mat4 world = Mat4(1.f);
+        DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
+        XMStoreFloat4x4(&constants.model, model);
+
+        objectCB->SetData<ObjectConstants>(mRenderItems[(uint32_t)ERenderLayer::Sky][0]->objectCBIndex, constants, true);
+    }
+
     for (auto entity : entities)
     {
         ObjectConstants constants;
@@ -82,7 +93,7 @@ void D3DContext::UpdateObjectCB(const std::vector<Entity>& entities)
         DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
         XMStoreFloat4x4(&constants.model, model);
 
-        auto item = mRenderItems[entity.GetName()].get();
+        auto item = mAllRenderItems[entity.GetName()].get();
         item->world = constants.model;
         objectCB->SetData<ObjectConstants>(item->objectCBIndex, constants, true);
     }
@@ -163,21 +174,26 @@ void D3DContext::RenderScene(uint32_t width, uint32_t height)
     ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvSrvUavDescriptorHeap->gpuDescriptorHeap.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
+    // Draw entities
     cmdList->SetGraphicsRootSignature(pso->rootSignature.Get());
-
     cmdList->SetGraphicsRootConstantBufferView(1, frameResource->passBuffers->uploadResource->GetGPUVirtualAddress());
-    DrawRenderTargets(cmdList.Get());
+    DrawRenderItems(cmdList.Get(), mRenderItems[(uint32_t)ERenderLayer::Opaque]);
+
+    // Draw sky
+    cmdList->SetPipelineState(mPSOs.at("SimpleSky")->d3dPso.Get());
+    DrawRenderItems(cmdList.Get(), mRenderItems[(uint32_t)ERenderLayer::Sky]);
+
     cmdList->ResourceBarrier(1, &afterBarrier);
 
     ExecuteCmdBuffer(cmdBuffer);
     ReleaseCmdBuffer(cmdBuffer);
 }
 
-void D3DContext::DrawRenderTargets(ID3D12GraphicsCommandList* cmdList)
+void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::vector<D3DRenderItem*>& renderItems)
 {
-    for (auto& item : mRenderItems)
+    for (auto& item : renderItems)
     {
-        auto geo = item.second->mesh;
+        auto geo = item->mesh;
 
         auto vBufferView = geo->VertexBufferView();
         auto iBufferView = geo->IndexBufferView();
@@ -186,7 +202,8 @@ void D3DContext::DrawRenderTargets(ID3D12GraphicsCommandList* cmdList)
         cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         D3D12_GPU_VIRTUAL_ADDRESS objectCBAddress = mGraphicsContext->currentFrameResource->objectBuffers->uploadResource->GetGPUVirtualAddress();
-        cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item.second->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
+        cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
+        cmdList->SetGraphicsRootDescriptorTable(2, mTextures.at("skyBox")->srvView->gpuDescriptorHandleGPU);
         cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("boxBaseColor")->srvView->gpuDescriptorHandleGPU);
         cmdList->DrawIndexedInstanced(geo->indexCount, 1, 0, 0, 0);
     }
@@ -273,7 +290,7 @@ void D3DContext::CreatePlainTexture(Texture& texture)
     {
         D3D12_SUBRESOURCE_DATA texData = {};
         texData.pData = texture.data;
-        texData.RowPitch = texture.width * 4;   // RGBA
+        texData.RowPitch = texture.width * 4;
         texData.SlicePitch = texture.height * texData.RowPitch;
         UpdateSubresources(cmdList.Get(), tex->resource->defaultResource.Get(), tex->resource->uploadResource.Get(), 0, 0, 1, &texData);
     }
@@ -283,6 +300,50 @@ void D3DContext::CreatePlainTexture(Texture& texture)
     cmdList->ResourceBarrier(1, &barrier);
 
     mTextures[texture.name] = std::move(tex);
+
+    ExecuteCmdBuffer(cmdBuffer);
+    ReleaseCmdBuffer(cmdBuffer);
+}
+
+void D3DContext::CreateCubeMap(std::vector<Texture>& textures)
+{
+    auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreateCubemap"));
+    auto cmdList = cmdBuffer->commandList;
+
+    TextureDescriptor texDescriptor;
+    {
+        texDescriptor.width = textures[0].width;
+        texDescriptor.height = textures[0].height;
+        texDescriptor.slices = 6;
+        texDescriptor.sparse = false;
+        texDescriptor.mipLevel = 1;
+        texDescriptor.anisoLevel = 1;
+        texDescriptor.sample = EMSAASample::None;
+        texDescriptor.usageType = EUsageType::Default;
+        texDescriptor.textureType = ETextureType::TexCube;
+        texDescriptor.storageType = EStorageType((uint32_t)EStorageType::Default | (uint32_t)EStorageType::Static);
+        texDescriptor.format = EGraphicsFormat::R8G8B8A8_UNorm;
+        texDescriptor.initState = ETextureInitState::CopyDest;
+    }
+    auto cubemap = std::make_unique<D3DPlainTexture>(mDevice.get(), mCbvSrvUavDescriptorHeap.get(), texDescriptor);
+
+    // Copy data from upload buffer to default buffer
+    std::vector<D3D12_SUBRESOURCE_DATA> texDatas;
+    for (int i = 0; i < 6; i++)
+    {
+        D3D12_SUBRESOURCE_DATA texData = {};
+        texData.pData = textures[i].data;
+        texData.RowPitch = textures[i].width * 4;
+        texData.SlicePitch = textures[i].height * texData.RowPitch;
+        texDatas.emplace_back(texData);
+    }
+    UpdateSubresources(cmdList.Get(), cubemap->resource->defaultResource.Get(), cubemap->resource->uploadResource.Get(), 0, 0, texDatas.size(), texDatas.data());
+
+    // Change texture state to pixel shader resource
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(cubemap->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    cmdList->ResourceBarrier(1, &barrier);
+
+    mTextures["skyBox"] = std::move(cubemap);
 
     ExecuteCmdBuffer(cmdBuffer);
     ReleaseCmdBuffer(cmdBuffer);
@@ -364,11 +425,30 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
 
 void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
 {
-    Texture tex;
+    // Hard code now, may can precompile shaderlab to support more flexible parameter binding
     auto baseTexture = std::get<std::string>(shaderlab.properties.at("_MainTex").value);
-    TextureLoader::LoadTexture(&tex, baseTexture);
-    tex.name = "boxBaseColor";
-    CreatePlainTexture(tex);
+    if (baseTexture == "skybox")
+    {
+        std::vector<Texture> textures;
+        // Right
+        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("edb6126b-2dcb-4bca-9feb-e5b8fcb13e7a")));
+        // Left
+        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("8bf66627-d9e8-4796-bcce-4e9aa086b7e5")));
+        // Top
+        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("bc7da57a-cd37-4654-81a6-c9fa8fbabbf2")));
+        // Bottom
+        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("60111c87-e1af-462b-b3dd-0284a6f27998")));
+        // Front
+        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("2f460232-0bad-45ce-ac41-bb34b280692b")));
+        // Back
+        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("89999e83-d4c2-436e-8084-2aa3b1644cca")));
+        CreateCubeMap(textures);
+    }
+    else
+    {
+        auto tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(baseTexture));
+        CreatePlainTexture(*tex);
+    }
 
     for (auto kernel : shaderlab.category.kernels)
     {
@@ -385,7 +465,18 @@ void D3DContext::CreateRenderItem(Entity& entity)
     item->name = entity.GetName();
     item->mesh = mMeshes.at(entity.GetMeshContainer()->meshRef.name).get();
     item->objectCBIndex = mIncreRenderItemIndex++;
-    mRenderItems[item->name] = std::move(item);
+    mRenderItems[(uint32_t)ERenderLayer::Opaque].push_back(item.get());
+    mAllRenderItems[item->name] = std::move(item);
+}
+
+void D3DContext::CreateSkyItem()
+{
+    auto skyItem = std::make_unique<D3DRenderItem>();
+    skyItem->name = "skybox";
+    skyItem->mesh = mMeshes.at("sphere-builtin").get();
+    skyItem->objectCBIndex = mIncreRenderItemIndex++;
+    mRenderItems[(uint32_t)ERenderLayer::Sky].push_back(skyItem.get());
+    mAllRenderItems[skyItem->name] = std::move(skyItem);
 }
 
 RHICommandContext* D3DContext::GetContext(const EContextType& type)

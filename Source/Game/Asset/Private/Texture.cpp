@@ -11,8 +11,9 @@ Texture::Texture(const Texture& rhs)
 	width = rhs.width;
 	height = rhs.height;
 	channel = rhs.channel;
-	data = new uint8_t[rhs.width * rhs.height * rhs.channel];
-	memcpy(data, rhs.data, rhs.width * rhs.height * rhs.channel);
+	// Force image to 4 channel
+	data = new uint8_t[rhs.width * rhs.height * STBI_rgb_alpha];
+	memcpy(data, rhs.data, rhs.width * rhs.height * STBI_rgb_alpha);
 }
 
 Texture::Texture(Texture&& rhs)
@@ -33,17 +34,16 @@ Texture::~Texture()
 
 void TextureLoader::LoadTexture(Texture* tex, std::string_view sourceFile)
 {
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char* input = stbi_load(sourceFile.data(), &tex->width, &tex->height, &tex->channel, 0);
+	unsigned char* input = stbi_load(sourceFile.data(), &tex->width, &tex->height, &tex->channel, STBI_rgb_alpha);
 
 	if (!input)
 	{
 		stbi_image_free(input);
 		return;
 	}
-	
-	tex->data = new uint8_t[tex->width * tex->height * tex->channel];
-	memcpy(tex->data, input, tex->width * tex->height * tex->channel);
+
+	tex->data = new unsigned char[tex->width * tex->height * STBI_rgb_alpha];
+	memcpy(tex->data, input, tex->width * tex->height * STBI_rgb_alpha);
 
 	stbi_image_free(input);
 }

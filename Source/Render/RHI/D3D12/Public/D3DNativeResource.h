@@ -11,6 +11,7 @@ namespace Lumen::Render
     public:
         static DXGI_FORMAT GetTextureFormat(EGraphicsFormat format);
         static DXGI_FORMAT GetTextureViewFormat(EGraphicsFormat format);
+        static int GetTextureChannelNum(EGraphicsFormat format);
         static D3D12_RESOURCE_DIMENSION GetResourceDimension(ETextureType type);
         static D3D12_RTV_DIMENSION GetRTVDimension(ETextureType type);
         static D3D12_SRV_DIMENSION GetSRVDimension(ETextureType type);

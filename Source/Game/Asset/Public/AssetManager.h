@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Game/Asset/Public/ShaderLabCompiler.h"
 #include "Game/Asset/Public/Scene.h"
 #include "Game/Asset/Public/Mesh.h"
 #include "Game/Asset/Public/Texture.h"
@@ -28,11 +27,7 @@ namespace Lumen::Game
     class AssetManager
     {
     public:
-        AssetManager();
-        AssetManager(const AssetManager&) = delete;
-        AssetManager& operator=(const AssetManager&) = delete;
-        // Release allocated data and return view to memory pool, do later
-        ~AssetManager() {}
+        static AssetManager& GetInstance();
 
         bool LoadAsset(std::filesystem::path path);
         // Scan assets folder, buuid asset tree and resource map
@@ -44,9 +39,17 @@ namespace Lumen::Game
         
         inline Scene* GetScene() noexcept { return mScene.get(); }
         inline AssetTreeNode* GetAssetTree() noexcept { return mAssetTree.get(); }
+        inline std::unordered_map<std::string, Mesh*>* GetBuiltInMeshMap() noexcept { return &mBuiltInMeshMap; }
 
     private:
+        AssetManager();
+        AssetManager(const AssetManager&) = delete;
+        AssetManager& operator=(const AssetManager&) = delete;
+        // Release allocated data and return view to memory pool, do later
+        ~AssetManager() {}
+
         void EnterDictRecur(const std::string& dir, AssetTreeNode* node);
+        void CreateBuiltInMeshes();
 
     private:
         // There can be only one scene at one time
@@ -59,6 +62,9 @@ namespace Lumen::Game
         std::unordered_map<xg::Guid, Texture*> mGuid2TextureMap;
         std::unordered_map<xg::Guid, Material*> mGuid2MaterialMap;
         std::unordered_map<xg::Guid, ShaderLab*> mGuid2ShaderLabMap;
+
+        // Built-in meshes
+        std::unordered_map<std::string, Mesh*> mBuiltInMeshMap;
 
         // Resource memory pool
         MemoryPool<Mesh> mMeshStorage;

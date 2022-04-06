@@ -1,3 +1,4 @@
+#include "Game/Asset/Public/ShaderLabCompiler.h"
 #include "Game/Asset/Public/AssetManager.h"
 #include "Game/Asset/Public/Serializer.h"
 
@@ -13,9 +14,17 @@ std::string GetFileType(file_type type)
     else return "None";
 }
 
+AssetManager& AssetManager::GetInstance()
+{
+    static AssetManager instance;
+    return instance;
+}
+
 AssetManager::AssetManager()
 {
     mScene = std::make_unique<Scene>();
+
+    CreateBuiltInMeshes();
 }
 
 void AssetManager::BuildResourceMap()
@@ -139,6 +148,14 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
     }
 
     return true;
+}
+
+void AssetManager::CreateBuiltInMeshes()
+{
+    Mesh* mesh = mMeshStorage.RequestElement();
+    new(mesh)Mesh(MeshGenerator::CreateSphere(0.5f, 20, 20));
+    mesh->name = "sphere-builtin";
+    mBuiltInMeshMap[mesh->name] = mesh;
 }
 
 Mesh* AssetManager::GetMeshByGUID(xg::Guid guid)

@@ -45,5 +45,7 @@ namespace Lumen::Game
     public:
         // The number of vertex is m * n
         static Mesh CreateGrid(float width, float depth, float m, float n);
+
+        static Mesh CreateSphere(float radius, uint32_t sliceCount, uint32_t stackCount);
     };
 }

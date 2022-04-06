@@ -16,7 +16,8 @@ namespace Lumen::Game
 
     protected:
         bool InitMainWindow();
-        void HandleIO();
+        // Break loop if return false
+        bool HandleIO();
         static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     private:

@@ -9,12 +9,16 @@ DXGI_FORMAT D3DResourceUtility::GetTextureFormat(EGraphicsFormat format)
         return DXGI_FORMAT::DXGI_FORMAT_R8_UNORM;
     else if (format == EGraphicsFormat::R8G8_SRGB)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8_UNORM;
+    else if (format == EGraphicsFormat::R8G8B8_SRGB)
+        return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     else if (format == EGraphicsFormat::R8G8B8A8_SRGB)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     else if (format == EGraphicsFormat::R8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8_UNORM;
     else if (format == EGraphicsFormat::R8G8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8_UNORM;
+    else if (format == EGraphicsFormat::R8G8B8_UNorm)
+        return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     else if (format == EGraphicsFormat::R8G8B8A8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     else if (format == EGraphicsFormat::D24_S8_UNorm)
@@ -29,18 +33,33 @@ DXGI_FORMAT D3DResourceUtility::GetTextureViewFormat(EGraphicsFormat format)
         return DXGI_FORMAT::DXGI_FORMAT_R8_UNORM;
     else if (format == EGraphicsFormat::R8G8_SRGB)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8_UNORM;
+    else if (format == EGraphicsFormat::R8G8B8_SRGB)
+        return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     else if (format == EGraphicsFormat::R8G8B8A8_SRGB)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     else if (format == EGraphicsFormat::R8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8_UNORM;
     else if (format == EGraphicsFormat::R8G8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8_UNORM;
+    else if (format == EGraphicsFormat::R8G8B8_UNorm)
+        return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     else if (format == EGraphicsFormat::R8G8B8A8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     else if (format == EGraphicsFormat::D24_S8_UNorm)
         return DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT;
 
     return DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+}
+
+int D3DResourceUtility::GetTextureChannelNum(EGraphicsFormat format)
+{
+    if (format == EGraphicsFormat::R8_SRGB || format == EGraphicsFormat::R8_UNorm)
+        return 1;
+    else if (format == EGraphicsFormat::R8G8_SRGB || format == EGraphicsFormat::R8G8_UNorm)
+        return 2;
+    else if (format == EGraphicsFormat::R8G8B8_SRGB || format == EGraphicsFormat::R8G8B8_UNorm)
+        return 3;
+    return 4;
 }
 
 D3D12_RESOURCE_DIMENSION D3DResourceUtility::GetResourceDimension(ETextureType type)
@@ -73,6 +92,8 @@ D3D12_SRV_DIMENSION D3DResourceUtility::GetSRVDimension(ETextureType type)
         return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
     else if (type == ETextureType::Tex3D)
         return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE3D;
+    else if (type == ETextureType::TexCube)
+        return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURECUBE;
 
     return D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_UNKNOWN;
 }
@@ -312,7 +333,9 @@ D3DTextureResource::D3DTextureResource(RHIDevice* rhiDevice, const TextureDescri
         if (descriptor.usageType == EUsageType::Default)
         {
             uploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-            uploadResourceDesc.Width = descriptor.width * descriptor.height * 4;
+            // Copy region row pitch should be aligned with 256
+            uploadResourceDesc.Width = ((descriptor.width + 255) & ~255) * descriptor.height * descriptor.slices * D3DResourceUtility::GetTextureChannelNum(descriptor.format);
+            uploadResourceDesc.DepthOrArraySize = 1;
             uploadResourceDesc.Height = 1;
             uploadResourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
             uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_ROW_MAJOR;

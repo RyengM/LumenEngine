@@ -2,7 +2,7 @@ Shader "SimpleForward"
 {
     Properties
     {
-        [NoScaleOffset] _MainTex("BaseColor Map", 2D) = "../../Assets/Texture/boxBaseColor.png" {}
+        [NoScaleOffset] _MainTex("BaseColor Map", 2D) = "d4263b4d-154c-4c85-9ed3-8b5e9bb93301" {}
     }
 
     Category
@@ -57,7 +57,7 @@ Shader "SimpleForward"
 
                 float3 directLight = ComputeDirectionalLight(gLights[0], mat, In.normalW, toEyeW);
                 
-                return float4(diffuse * directLight, 1.0);
+                return float4(diffuse.xyz * directLight, 1.0);
             }
             ENDHLSL
         }

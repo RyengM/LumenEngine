@@ -17,15 +17,23 @@ void EditorEngine::PreInit(const WindowInfo& windowInfo)
     RenderCommandQueue::GetInstance().SetFrameNum(mConfig.frameBufferNum);
 
     // Launch render thread
-    RenderRunnable* renderRunnable = new RenderRunnable(windowInfo, &profileData);
+    RenderRunnable* renderRunnable = new RenderRunnable(windowInfo, &mProfileData);
     RunnableThread* renderThread = RunnableThread::Create("RenderThread", renderRunnable);
 }
 
 void EditorEngine::Init()
 {
     // Load asset manager, we load all the assts now, later will only load scene assets at begining
-    mAssetManager = std::make_unique<AssetManager>();
-    mAssetManager->BuildResourceMap();
+    AssetManager::GetInstance().BuildResourceMap();
+
+    // Build built-in meshes, its okay to pass pointer since built in mesh will not be modified
+    for (auto iter : *AssetManager::GetInstance().GetBuiltInMeshMap())
+    {
+        Mesh* mesh = iter.second;
+        ENQUEUE_RENDER_COMMAND("CreateBuiltInMesh", [mesh](RHIContext* graphicsContext) {
+            graphicsContext->CreateGeometry(*mesh);
+        });
+    }
 
     // Prepare scene buffer
     mSceneBuffer = std::make_unique<VisualBuffer>("scene", 1440, 810);
@@ -33,6 +41,10 @@ void EditorEngine::Init()
     ENQUEUE_RENDER_COMMAND("CreateSceneBuffer", [sceneBufferPtr](RHIContext* graphicsContext) {
         graphicsContext->CreateSceneBuffer(sceneBufferPtr);
     });
+
+    // Init IO status recording and link objects associated with it
+    deviceStatus = std::make_shared<DeviceStatus>();
+    AssetManager::GetInstance().GetScene()->camera.deviceStatus = deviceStatus;
 
     // Tranfer scene data to render thread
     CreateScene();
@@ -45,19 +57,19 @@ void EditorEngine::Tick()
     // Tick all entities
     if (bPlaying)
     {
-        for (auto entity : mAssetManager->GetScene()->entities)
+        for (auto entity : AssetManager::GetInstance().GetScene()->entities)
             entity.Tick();
     }
 
     // Update object constant buffer
-    auto entities = mAssetManager->GetScene()->entities;
+    auto entities = AssetManager::GetInstance().GetScene()->entities;
     ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entities](RHIContext* graphicsContext) {
         graphicsContext->UpdateObjectCB(entities);
     });
 
     // Update pass constant buffer
-    auto camera = mAssetManager->GetScene()->camera;
-    auto light = mAssetManager->GetScene()->light;
+    auto camera = AssetManager::GetInstance().GetScene()->camera;
+    auto light = AssetManager::GetInstance().GetScene()->light;
     auto updatePassCBLambda = [camProxy = Camera(camera), lightProxy = DirectionalLight(light)](RHIContext* graphicsContext) {
         graphicsContext->UpdatePassCB(camProxy, lightProxy);
     };
@@ -72,7 +84,7 @@ void EditorEngine::Tick()
 
     high_resolution_clock::time_point endTime = high_resolution_clock::now();
     microseconds timeInterval = std::chrono::duration_cast<microseconds>(endTime - beginTime);
-    profileData.gameThreadTickTime = timeInterval.count();
+    mProfileData.gameThreadTickTime = timeInterval.count();
 }
 
 void EditorEngine::Exit()
@@ -82,7 +94,7 @@ void EditorEngine::Exit()
 
 void EditorEngine::BeginPlay()
 {
-    for (auto entity : mAssetManager->GetScene()->entities)
+    for (auto entity : AssetManager::GetInstance().GetScene()->entities)
         entity.BeginPlay();
     bPlaying = true;
 }
@@ -96,16 +108,29 @@ void EditorEngine::EndPlay()
 
 void EditorEngine::CreateScene()
 {
-    for (Entity& entity : mAssetManager->GetScene()->entities)
+    // Skybox
+    {
+        ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid("5ac9d5cc-5be3-4000-8b54-cffc76be4f40"));
+        ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
+            graphicsContext->CreateShaderlab(shaderProxy);
+        });
+
+        ENQUEUE_RENDER_COMMAND("CreateSkyItem", [](RHIContext* graphicsContext) {
+            graphicsContext->CreateSkyItem();
+        });
+    }
+
+    // Entities
+    for (Entity& entity : AssetManager::GetInstance().GetScene()->entities)
     {
         MeshComponent* meshComponent = entity.GetMeshContainer();
-        Mesh* mesh = mAssetManager->GetMeshByGUID(xg::Guid(meshComponent->meshRef.guid));
+        Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent->meshRef.guid));
         ENQUEUE_RENDER_COMMAND("CreateGeo", [meshProxy = Mesh(*mesh)](RHIContext* graphicsContext) {
             graphicsContext->CreateGeometry(meshProxy);
         });
 
         MeshRendererComponent* meshRenderer = entity.GetMeshRenderer();
-        ShaderLab* shader = mAssetManager->GetShaderlabByGUID(xg::Guid(meshRenderer->materialRef.guid));
+        ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer->materialRef.guid));
         ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
             graphicsContext->CreateShaderlab(shaderProxy);
         });
