@@ -24,6 +24,7 @@ void EditorEngine::PreInit(const WindowInfo& windowInfo)
 void EditorEngine::Init()
 {
     // Load asset manager, we load all the assts now, later will only load scene assets at begining
+    // CPU built-in meshes will be established here
     AssetManager::GetInstance().BuildResourceMap();
 
     // Build built-in meshes, its okay to pass pointer since built in mesh will not be modified
@@ -58,14 +59,17 @@ void EditorEngine::Tick()
     if (bPlaying)
     {
         for (auto entity : AssetManager::GetInstance().GetScene()->entities)
-            entity.Tick();
+            entity->Tick();
     }
 
     // Update object constant buffer
     auto entities = AssetManager::GetInstance().GetScene()->entities;
-    ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entities](RHIContext* graphicsContext) {
-        graphicsContext->UpdateObjectCB(entities);
-    });
+    for (auto entityPtr : entities)
+    {
+        ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entityProxy = Entity(*entityPtr.get())](RHIContext* graphicsContext) {
+            graphicsContext->UpdateObjectCB(entityProxy);
+        });
+    }
 
     // Update pass constant buffer
     auto camera = AssetManager::GetInstance().GetScene()->camera;
@@ -95,7 +99,7 @@ void EditorEngine::Exit()
 void EditorEngine::BeginPlay()
 {
     for (auto entity : AssetManager::GetInstance().GetScene()->entities)
-        entity.BeginPlay();
+        entity->BeginPlay();
     bPlaying = true;
 }
 
@@ -121,22 +125,22 @@ void EditorEngine::CreateScene()
     }
 
     // Entities
-    for (Entity& entity : AssetManager::GetInstance().GetScene()->entities)
+    for (auto entity : AssetManager::GetInstance().GetScene()->entities)
     {
-        MeshComponent* meshComponent = entity.GetMeshContainer();
+        MeshComponent* meshComponent = entity->GetMeshContainerPtr();
         Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent->meshRef.guid));
         ENQUEUE_RENDER_COMMAND("CreateGeo", [meshProxy = Mesh(*mesh)](RHIContext* graphicsContext) {
             graphicsContext->CreateGeometry(meshProxy);
         });
 
-        MeshRendererComponent* meshRenderer = entity.GetMeshRenderer();
+        MeshRendererComponent* meshRenderer = entity->GetMeshRenderer();
         ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer->materialRef.guid));
         ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
             graphicsContext->CreateShaderlab(shaderProxy);
         });
 
-        ENQUEUE_RENDER_COMMAND("CreateRenderItem", [entity](RHIContext* graphicsContext) {
-            graphicsContext->CreateRenderItem(const_cast<Entity&>(entity));
+        ENQUEUE_RENDER_COMMAND("CreateRenderItem", [entityProxy = Entity(*entity.get())](RHIContext* graphicsContext) {
+            graphicsContext->CreateRenderItem(entityProxy);
         });
     }
 }

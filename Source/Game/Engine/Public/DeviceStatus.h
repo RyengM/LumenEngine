@@ -24,6 +24,8 @@ namespace Lumen::Game
 		bool aPressed = false;
 		bool dPressed = false;
 
+		bool bSceneWindow = false;
+
 		void ProcessMouseMovement(float x, float y)
 		{
 			Vec2 pos{ x, y };

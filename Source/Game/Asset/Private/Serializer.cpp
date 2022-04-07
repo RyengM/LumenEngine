@@ -1,5 +1,4 @@
 #include "Game/Asset/Public/Serializer.h"
-#include "Test/SerializeTest/Public/Derived.h"
 #include <regex>
 #include <fstream>
 
@@ -70,6 +69,7 @@ void Serializer::SerializeInternal(PrettyWriter<StringBuffer>& writer, const rtt
 {
     writer.StartObject();
     type t = obj.get_derived_type();
+    if (t.is_wrapper()) t = t.get_wrapped_type();
 
     for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
     {
@@ -100,6 +100,8 @@ void Serializer::Deserialize(BaseObject* obj, std::string_view path)
 void Serializer::DeserializeInternal(rttr::instance obj, Value& json)
 {
     type t = obj.get_derived_type();
+    if (t.is_wrapper()) t = t.get_wrapped_type();
+
     for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
     {
         Value::MemberIterator ret = json.FindMember(p.get_name().data());
@@ -131,9 +133,23 @@ void Serializer::DeserializeInternal(rttr::instance obj, Value& json)
             }
             case kObjectType:
             {
-                variant var = p.get_value(obj);
-                DeserializeInternal(var, jsonValue);
-                p.set_value(obj, var);
+                // We only support shared pointer now
+                // unique ptr will forbid copy opeartion
+                if (propertyType.is_wrapper() && propertyType.get_wrapped_type().is_pointer())
+                {
+                    std::string name = propertyType.get_wrapped_type().get_name().data();
+                    std::string pureName = name.substr(0, name.length() - 1);
+                    type derivedType = type::get_by_name(pureName);
+                    variant var = derivedType.create();
+                    DeserializeInternal(var, jsonValue);
+                    p.set_value(obj, var);
+                }
+                else
+                {
+                    variant var = p.get_value(obj);
+                    DeserializeInternal(var, jsonValue);
+                    p.set_value(obj, var);
+                }
                 break;
             }
             default:
@@ -366,10 +382,24 @@ void Serializer::ReadArray(variant_sequential_view& view, Value& value)
         }
         else if (jsonIndexValue.IsObject())
         {
-            variant varTemp = view.get_value(i);
-            variant wrappedVar = varTemp.extract_wrapped_value();
-            DeserializeInternal(wrappedVar, jsonIndexValue);
-            view.set_value(i, wrappedVar);
+            // We only support shared pointer now
+            // unique ptr will forbid copy opeartion
+            if (valueType.is_wrapper() && valueType.get_wrapped_type().is_pointer())
+            {
+                std::string name = valueType.get_wrapped_type().get_name().data();
+                std::string pureName = name.substr(0, name.length() - 1);
+                type derivedType = type::get_by_name(pureName);
+                variant var = derivedType.create();
+                DeserializeInternal(var, jsonIndexValue);
+                view.set_value(i, var);
+            }
+            else
+            {
+                variant varTemp = view.get_value(i);
+                variant wrappedVar = varTemp.extract_wrapped_value();
+                DeserializeInternal(wrappedVar, jsonIndexValue);
+                view.set_value(i, wrappedVar);
+            }
         }
         else
         {

@@ -55,7 +55,7 @@ void Camera::UpdateProjMatrix()
 
 void Camera::ProcessKeyboard()
 {
-	if (deviceStatus->rightMouseActive)
+	if (deviceStatus->bSceneWindow && deviceStatus->rightMouseActive)
 	{
 		if (deviceStatus->wPressed)
 			mTransform.position += mFront * mMoveSpeed;
@@ -71,7 +71,7 @@ void Camera::ProcessKeyboard()
 
 void Camera::ProcessMouseMovement()
 {
-	if (deviceStatus->rightMouseActive)
+	if (deviceStatus->bSceneWindow && deviceStatus->rightMouseActive)
 	{
 		float sign = mUp.y > 0 ? -1.0f : 1.0f;
 		mYaw += sign * deviceStatus->delta.x;

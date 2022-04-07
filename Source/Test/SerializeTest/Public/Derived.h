@@ -8,6 +8,8 @@ using namespace Lumen::Game;
 using namespace Lumen::Core;
 using namespace rttr;
 
+// It seems std::vector<std::shared_ptr<T>> cannot be parsed by USRefl correctly now. Try fix later
+
 namespace Lumen::Test
 {
     struct DerivedComponent : Component
@@ -63,7 +65,13 @@ namespace Lumen::Test
         DerivedSubComponent mObj;
 
         [[serialize(true)]]
+        std::shared_ptr<DerivedSubComponent> mObjPtr;
+
+        [[serialize(true)]]
         std::vector<DerivedSubComponent> mObjs;
+
+        [[serialize(true)]]
+        std::vector<std::shared_ptr<DerivedSubComponent>> mObjPtrs;
 
     private:
         [[serialize(true)]]

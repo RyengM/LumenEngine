@@ -38,7 +38,6 @@ Shader "SimpleSky"
                 Out.posL = In.posL;
 
                 // Transform to world space.
-                //float4 posW = mul(float4(In.posL, 1.0f), gWorld);
                 float4 posW = float4(In.posL, 1.0f);
 
                 // Always center sky about camera.

@@ -18,9 +18,13 @@ namespace Lumen::Game
         inline std::string GetName() const noexcept { return mName; }
         inline void SetName(std::string_view name) noexcept { mName = name; }
 
-        inline TransformComponent* GetTransform() noexcept { return &mTransform; }
+        // Used for data transmission between threads, object type should be const
+        inline TransformComponent GetTransform() const noexcept { return mTransform; }
+        // Used for UI interaction, to modify data directly, object type must be pointer
+        inline TransformComponent* GetTransformPtr() noexcept { return &mTransform; }
 
-        inline MeshComponent* GetMeshContainer() noexcept {return &mMeshContainer;}
+        inline MeshComponent GetMeshContainer() const noexcept {return mMeshContainer;}
+        inline MeshComponent* GetMeshContainerPtr() noexcept {return &mMeshContainer;}
         inline void SetMeshGUID(std::string_view guid) noexcept { mMeshContainer.meshRef.guid = guid; }
 
         inline MeshRendererComponent* GetMeshRenderer() noexcept { return &mMeshRenderer; }

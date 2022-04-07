@@ -23,8 +23,13 @@ Derived::Derived(std::string_view name)
     SetName(name);
     name = "sub";
 
-    for (int i = 0; i < 2; i++)
-        mObjs.emplace_back(2);
+	mObjPtr = std::make_shared<DerivedSubComponent>();
+
+	for (int i = 0; i < 2; i++)
+	{
+		mObjs.emplace_back(2);
+		mObjPtrs.emplace_back(std::make_shared<DerivedSubComponent>());
+	}
 };
 
 void Derived::Func()
@@ -86,7 +91,15 @@ RTTR_REGISTRATION
 		(
 			metadata("serialize", true)
 		)
+		.property("mObjPtr", &Derived::mObjPtr)
+		(
+			metadata("serialize", true)
+		)
 		.property("mObjs", &Derived::mObjs)
+		(
+			metadata("serialize", true)
+		)
+		.property("mObjPtrs", &Derived::mObjPtrs)
 		(
 			metadata("serialize", true)
 		)

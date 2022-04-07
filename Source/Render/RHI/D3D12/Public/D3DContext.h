@@ -35,7 +35,7 @@ namespace Lumen::Render
 
         virtual void Present() override;
 
-        virtual void UpdateObjectCB(const std::vector<Entity>& entities) override;
+        virtual void UpdateObjectCB(const Entity& entity) override;
 
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) override;
 
@@ -53,7 +53,7 @@ namespace Lumen::Render
 
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
-        virtual void CreateRenderItem(Entity& entity) override;
+        virtual void CreateRenderItem(const Entity& entity) override;
 
         virtual void CreateSkyItem() override;
 

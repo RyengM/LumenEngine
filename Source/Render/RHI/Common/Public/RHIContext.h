@@ -48,7 +48,7 @@ namespace Lumen::Render
 
         virtual void Present() = 0;
 
-        virtual void UpdateObjectCB(const std::vector<Entity>& entities) = 0;
+        virtual void UpdateObjectCB(const Entity& entity) = 0;
 
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) = 0;
 
@@ -72,7 +72,7 @@ namespace Lumen::Render
         virtual void CreateShaderlab(const ShaderLab& shaderlab) = 0;
 
         // Create render item
-        virtual void CreateRenderItem(Entity& entity) = 0;
+        virtual void CreateRenderItem(const Entity& entity) = 0;
 
         // Create sky render item
         virtual void CreateSkyItem() = 0;

@@ -71,32 +71,19 @@ void D3DContext::Present()
     mSwapChain->Present();
 }
 
-void D3DContext::UpdateObjectCB(const std::vector<Entity>& entities)
+void D3DContext::UpdateObjectCB(const Entity& entity)
 {
     auto objectCB = mGraphicsContext->currentFrameResource->objectBuffers.get();
 
-    {
-        ObjectConstants constants;
+    ObjectConstants constants;
 
-        Mat4 world = Mat4(1.f);
-        DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
-        XMStoreFloat4x4(&constants.model, model);
+    Mat4 world = Mat4(1.f).Scale(entity.GetTransform().scale).Translate(entity.GetTransform().position);
+    DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
+    XMStoreFloat4x4(&constants.model, model);
 
-        objectCB->SetData<ObjectConstants>(mRenderItems[(uint32_t)ERenderLayer::Sky][0]->objectCBIndex, constants, true);
-    }
-
-    for (auto entity : entities)
-    {
-        ObjectConstants constants;
-
-        Mat4 world = Mat4(1.f).Scale(entity.GetTransform()->scale).Translate(entity.GetTransform()->position);
-        DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
-        XMStoreFloat4x4(&constants.model, model);
-
-        auto item = mAllRenderItems[entity.GetName()].get();
-        item->world = constants.model;
-        objectCB->SetData<ObjectConstants>(item->objectCBIndex, constants, true);
-    }
+    auto item = mAllRenderItems[entity.GetName()].get();
+    item->world = constants.model;
+    objectCB->SetData<ObjectConstants>(item->objectCBIndex, constants, true);
 }
 
 void D3DContext::UpdatePassCB(const Camera& camera, const DirectionalLight& light)
@@ -459,11 +446,11 @@ void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
     }
 }
 
-void D3DContext::CreateRenderItem(Entity& entity)
+void D3DContext::CreateRenderItem(const Entity& entity)
 {
     auto item = std::make_unique<D3DRenderItem>();
     item->name = entity.GetName();
-    item->mesh = mMeshes.at(entity.GetMeshContainer()->meshRef.name).get();
+    item->mesh = mMeshes.at(entity.GetMeshContainer().meshRef.name).get();
     item->objectCBIndex = mIncreRenderItemIndex++;
     mRenderItems[(uint32_t)ERenderLayer::Opaque].push_back(item.get());
     mAllRenderItems[item->name] = std::move(item);

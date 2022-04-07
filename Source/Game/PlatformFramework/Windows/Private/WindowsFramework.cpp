@@ -133,7 +133,6 @@ void WindowsFramework::UpdateGuiWindow()
 
     // Show scene hierarchy
     {
-        
         ImGui::Begin("Hierarchy");
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
@@ -141,8 +140,26 @@ void WindowsFramework::UpdateGuiWindow()
             for (int i = 0; i < scene->entities.size(); i++)
             {
                 auto& entity = scene->entities[i];
-                if (ImGui::Selectable(entity.GetName().c_str(), selected == i))
+                if (ImGui::Selectable(entity->GetName().c_str(), selected == i))
                     selected = i;
+            }
+
+            if (ImGui::BeginPopupContextWindow())
+            {
+                if (ImGui::TreeNode("Add entity"))
+                {
+                    for (auto type : type::get_types())
+                    {
+                        if (type.is_derived_from<Entity>() && type.is_class())
+                        {
+                            if (ImGui::Button(type.get_name().data()))
+                            {
+                            }
+                        }
+                    }
+                    ImGui::TreePop();
+                }
+                ImGui::EndPopup();
             }
         }
         ImGui::End();
@@ -154,11 +171,11 @@ void WindowsFramework::UpdateGuiWindow()
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
-            ImGui::Text(scene->entities[selected].GetName().c_str());
-            Entity* selectedEntity = &scene->entities[selected];
+            ImGui::Text(scene->entities[selected]->GetName().c_str());
+            Entity* selectedEntity = scene->entities[selected].get();
             if (ImGui::CollapsingHeader("Transform"))
             {
-                auto transform = selectedEntity->GetTransform();
+                auto transform = selectedEntity->GetTransformPtr();
                 ImGui::LabelText("label", "Value");
                 {
                     ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position.x));
@@ -184,6 +201,12 @@ void WindowsFramework::UpdateGuiWindow()
     {
         ImGui::Begin("Scene");
 
+        if (ImGui::IsWindowHovered())
+            mEngine.deviceStatus->bSceneWindow = true;
+        else
+            mEngine.deviceStatus->bSceneWindow = false;
+
+        // Show scene RT
         if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
         {
             auto sceneBufPtr = mEngine.GetSceneBufferPtr();

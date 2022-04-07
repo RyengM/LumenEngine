@@ -2,7 +2,7 @@
 
 #include "Core/Common/Public/BaseObject.h"
 
-// It seems operator/= cannot be reflected by UANTLR correctly now. Try fix later
+// It seems operator/= cannot be parsed by USRefl correctly now. Try fix later
 
 namespace Lumen::Core
 {

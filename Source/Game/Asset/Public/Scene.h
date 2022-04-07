@@ -4,13 +4,13 @@
 #include "Game/GamePlay/Public/Camera.h"
 #include "Game/GamePlay/Public/Light.h"
 
+// It seems std::vector<std::shared_ptr<T>> cannot be parsed by USRefl correctly now. Try fix later
+
 namespace Lumen::Game
 {
-    struct Scene : public BaseObject 
+    struct Scene : public BaseObject
     {
         Scene();
-        Scene(const Scene& rhs);
-        Scene(Scene&& rhs);
         
         // TODO. Settings
 
@@ -21,7 +21,7 @@ namespace Lumen::Game
         DirectionalLight light;
 
         [[serialize(true)]]
-        std::vector<Entity> entities;
+        std::vector<std::shared_ptr<Entity>> entities;
 
         // TODO. Add prefabs to support entity group ref
 
