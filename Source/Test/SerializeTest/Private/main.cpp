@@ -10,6 +10,7 @@ int main() {
     variant derived = derivedType.create({ std::string_view("TestObject") });
 
     Derived* s = derived.get_value<Derived*>();
+    s->mVec = Vec3(7, 8, 9);
     Serializer::GetInstance().Serialize(s, "./test.json");
     
     Derived d;

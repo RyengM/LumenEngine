@@ -27,6 +27,11 @@ namespace Lumen::Game
         void Clean();
         // GUI interaction
         void EnterDictRecur(AssetTreeNode* node);
+        // @param0: object ref
+        void ShowDetailInternal(rttr::instance obj);
+        // @param0: object ref, @param1: property, @param2: deep copied variant of object
+        bool ShowDetailAtomic(rttr::instance obj, const rttr::property& p, rttr::variant& var);
+        void BindVariant(rttr::instance obj, const rttr::property& p, rttr::variant& var);
         void UpdateGuiWindow();
 
     public:

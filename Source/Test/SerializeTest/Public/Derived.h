@@ -59,7 +59,10 @@ namespace Lumen::Test
         double mDouble = 10.0;
 
         [[serialize(true)]]
-        Vec3 mVec = Vec3(1,2,3);
+        Vec3 mVec = Vec3(1, 2, 3);
+
+        [[serialize(true)]]
+        Vec3 mVec1 = Vec3(4, 5, 6);
 
         [[serialize(true)]]
         DerivedSubComponent mObj;

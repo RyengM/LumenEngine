@@ -87,6 +87,10 @@ RTTR_REGISTRATION
 		(
 			metadata("serialize", true)
 		)
+		.property("mVec1", &Derived::mVec1)
+		(
+			metadata("serialize", true)
+		)
 		.property("mObj", &Derived::mObj)
 		(
 			metadata("serialize", true)

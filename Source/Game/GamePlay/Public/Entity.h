@@ -33,8 +33,6 @@ namespace Lumen::Game
     protected:
         [[serialize(true)]]
         std::string mName;
-        [[serialize(true)]]
-        std::vector<Entity> mChildEntities;
 
         [[serialize(true)]]
         TransformComponent mTransform;

@@ -18,15 +18,13 @@ RTTR_REGISTRATION
 		.method("GetName", &Entity::GetName)
 		.method("SetName", &Entity::SetName)
 		.method("GetTransform", &Entity::GetTransform)
+		.method("GetTransformPtr", &Entity::GetTransformPtr)
 		.method("GetMeshContainer", &Entity::GetMeshContainer)
+		.method("GetMeshContainerPtr", &Entity::GetMeshContainerPtr)
 		.method("SetMeshGUID", &Entity::SetMeshGUID)
 		.method("GetMeshRenderer", &Entity::GetMeshRenderer)
 		.method("SetShaderGUID", &Entity::SetShaderGUID)
 		.property("mName", &Entity::mName, registration::protected_access)
-		(
-			metadata("serialize", true)
-		)
-		.property("mChildEntities", &Entity::mChildEntities, registration::protected_access)
 		(
 			metadata("serialize", true)
 		)

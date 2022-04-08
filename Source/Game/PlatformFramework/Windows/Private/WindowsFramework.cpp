@@ -5,6 +5,7 @@
 #include <cassert>
 #include <WindowsX.h>
 #include <filesystem>
+#include <regex>
 
 using namespace Lumen::Game;
 using namespace Lumen::Core;
@@ -103,21 +104,6 @@ void WindowsFramework::Clean()
     mImguiManager.Clear();
 }
 
-void WindowsFramework::EnterDictRecur(AssetTreeNode* node)
-{
-    for (auto childNode : node->children)
-    {
-        if (childNode->fileType == "Directory")
-        {
-            if (ImGui::TreeNode(childNode->fileName.data()))
-                EnterDictRecur(childNode.get());
-        }
-        else if (childNode->fileType == "Regular")
-            ImGui::Text(childNode->fileName.data());
-    }
-    ImGui::TreePop();
-}
-
 void WindowsFramework::UpdateGuiWindow()
 {
     static int selected = 0;
@@ -152,6 +138,10 @@ void WindowsFramework::UpdateGuiWindow()
                     {
                         if (type.is_derived_from<Entity>() && type.is_class())
                         {
+                            auto name = type.get_name();
+                            // Do not support create camera and light yet
+                            if (name == "Camera" || name == "DirectionalLight")
+                                continue;
                             if (ImGui::Button(type.get_name().data()))
                             {
                             }
@@ -171,18 +161,21 @@ void WindowsFramework::UpdateGuiWindow()
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
+            auto name = scene->entities[selected]->GetName();
+            // Find class name to reflect properties
+            auto className = std::string(typeid(*scene->entities[selected].get()).name());
+            std::smatch result;
+            if (std::regex_search(className, result, std::regex("(\\w*)(?=$)")))
+                className = result[0].str();
+
+            type t = type::get_by_name(className);
+
             ImGui::Text(scene->entities[selected]->GetName().c_str());
             Entity* selectedEntity = scene->entities[selected].get();
-            if (ImGui::CollapsingHeader("Transform"))
-            {
-                auto transform = selectedEntity->GetTransformPtr();
-                ImGui::LabelText("label", "Value");
-                {
-                    ImGui::DragFloat3("translate", reinterpret_cast<float*>(&transform->position.x));
-                    ImGui::DragFloat3("rotation", reinterpret_cast<float*>(&transform->rotation.x));
-                    ImGui::DragFloat3("scale", reinterpret_cast<float*>(&transform->scale.x));
-                }
-            }
+
+            // Get object ref, note variant will deep copy instance data
+            rttr::instance obj(selectedEntity);
+            ShowDetailInternal(selectedEntity);
         }
         ImGui::End();
     }
@@ -214,6 +207,82 @@ void WindowsFramework::UpdateGuiWindow()
         }
         ImGui::End();
     }
+}
+
+void WindowsFramework::EnterDictRecur(AssetTreeNode* node)
+{
+    for (auto childNode : node->children)
+    {
+        if (childNode->fileType == "Directory")
+        {
+            if (ImGui::TreeNode(childNode->fileName.data()))
+                EnterDictRecur(childNode.get());
+        }
+        else if (childNode->fileType == "Regular")
+            ImGui::Text(childNode->fileName.data());
+    }
+    ImGui::TreePop();
+}
+
+void WindowsFramework::ShowDetailInternal(rttr::instance obj)
+{
+    type t = obj.get_derived_type();
+    for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
+    {
+        if (p.get_metadata("serialize").is_valid() && p.get_metadata("serialize").to_bool())
+        {
+            variant var = p.get_value(obj);
+            BindVariant(obj, p, var);
+            // Must read back to modify origin data
+            p.set_value(obj, var);
+        }
+    }
+}
+
+void WindowsFramework::BindVariant(rttr::instance obj, const rttr::property& p, rttr::variant& var)
+{
+    auto t = var.get_type();
+    // Arithmetic
+    if (ShowDetailAtomic(obj, p, var)) {}
+    // Object
+    else
+    {
+        // Special handling for Vec3 type, because item with same label name will be recognized as same one in imgui
+        if (t.get_name() == "Vec3")
+        {
+            ImGui::DragFloat3(p.get_name().data(), &var.get_value<Vec3>().x, 0.1f);
+            return;
+        }
+        if (ImGui::CollapsingHeader(p.get_name().data()))
+        {
+            auto childProps = t.get_properties();
+            if (!childProps.empty())
+                ShowDetailInternal(var);
+        }
+    }
+}
+
+bool WindowsFramework::ShowDetailAtomic(rttr::instance obj, const rttr::property& p, rttr::variant& var)
+{
+    auto propertyName = p.get_name().data();
+    auto t = var.get_type();
+    if (t.is_arithmetic())
+    {
+        if (t == type::get<bool>())
+            ImGui::Checkbox(propertyName, &var.get_value<bool>());
+        else if (t == type::get<int8_t>() || t == type::get<int16_t>() || t == type::get<int32_t>() || t == type::get<int64_t>() ||
+            t == type::get<uint8_t>() || t == type::get<uint16_t>() || t == type::get<uint32_t>() || t == type::get<uint64_t>())
+            ImGui::DragInt(propertyName, &var.get_value<int>(), 1);
+        else if (t == type::get<float>() || t == type::get<double>())
+            ImGui::DragFloat(propertyName, &var.get_value<float>(), 0.1f);
+        return true;
+    }
+    else if (t == type::get<std::string>())
+    {
+        ImGui::LabelText(propertyName, var.to_string().c_str());
+        return true;
+    }
+    return false;
 }
 
 bool WindowsFramework::HandleIO()
