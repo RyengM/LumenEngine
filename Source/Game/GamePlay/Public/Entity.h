@@ -15,6 +15,7 @@ namespace Lumen::Game
         virtual void BeginPlay() {};
         virtual void Tick() {};
 
+        inline std::string GetEntityClassName() const noexcept { return mClassName; }
         inline std::string GetName() const noexcept { return mName; }
         inline void SetName(std::string_view name) noexcept { mName = name; }
 
@@ -30,19 +31,24 @@ namespace Lumen::Game
         inline MeshRendererComponent* GetMeshRenderer() noexcept { return &mMeshRenderer; }
         inline void SetShaderGUID(std::string_view guid) noexcept { mMeshRenderer.materialRef.guid = guid; }
 
+        inline xg::Guid GetGuid() const noexcept { return mGuid; }
+
     protected:
+        [[serialize(true)]]
+        std::string mClassName = "Entity";
+
         [[serialize(true)]]
         std::string mName;
 
         [[serialize(true)]]
         TransformComponent mTransform;
-
-        // Fix component type now, to expand ability to use vector of pointers
-        // We need to allocate specific type of memory before auto deserialize
         [[serialize(true)]]
         MeshComponent mMeshContainer;
         [[serialize(true)]]
         MeshRendererComponent mMeshRenderer;
+
+        // Each entity instance in the scene will have a unique id, no not need to be serialized
+        xg::Guid mGuid;
 
         RTTR_REGISTRATION_FRIEND
         RTTR_ENABLE(BaseObject)

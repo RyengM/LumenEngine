@@ -74,6 +74,9 @@ namespace Lumen::Render
         // Create render item
         virtual void CreateRenderItem(const Entity& entity) = 0;
 
+        // Remove render item
+        virtual void RemoveRenderItem(std::string_view guid) = 0;
+
         // Create sky render item
         virtual void CreateSkyItem() = 0;
 

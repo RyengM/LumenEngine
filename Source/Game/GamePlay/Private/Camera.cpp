@@ -4,11 +4,12 @@ using namespace Lumen::Game;
 
 Camera::Camera()
 {
-
+	mClassName = "Camera";
 }
 
 Camera::Camera(float fov, float aspect, float nearPlane, float farPlane)
 {
+	mClassName = "Camera";
 	mFov = fov;
 	mAspectRatio = aspect;
 	mNearPlane = nearPlane;

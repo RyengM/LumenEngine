@@ -12,6 +12,10 @@ int main() {
     std::vector<BaseObject*> vec;
     vec.emplace_back(d);
 
+    BaseObject* b = static_cast<Derived*>(d);
+    instance ins = b;
+    auto t = ins.get_derived_type();
+
     constructor cons = derivedType.get_constructor();
     constructor cons2 = derivedType.get_constructor({ type::get<int>() });
     cons.invoke();

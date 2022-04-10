@@ -1,5 +1,6 @@
 {
     "camera": {
+        "mClassName": "Entity",
         "mName": "",
         "mTransform": {
             "position": {
@@ -20,31 +21,34 @@
         },
         "mMeshContainer": {
             "meshRef": {
+                "name": "",
                 "guid": ""
             }
         },
         "mMeshRenderer": {
             "materialRef": {
+                "name": "",
                 "guid": ""
             }
         },
         "mUp": {
-            "x": 0.0,
-            "y": 1.0,
-            "z": 0.0
+            "x": -0.005776154343038797,
+            "y": 0.9961947202682495,
+            "z": -0.08696415275335312
         },
         "mFront": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 1.0
+            "x": 0.06602172553539276,
+            "y": 0.0871557667851448,
+            "z": 0.9940045475959778
         },
         "mFov": 45.0,
         "mAspectRatio": 1.7777777910232544,
         "mNearPlane": 0.10000000149011612,
         "mFarPlane": 100.0,
-        "mMoveSpeed": 0.2
+        "mMoveSpeed": 0.20000000298023224
     },
     "light": {
+        "mClassName": "Entity",
         "mName": "",
         "mTransform": {
             "position": {
@@ -65,11 +69,13 @@
         },
         "mMeshContainer": {
             "meshRef": {
+                "name": "",
                 "guid": ""
             }
         },
         "mMeshRenderer": {
             "materialRef": {
+                "name": "",
                 "guid": ""
             }
         },
@@ -81,10 +87,11 @@
     },
     "entities": [
         {
+            "mClassName": "Entity",
             "mName": "box",
             "mTransform": {
                 "position": {
-                    "x": 0.0,
+                    "x": 0.30000001192092896,
                     "y": 0.0,
                     "z": 0.0
                 },
@@ -94,9 +101,9 @@
                     "z": 0.0
                 },
                 "scale": {
-                    "x": 0.2,
-                    "y": 0.2,
-                    "z": 0.2
+                    "x": 0.20000000298023224,
+                    "y": 0.20000000298023224,
+                    "z": 0.20000000298023224
                 }
             },
             "mMeshContainer": {
@@ -109,6 +116,74 @@
                 "materialRef": {
                     "name": "boxBaseColor",
                     "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
+                }
+            }
+        },
+        {
+            "mClassName": "TestEntity",
+            "mName": "testObj",
+            "mTransform": {
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "mMeshContainer": {
+                "meshRef": {
+                    "name": "",
+                    "guid": ""
+                }
+            },
+            "mMeshRenderer": {
+                "materialRef": {
+                    "name": "",
+                    "guid": ""
+                }
+            },
+            "mIntValue": 0,
+            "mStrValue": "Test"
+        },
+        {
+            "mClassName": "TestEntity",
+            "mName": "TestEntity_0",
+            "mTransform": {
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "mMeshContainer": {
+                "meshRef": {
+                    "name": "",
+                    "guid": ""
+                }
+            },
+            "mMeshRenderer": {
+                "materialRef": {
+                    "name": "",
+                    "guid": ""
                 }
             }
         }

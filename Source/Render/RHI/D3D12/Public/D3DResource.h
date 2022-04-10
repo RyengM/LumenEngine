@@ -113,6 +113,9 @@ namespace Lumen::Render
 
         D3DMeshGeometry* mesh;
         D3D12_PRIMITIVE_TOPOLOGY primitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+        // Same id with entity in the scene
+        std::string guid;
     };
 
     struct D3DLight

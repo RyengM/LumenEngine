@@ -32,6 +32,8 @@ namespace Lumen::Game
         bool LoadAsset(std::filesystem::path path);
         // Scan assets folder, buuid asset tree and resource map
         void BuildResourceMap();
+        // Serialize scene to asset folder, TODO, now only support one default scene
+        void SaveScene();
 
         Mesh* GetMeshByGUID(xg::Guid guid);
         Texture* GetTextureByGUID(xg::Guid guid);

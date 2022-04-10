@@ -14,6 +14,7 @@ namespace Lumen::Game
         DirectionalLight();
         DirectionalLight(const Vec3& pos, const Vec3& direction, const Vec3& scale, const Vec3& strength) : strength(strength)
         {
+            mClassName = "DirectionalLight";
             mTransform.position = pos;
             mTransform.rotation = direction;
             mTransform.scale = scale;

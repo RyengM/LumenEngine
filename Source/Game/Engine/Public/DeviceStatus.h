@@ -16,6 +16,7 @@ namespace Lumen::Game
 
 		bool leftAltActive = false;
 		bool leftShiftActive = false;
+		bool leftCtrlActive = false;
 		bool leftMouseActive = false;
 		bool rightMouseActive = false;
 

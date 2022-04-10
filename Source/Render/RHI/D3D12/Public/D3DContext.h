@@ -55,6 +55,8 @@ namespace Lumen::Render
 
         virtual void CreateRenderItem(const Entity& entity) override;
 
+        virtual void RemoveRenderItem(std::string_view guid) override;
+
         virtual void CreateSkyItem() override;
 
         virtual RHICommandContext* GetContext(const EContextType& type) override;

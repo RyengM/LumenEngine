@@ -37,6 +37,11 @@ void AssetManager::BuildResourceMap()
     EnterDictRecur(assetFolder, mAssetTree.get());
 }
 
+void AssetManager::SaveScene()
+{
+    Serializer::GetInstance().Serialize(mScene.get(), "../../Assets/Scene/simpleScene.scene");
+}
+
 void AssetManager::EnterDictRecur(const std::string& dir, AssetTreeNode* node) {
     directory_iterator list(dir);
     for (auto& it : list) {
@@ -160,18 +165,24 @@ void AssetManager::CreateBuiltInMeshes()
 
 Mesh* AssetManager::GetMeshByGUID(xg::Guid guid)
 {
-    Mesh* mesh = mGuid2MeshMap.at(guid);
+    Mesh* mesh = nullptr;
+    if (mGuid2MeshMap.find(guid) != mGuid2MeshMap.end())
+        mesh = mGuid2MeshMap.at(guid);
     return mesh;
 }
 
 Texture* AssetManager::GetTextureByGUID(xg::Guid guid)
 {
-    Texture* tex = mGuid2TextureMap.at(guid);
+    Texture* tex = nullptr;
+    if (mGuid2TextureMap.find(guid) != mGuid2TextureMap.end())
+        tex = mGuid2TextureMap.at(guid);
     return tex;
 }
 
 ShaderLab* AssetManager::GetShaderlabByGUID(xg::Guid guid)
 {
-    ShaderLab* shaderlab = mGuid2ShaderLabMap.at(guid);
+    ShaderLab* shaderlab = nullptr;
+    if (mGuid2ShaderLabMap.find(guid) != mGuid2ShaderLabMap.end())
+        shaderlab = mGuid2ShaderLabMap.at(guid);
     return shaderlab;
 }

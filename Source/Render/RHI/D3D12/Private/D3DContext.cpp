@@ -81,7 +81,8 @@ void D3DContext::UpdateObjectCB(const Entity& entity)
     DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
     XMStoreFloat4x4(&constants.model, model);
 
-    auto item = mAllRenderItems[entity.GetName()].get();
+    if (mAllRenderItems.find(entity.GetGuid().str()) == mAllRenderItems.end()) return;
+    auto item = mAllRenderItems[entity.GetGuid().str()].get();
     item->world = constants.model;
     objectCB->SetData<ObjectConstants>(item->objectCBIndex, constants, true);
 }
@@ -181,6 +182,7 @@ void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::
     for (auto& item : renderItems)
     {
         auto geo = item->mesh;
+        if (!geo) continue;
 
         auto vBufferView = geo->VertexBufferView();
         auto iBufferView = geo->IndexBufferView();
@@ -412,7 +414,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
 
 void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
 {
-    // Hard code now, may can precompile shaderlab to support more flexible parameter binding
+    // Hard code now, may can precompile shaderlab to support more flexible parameter binding later
     auto baseTexture = std::get<std::string>(shaderlab.properties.at("_MainTex").value);
     if (baseTexture == "skybox")
     {
@@ -450,10 +452,22 @@ void D3DContext::CreateRenderItem(const Entity& entity)
 {
     auto item = std::make_unique<D3DRenderItem>();
     item->name = entity.GetName();
-    item->mesh = mMeshes.at(entity.GetMeshContainer().meshRef.name).get();
+    auto meshName = entity.GetMeshContainer().meshRef.name;
+    if (mMeshes.find(meshName) != mMeshes.end())
+        item->mesh = mMeshes.at(meshName).get();
     item->objectCBIndex = mIncreRenderItemIndex++;
+    item->guid = entity.GetGuid().str();
     mRenderItems[(uint32_t)ERenderLayer::Opaque].push_back(item.get());
-    mAllRenderItems[item->name] = std::move(item);
+    mAllRenderItems[item->guid] = std::move(item);
+}
+
+void D3DContext::RemoveRenderItem(std::string_view guid)
+{
+    // TODO. erase is slow, replace with a more effective way later
+    for (int i = 0; i < mRenderItems[(uint32_t)ERenderLayer::Opaque].size(); i++)
+        if (mRenderItems[(uint32_t)ERenderLayer::Opaque][i]->guid == guid.data())
+            mRenderItems[(uint32_t)ERenderLayer::Opaque].erase(mRenderItems[(uint32_t)ERenderLayer::Opaque].begin() + i);
+    mAllRenderItems.erase(guid.data());
 }
 
 void D3DContext::CreateSkyItem()
@@ -463,7 +477,7 @@ void D3DContext::CreateSkyItem()
     skyItem->mesh = mMeshes.at("sphere-builtin").get();
     skyItem->objectCBIndex = mIncreRenderItemIndex++;
     mRenderItems[(uint32_t)ERenderLayer::Sky].push_back(skyItem.get());
-    mAllRenderItems[skyItem->name] = std::move(skyItem);
+    mAllRenderItems[xg::newGuid()] = std::move(skyItem);
 }
 
 RHICommandContext* D3DContext::GetContext(const EContextType& type)

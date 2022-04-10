@@ -69,7 +69,11 @@ void Serializer::SerializeInternal(PrettyWriter<StringBuffer>& writer, const rtt
 {
     writer.StartObject();
     type t = obj.get_derived_type();
-    if (t.is_wrapper()) t = t.get_wrapped_type();
+    if (t.is_wrapper())
+    {
+        instance wrappedInstance = obj.get_wrapped_instance();
+        t = wrappedInstance.get_derived_type();
+    }
 
     for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
     {
@@ -100,7 +104,11 @@ void Serializer::Deserialize(BaseObject* obj, std::string_view path)
 void Serializer::DeserializeInternal(rttr::instance obj, Value& json)
 {
     type t = obj.get_derived_type();
-    if (t.is_wrapper()) t = t.get_wrapped_type();
+    if (t.is_wrapper())
+    {
+        instance wrappedInstance = obj.get_wrapped_instance();
+        t = wrappedInstance.get_derived_type();
+    }
 
     for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
     {
@@ -383,14 +391,24 @@ void Serializer::ReadArray(variant_sequential_view& view, Value& value)
         else if (jsonIndexValue.IsObject())
         {
             // We only support shared pointer now
-            // unique ptr will forbid copy opeartion
+            // Unique ptr will forbid copy opeartion
             if (valueType.is_wrapper() && valueType.get_wrapped_type().is_pointer())
             {
                 std::string name = valueType.get_wrapped_type().get_name().data();
                 std::string pureName = name.substr(0, name.length() - 1);
+
+                // Note. Special handling for entity hierarchy with vector
+                // We should promise className is always the first member of entity, see entity structure
+                {
+                    std::string entityClassName = jsonIndexValue.MemberBegin()->name.GetString();
+                    if (entityClassName == "mClassName")
+                        pureName = jsonIndexValue.MemberBegin()->value.GetString();
+                }
+
                 type derivedType = type::get_by_name(pureName);
                 variant var = derivedType.create();
                 DeserializeInternal(var, jsonIndexValue);
+
                 view.set_value(i, var);
             }
             else

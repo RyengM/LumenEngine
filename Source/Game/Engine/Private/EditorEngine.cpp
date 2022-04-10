@@ -129,15 +129,21 @@ void EditorEngine::CreateScene()
     {
         MeshComponent* meshComponent = entity->GetMeshContainerPtr();
         Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent->meshRef.guid));
-        ENQUEUE_RENDER_COMMAND("CreateGeo", [meshProxy = Mesh(*mesh)](RHIContext* graphicsContext) {
-            graphicsContext->CreateGeometry(meshProxy);
-        });
+        if (mesh)
+        {
+            ENQUEUE_RENDER_COMMAND("CreateGeo", [meshProxy = Mesh(*mesh)](RHIContext* graphicsContext) {
+                graphicsContext->CreateGeometry(meshProxy);
+            });
+        }
 
         MeshRendererComponent* meshRenderer = entity->GetMeshRenderer();
         ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer->materialRef.guid));
-        ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
-            graphicsContext->CreateShaderlab(shaderProxy);
-        });
+        if (shader)
+        {
+            ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
+                graphicsContext->CreateShaderlab(shaderProxy);
+            });
+        }
 
         ENQUEUE_RENDER_COMMAND("CreateRenderItem", [entityProxy = Entity(*entity.get())](RHIContext* graphicsContext) {
             graphicsContext->CreateRenderItem(entityProxy);

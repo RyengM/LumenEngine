@@ -204,15 +204,25 @@ struct sequential_container_mapper_wrapper : iterator_wrapper_base<Tp>
                          !std::is_const<remove_reference_t<ReturnType>>::value, int> = 0>
     static bool set_value(void* container, std::size_t index, argument& value)
     {
-        if (value.get_type() == ::rttr::type::get<value_t>())
+        // Edited: support inherited class pointer conversion
+        auto src_type = value.get_type();
+        rttr::type dst_type = ::rttr::type::get<value_t>();
+        if (src_type.is_wrapper() && dst_type.is_wrapper())
+        {
+            src_type = src_type.get_wrapped_type();
+            dst_type = dst_type.get_wrapped_type();
+            if (src_type.is_derived_from(dst_type))
+            {
+                base_class::get_value(get_container(container), index) = value.get_value<value_t>();
+                return true;
+            }
+        }
+        else if (src_type == dst_type)
         {
             base_class::get_value(get_container(container), index) = value.get_value<value_t>();
             return true;
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     template<typename..., typename C = ConstType, typename ReturnType = decltype(base_class::get_value(std::declval<C&>(), 0)),

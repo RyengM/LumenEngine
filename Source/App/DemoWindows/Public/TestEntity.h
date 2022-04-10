@@ -16,6 +16,9 @@ private:
     [[serialize(true)]]
     int mIntValue = 0;
 
+    [[serialize(true)]]
+    std::string mStrValue = "Test";
+
     RTTR_REGISTRATION_FRIEND
     RTTR_ENABLE(Entity)
 };

@@ -5,7 +5,6 @@
 #include <cassert>
 #include <WindowsX.h>
 #include <filesystem>
-#include <regex>
 
 using namespace Lumen::Game;
 using namespace Lumen::Core;
@@ -108,6 +107,15 @@ void WindowsFramework::UpdateGuiWindow()
 {
     static int selected = 0;
 
+    // Move camera
+    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
+    if (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_D))
+        camera->ProcessKeyboard();
+
+    // Save scene
+    if (ImGui::IsKeyReleased(ImGuiKey_S) && mEngine.deviceStatus->leftCtrlActive)
+        AssetManager::GetInstance().SaveScene();
+
     // Show simple profiler
     {
         ImGui::Begin("Profiler");
@@ -120,6 +128,7 @@ void WindowsFramework::UpdateGuiWindow()
     // Show scene hierarchy
     {
         ImGui::Begin("Hierarchy");
+
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
@@ -130,20 +139,27 @@ void WindowsFramework::UpdateGuiWindow()
                     selected = i;
             }
 
+            if (ImGui::IsWindowHovered() && ImGui::IsKeyReleased(ImGuiKey_Delete))
+            {
+                scene->DeleteEntity(scene->entities[selected]->GetName());
+                selected = 0;
+            }
+
             if (ImGui::BeginPopupContextWindow())
             {
                 if (ImGui::TreeNode("Add entity"))
                 {
-                    for (auto type : type::get_types())
+                    for (auto t : rttr::type::get_types())
                     {
-                        if (type.is_derived_from<Entity>() && type.is_class())
+                        if (t.is_derived_from<Entity>() && t.is_class())
                         {
-                            auto name = type.get_name();
+                            auto name = t.get_name();
                             // Do not support create camera and light yet
                             if (name == "Camera" || name == "DirectionalLight")
                                 continue;
-                            if (ImGui::Button(type.get_name().data()))
+                            if (ImGui::Button(name.data()))
                             {
+                                scene->CreateEntity(name.data());
                             }
                         }
                     }
@@ -161,16 +177,6 @@ void WindowsFramework::UpdateGuiWindow()
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
-            auto name = scene->entities[selected]->GetName();
-            // Find class name to reflect properties
-            auto className = std::string(typeid(*scene->entities[selected].get()).name());
-            std::smatch result;
-            if (std::regex_search(className, result, std::regex("(\\w*)(?=$)")))
-                className = result[0].str();
-
-            type t = type::get_by_name(className);
-
-            ImGui::Text(scene->entities[selected]->GetName().c_str());
             Entity* selectedEntity = scene->entities[selected].get();
 
             // Get object ref, note variant will deep copy instance data
@@ -198,6 +204,11 @@ void WindowsFramework::UpdateGuiWindow()
             mEngine.deviceStatus->bSceneWindow = true;
         else
             mEngine.deviceStatus->bSceneWindow = false;
+
+        // Show control panel
+        if (ImGui::Button("Start")) mEngine.BeginPlay();
+        ImGui::SameLine();
+        if (ImGui::Button("Stop")) mEngine.EndPlay();
 
         // Show scene RT
         if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
@@ -288,9 +299,9 @@ bool WindowsFramework::ShowDetailAtomic(rttr::instance obj, const rttr::property
 bool WindowsFramework::HandleIO()
 {
     ImGuiContext& g = *GImGui;
+    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
 
     auto status = mEngine.deviceStatus.get();
-    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
 
     // Deal with responsive interaction
     for (auto& inputEvent : g.InputEventsQueue)
@@ -325,6 +336,7 @@ bool WindowsFramework::HandleIO()
             {
                 if (inputEvent.Key.Down) status->sPressed = true;
                 else status->sPressed = false;
+
             }
             if (inputEvent.Key.Key == ImGuiKey_A)
             {
@@ -335,6 +347,11 @@ bool WindowsFramework::HandleIO()
             {
                 if (inputEvent.Key.Down) status->dPressed = true;
                 else status->dPressed = false;
+            }
+            if (inputEvent.Key.Key == ImGuiKey_LeftCtrl)
+            {
+                if (inputEvent.Key.Down) status->leftCtrlActive = true;
+                else status->leftCtrlActive = false;
             }
         }
     }
@@ -408,19 +425,6 @@ LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wP
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
     }
-    break;
-    // Deal with persistent interaction, windows will count 100 and then respond continuously
-    // However, ImGui::IsKeyPressed is slow here, we need a better way to deal with long press later
-    case WM_KEYDOWN:
-        switch (wParam)
-        {
-        case 'W':
-        case 'S':
-        case 'A':
-        case 'D':
-            camera->ProcessKeyboard();
-            break;
-        }
     break;
     case WM_SIZE:
     {
