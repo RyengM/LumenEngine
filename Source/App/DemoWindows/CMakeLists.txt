@@ -29,7 +29,8 @@ target_link_libraries(${PROJECT_NAME}
     optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Imgui.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab.lib)
+    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab.lib
+    ${CMAKE_SOURCE_DIR}/Lib/assimp.lib)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY FOLDER "App")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/Bin)

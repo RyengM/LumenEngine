@@ -1,10 +1,70 @@
 #include "Game/Asset/Public/mesh.h"
+#include "Assimp/Importer.hpp"
+#include "Assimp/scene.h"
+#include "Assimp/postprocess.h"
 #include <unordered_map>
 #include <cassert>
 #include <fstream>
 #include <sstream>
 
 using namespace Lumen::Game;
+
+Mesh AssimpProcessMesh(aiMesh* mesh, const aiScene* scene)
+{
+    Mesh data;
+    data.name = mesh->mName.data;
+    Vertex v;
+    for (int i = 0; i < mesh->mNumVertices; ++i)
+    {
+        v.pos.x = mesh->mVertices[i].x;
+        v.pos.y = mesh->mVertices[i].y;
+        v.pos.z = mesh->mVertices[i].z;
+
+        v.normal.x = mesh->mNormals[i].x;
+        v.normal.y = mesh->mNormals[i].y;
+        v.normal.z = mesh->mNormals[i].z;
+
+        if (mesh->mTangents)
+        {
+            v.tangentU.x = mesh->mTangents[i].x;
+            v.tangentU.y = mesh->mTangents[i].y;
+            v.tangentU.z = mesh->mTangents[i].z;
+        }
+
+        if (mesh->mTextureCoords[0])
+        {
+            v.texCoord.x = mesh->mTextureCoords[0][i].x;
+            v.texCoord.y = mesh->mTextureCoords[0][i].y;
+        }
+        else
+            v.texCoord = Float2(0.f);
+
+        data.vertices.push_back(v);
+    }
+
+    for (auto i = 0; i < mesh->mNumFaces; i++)
+    {
+        aiFace face = mesh->mFaces[i];
+        for (auto j = 0; j < mesh->mFaces->mNumIndices; j++)
+            data.indices.push_back(face.mIndices[j]);
+    }
+
+    return data;
+}
+
+void AssimpProcessNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& modelData)
+{
+    for (int i = 0; i < node->mNumMeshes; i++)
+    {
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        modelData.push_back(std::move(AssimpProcessMesh(mesh, scene)));
+    }
+
+    for (int i = 0; i < node->mNumChildren; i++)
+    {
+        AssimpProcessNode(node->mChildren[i], scene, modelData);
+    }
+}
 
 Mesh::Mesh(const Mesh& rhs)
 {
@@ -14,12 +74,45 @@ Mesh::Mesh(const Mesh& rhs)
     indices = rhs.indices;
 }
 
-Mesh::Mesh(Mesh&& rhs)
+Mesh::Mesh(Mesh&& rhs) noexcept
 {
     name = std::move(rhs.name);
     bTangent = rhs.bTangent;
     vertices = std::move(rhs.vertices);
     indices = std::move(rhs.indices);
+}
+
+void MeshLoader::LoadModel(Mesh* mesh, std::string_view path)
+{
+    std::vector<Mesh> modelData;
+
+    Assimp::Importer meshImporter;
+    const aiScene* scene = meshImporter.ReadFile(path.data(), aiProcess_Triangulate | aiProcess_FlipUVs);
+
+    if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        LOG_ERROR(meshImporter.GetErrorString());
+        return;
+    }
+
+    AssimpProcessNode(scene->mRootNode, scene, modelData);
+
+    // Combine mesh data and copy to mesh storage
+    int vertexSize = 0, indexSize = 0;
+    for (int i = 0; i < modelData.size(); i++)
+    {
+        vertexSize += modelData[i].vertices.size();
+        indexSize += modelData[i].indices.size();
+    }
+    mesh->vertices.resize(vertexSize);
+    mesh->indices.resize(indexSize);
+    int offset = 0;
+    for (int i = 0; i < modelData.size(); i++)
+    {
+        memcpy(&mesh->vertices[offset], &modelData[i].vertices[0], modelData[i].vertices.size() * sizeof(Vertex));
+        memcpy(&mesh->indices[offset], &modelData[i].indices[0], modelData[i].indices.size() * sizeof(uint32_t));
+        offset += modelData[i].vertices.size();
+    }
 }
 
 void MeshLoader::LoadObj(Mesh* mesh, std::string_view sourceFile)

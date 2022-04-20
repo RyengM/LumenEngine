@@ -7,6 +7,7 @@ include_directories("${CMAKE_SOURCE_DIR}/Source")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Spdlog/include")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/ANTLR/Runtime/Public")
 include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty")
+include_directories("${CMAKE_SOURCE_DIR}/Source/ThirdParty/Assimp")
 
 file(GLOB GAMEPLAY_FILES "GamePlay/Public/*.h" "GamePlay/Public/Details/*.inl" "GamePlay/Private/*.cpp")
 file(GLOB WINDOWS_FILES "PlatFormFramework/Windows/Public/*.h" "PlatFormFramework/Windows/Private/*.cpp")
@@ -33,7 +34,8 @@ target_link_libraries(${PROJECT_NAME}
     optimized ${CMAKE_SOURCE_DIR}/Lib/RTTR.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/Imgui.lib
     optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_Runtime.lib
-    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab.lib)
+    optimized ${CMAKE_SOURCE_DIR}/Lib/ANTLR_ParserShaderLab.lib
+    Assimp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/Lib"
@@ -44,3 +46,6 @@ add_definitions(-DANTLR4CPP_STATIC)
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/Assimp/assimp-vc142-mt.dll ${CMAKE_SOURCE_DIR}/Bin/$(Configuration))
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME} COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/Assimp/lib ${CMAKE_SOURCE_DIR}/Lib)

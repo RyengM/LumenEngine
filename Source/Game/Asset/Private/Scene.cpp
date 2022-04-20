@@ -44,7 +44,6 @@ void Scene::DeleteEntity(std::string_view name)
 				graphicsContext->RemoveRenderItem(guid);
 			});
 
-			entities[i].reset();
 			entities.erase(entities.begin() + i);
 			break;
 		}

@@ -30,14 +30,16 @@ namespace Lumen::Game
 
         Mesh() {}
         Mesh(const Mesh& rhs);
-        Mesh(Mesh&& rhs);
-        ~Mesh() {}
+        Mesh(Mesh&& rhs) noexcept;
     };
 
     class MeshLoader
     {
     public:
+        // Deprecated, use assimp instead
         static void LoadObj(Mesh* mesh, std::string_view sourceFile);
+
+        static void LoadModel(Mesh* mesh, std::string_view path);
     };
 
     class MeshGenerator

@@ -4,9 +4,9 @@
         "mName": "",
         "mTransform": {
             "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -6.0
+                "x": 5.214689254760742,
+                "y": 2.3648617267608643,
+                "z": -4.219837188720703
             },
             "rotation": {
                 "x": 0.0,
@@ -32,14 +32,14 @@
             }
         },
         "mUp": {
-            "x": -0.005776154343038797,
-            "y": 0.9961947202682495,
-            "z": -0.08696415275335312
+            "x": -0.13998724520206451,
+            "y": 0.9788674116134644,
+            "z": 0.14907129108905792
         },
         "mFront": {
-            "x": 0.06602172553539276,
-            "y": 0.0871557667851448,
-            "z": 0.9940045475959778
+            "x": -0.6700807809829712,
+            "y": -0.20449614524841309,
+            "z": 0.7135636210441589
         },
         "mFov": 45.0,
         "mAspectRatio": 1.7777777910232544,
@@ -116,74 +116,6 @@
                 "materialRef": {
                     "name": "boxBaseColor",
                     "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
-                }
-            }
-        },
-        {
-            "mClassName": "TestEntity",
-            "mName": "testObj",
-            "mTransform": {
-                "position": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "rotation": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "scale": {
-                    "x": 1.0,
-                    "y": 1.0,
-                    "z": 1.0
-                }
-            },
-            "mMeshContainer": {
-                "meshRef": {
-                    "name": "",
-                    "guid": ""
-                }
-            },
-            "mMeshRenderer": {
-                "materialRef": {
-                    "name": "",
-                    "guid": ""
-                }
-            },
-            "mIntValue": 0,
-            "mStrValue": "Test"
-        },
-        {
-            "mClassName": "TestEntity",
-            "mName": "TestEntity_0",
-            "mTransform": {
-                "position": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "rotation": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "scale": {
-                    "x": 1.0,
-                    "y": 1.0,
-                    "z": 1.0
-                }
-            },
-            "mMeshContainer": {
-                "meshRef": {
-                    "name": "",
-                    "guid": ""
-                }
-            },
-            "mMeshRenderer": {
-                "materialRef": {
-                    "name": "",
-                    "guid": ""
                 }
             }
         }
