@@ -26,26 +26,21 @@
             }
         },
         "mMeshRenderer": {
-            "materialRef": {
+            "shaderlabRef": {
                 "name": "",
                 "guid": ""
+            },
+            "material": {
+                "diffuseTextureGuid": ""
             }
-        },
-        "mUp": {
-            "x": -0.13998724520206451,
-            "y": 0.9788674116134644,
-            "z": 0.14907129108905792
-        },
-        "mFront": {
-            "x": -0.6700807809829712,
-            "y": -0.20449614524841309,
-            "z": 0.7135636210441589
         },
         "mFov": 45.0,
         "mAspectRatio": 1.7777777910232544,
         "mNearPlane": 0.10000000149011612,
         "mFarPlane": 100.0,
-        "mMoveSpeed": 0.20000000298023224
+        "mMoveSpeed": 0.20000000298023224,
+        "mYaw": 34.80000686645508,
+        "mPitch": 20.800004959106445
     },
     "light": {
         "mClassName": "Entity",
@@ -74,9 +69,12 @@
             }
         },
         "mMeshRenderer": {
-            "materialRef": {
+            "shaderlabRef": {
                 "name": "",
                 "guid": ""
+            },
+            "material": {
+                "diffuseTextureGuid": ""
             }
         },
         "strength": {
@@ -113,9 +111,12 @@
                 }
             },
             "mMeshRenderer": {
-                "materialRef": {
-                    "name": "boxBaseColor",
+                "shaderlabRef": {
+                    "name": "simpleForward",
                     "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
+                },
+                "material": {
+                    "diffuseTextureGuid": "d4263b4d-154c-4c85-9ed3-8b5e9bb93301"
                 }
             }
         }

@@ -62,10 +62,10 @@ namespace Lumen::Render
         int matCBIndex = -1;
 
         // Index to SRV heap for diffuse texture
-        int diffuseSrvHeapIndex = -1;
+        int diffuseSrvHandle = -1;
 
         // Index to SRV heap for normal texture
-        int normalSrvHeapIndex = -1;
+        int normalSrvHandle = -1;
         
         DirectX::XMFLOAT4 diffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
         DirectX::XMFLOAT3 fresnelR0 = { 0.01f, 0.01f, 0.01f };
@@ -110,6 +110,9 @@ namespace Lumen::Render
         DirectX::XMFLOAT4X4 world = MathHelper::Identity4x4();
 
         UINT objectCBIndex = -1;
+
+        // TODO. build material system
+        D3D12_GPU_DESCRIPTOR_HANDLE diffuseHandle;
 
         D3DMeshGeometry* mesh;
         D3D12_PRIMITIVE_TOPOLOGY primitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;

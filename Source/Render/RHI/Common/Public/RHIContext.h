@@ -59,20 +59,14 @@ namespace Lumen::Render
         // Create scene buffer for display
         virtual void CreateSceneBuffer(VisualBuffer* buffer) = 0;
 
-        // Create texture
-        virtual void CreatePlainTexture(Texture& texture) = 0;
+        // Create all GPU resources related to entity
+        virtual void CreateEntity(const Entity& entity) = 0;
 
-        // Create cubemap
-        virtual void CreateCubeMap(std::vector<Texture>& textures) = 0;
-
-        // Create geometry
-        virtual void CreateGeometry(const Mesh& mesh) = 0;
+        // Create geometry directly, make sure mesh is static
+        virtual void CreateGeometry(const Mesh& mesh, std::string_view guid) = 0;
 
         // Create shaders
         virtual void CreateShaderlab(const ShaderLab& shaderlab) = 0;
-
-        // Create render item
-        virtual void CreateRenderItem(const Entity& entity) = 0;
 
         // Remove render item
         virtual void RemoveRenderItem(std::string_view guid) = 0;
@@ -81,5 +75,18 @@ namespace Lumen::Render
         virtual void CreateSkyItem() = 0;
 
         virtual RHICommandContext* GetContext(const EContextType& type) = 0;
+
+    protected:
+        // Create texture
+        virtual void CreatePlainTexture(Texture* texture, std::string_view guid) = 0;
+
+        // Create cubemap
+        virtual void CreateCubeMap(std::vector<Texture>& textures) = 0;
+
+        // Create geometry
+        virtual void CreateGeometry(Mesh* mesh, std::string_view guid) = 0;
+
+        // Create render item
+        virtual void CreateRenderItem(const Entity& entity) = 0;
     };
 }

@@ -117,19 +117,6 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
         MeshLoader::LoadObj(mesh, path.string());
         mGuid2MeshMap.emplace(meta.guid, mesh);
     }
-    // Material
-    else if (ext == ".mat")
-    {
-        if (!bSkipMemoryCheck)
-            if (mGuid2MaterialMap.find(guid) != mGuid2MaterialMap.end())
-                return true;
-
-        Material* mat = mMaterialStorage.RequestElement();
-        new(mat)Material();
-        mat->name = stem.string();
-        MaterialLoader::LoadMaterial(mat, path.string());
-        mGuid2MaterialMap.emplace(meta.guid, mat);
-    }
     // ShaderLab
     else if (ext == ".shader")
     {

@@ -22,6 +22,7 @@ Camera::Camera(float fov, float aspect, float nearPlane, float farPlane)
 void Camera::Update()
 {
 	Vec3 pos = mTransform.position;
+	UpdateRotateVector();
 	mViewMatrix = MathUtil::LookAt(pos, pos + mFront, mWorldUp);
 	mViewProjMatrix = mProjMatrix * mViewMatrix;
 }
@@ -78,7 +79,6 @@ void Camera::ProcessMouseMovement()
 		mYaw += sign * deviceStatus->delta.x;
 		mPitch += deviceStatus->delta.y;
 
-		UpdateRotateVector();
 		Update();
 	}
 }
@@ -122,13 +122,7 @@ RTTR_REGISTRATION
 		.property("mProjMatrix", &Camera::mProjMatrix, registration::private_access)
 		.property("mViewProjMatrix", &Camera::mViewProjMatrix, registration::private_access)
 		.property("mUp", &Camera::mUp, registration::private_access)
-		(
-			metadata("serialize", true)
-		)
 		.property("mFront", &Camera::mFront, registration::private_access)
-		(
-			metadata("serialize", true)
-		)
 		.property("mRight", &Camera::mRight, registration::private_access)
 		.property("mWorldUp", &Camera::mWorldUp, registration::private_access)
 		.property("mFov", &Camera::mFov, registration::private_access)
@@ -152,6 +146,12 @@ RTTR_REGISTRATION
 			metadata("serialize", true)
 		)
 		.property("mYaw", &Camera::mYaw, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
 		.property("mPitch", &Camera::mPitch, registration::private_access)
+		(
+			metadata("serialize", true)
+		)
 	;
 }

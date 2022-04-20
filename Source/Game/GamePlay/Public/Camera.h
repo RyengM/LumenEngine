@@ -53,9 +53,7 @@ namespace Lumen::Game
         Mat4 mViewProjMatrix = Mat4(1.f);
 
         // Euler vector
-        [[serialize(true)]]
         Vec3 mUp = Vec3(0.f, 1.f, 0.f);
-        [[serialize(true)]]
         Vec3 mFront = Vec3(0.f, 0.f, 1.f);
         Vec3 mRight = Vec3(1.f, 0.f, 0.f);
 
@@ -75,7 +73,9 @@ namespace Lumen::Game
         float mMoveSpeed = 0.2f;
 
         // Rotation params
+        [[serialize(true)]]
         float mYaw = 0.f;
+        [[serialize(true)]]
         float mPitch = 0.f;
 
         RTTR_REGISTRATION_FRIEND

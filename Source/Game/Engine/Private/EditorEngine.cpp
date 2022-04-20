@@ -30,10 +30,12 @@ void EditorEngine::Init()
     // Build built-in meshes, its okay to pass pointer since built in mesh will not be modified
     for (auto iter : *AssetManager::GetInstance().GetBuiltInMeshMap())
     {
+        std::string guid = iter.first;
         Mesh* mesh = iter.second;
-        ENQUEUE_RENDER_COMMAND("CreateBuiltInMesh", [mesh](RHIContext* graphicsContext) {
-            graphicsContext->CreateGeometry(*mesh);
-        });
+        auto lambda = [mesh, guid](RHIContext* graphicsContext) {
+            graphicsContext->CreateGeometry(*mesh, guid);
+        };
+        ENQUEUE_RENDER_COMMAND("CreateBuiltInMesh", lambda);
     }
 
     // Prepare scene buffer
@@ -112,7 +114,7 @@ void EditorEngine::EndPlay()
 
 void EditorEngine::CreateScene()
 {
-    // Skybox
+    // Skybox, will be combined in entities later
     {
         ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid("5ac9d5cc-5be3-4000-8b54-cffc76be4f40"));
         ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
@@ -127,26 +129,8 @@ void EditorEngine::CreateScene()
     // Entities
     for (auto entity : AssetManager::GetInstance().GetScene()->entities)
     {
-        MeshComponent* meshComponent = entity->GetMeshContainerPtr();
-        Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent->meshRef.guid));
-        if (mesh)
-        {
-            ENQUEUE_RENDER_COMMAND("CreateGeo", [meshProxy = Mesh(*mesh)](RHIContext* graphicsContext) {
-                graphicsContext->CreateGeometry(meshProxy);
-            });
-        }
-
-        MeshRendererComponent* meshRenderer = entity->GetMeshRenderer();
-        ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer->materialRef.guid));
-        if (shader)
-        {
-            ENQUEUE_RENDER_COMMAND("CreatePso", [shaderProxy = ShaderLab(*shader)](RHIContext* graphicsContext) {
-                graphicsContext->CreateShaderlab(shaderProxy);
-            });
-        }
-
-        ENQUEUE_RENDER_COMMAND("CreateRenderItem", [entityProxy = Entity(*entity.get())](RHIContext* graphicsContext) {
-            graphicsContext->CreateRenderItem(entityProxy);
+        ENQUEUE_RENDER_COMMAND("CreateEntity", [entityProxy = Entity(*entity.get())](RHIContext* graphicsContext) {
+            graphicsContext->CreateEntity(entityProxy);
         });
     }
 }

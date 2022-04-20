@@ -28,8 +28,9 @@ namespace Lumen::Game
         inline MeshComponent* GetMeshContainerPtr() noexcept {return &mMeshContainer;}
         inline void SetMeshGUID(std::string_view guid) noexcept { mMeshContainer.meshRef.guid = guid; }
 
-        inline MeshRendererComponent* GetMeshRenderer() noexcept { return &mMeshRenderer; }
-        inline void SetShaderGUID(std::string_view guid) noexcept { mMeshRenderer.materialRef.guid = guid; }
+        inline MeshRendererComponent GetMeshRenderer() const noexcept { return mMeshRenderer; }
+        inline MeshRendererComponent* GetMeshRendererPtr() noexcept { return &mMeshRenderer; }
+        inline void SetShaderGUID(std::string_view guid) noexcept { mMeshRenderer.shaderlabRef.guid = guid; }
 
         inline xg::Guid GetGuid() const noexcept { return mGuid; }
 

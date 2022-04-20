@@ -77,7 +77,13 @@ void D3DContext::UpdateObjectCB(const Entity& entity)
 
     ObjectConstants constants;
 
-    Mat4 world = Mat4(1.f).Scale(entity.GetTransform().scale).Translate(entity.GetTransform().position);
+    Vec3 rotate = entity.GetTransform().rotation;
+    Quaternion quat(rotate.Length(), rotate.Normalize());
+
+    Mat4 world = Mat4(1.f).Scale(entity.GetTransform().scale);
+    world = quat.ToRotateMatrix() * world;
+    world = world.Translate(entity.GetTransform().position);
+
     DirectX::XMMATRIX model = MathHelper::ConvertToDxMatrix(world);
     XMStoreFloat4x4(&constants.model, model);
 
@@ -193,7 +199,7 @@ void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::
         D3D12_GPU_VIRTUAL_ADDRESS objectCBAddress = mGraphicsContext->currentFrameResource->objectBuffers->uploadResource->GetGPUVirtualAddress();
         cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
         cmdList->SetGraphicsRootDescriptorTable(2, mTextures.at("skyBox")->srvView->gpuDescriptorHandleGPU);
-        cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("boxBaseColor")->srvView->gpuDescriptorHandleGPU);
+        if (item->diffuseHandle.ptr) cmdList->SetGraphicsRootDescriptorTable(3, item->diffuseHandle);
         cmdList->DrawIndexedInstanced(geo->indexCount, 1, 0, 0, 0);
     }
 }
@@ -251,17 +257,33 @@ void D3DContext::CreateSceneBuffer(VisualBuffer* buffer)
     buffer->srvHandle = mSceneRT->colorBuffer->srvView->gpuDescriptorHandleGPU.ptr;
 }
 
-void D3DContext::CreatePlainTexture(Texture& texture)
+void D3DContext::CreateEntity(const Entity& entity)
 {
-    if (mTextures.find(texture.name) != mTextures.end()) return;
+    MeshComponent meshComponent = entity.GetMeshContainer();
+    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.meshRef.guid));
+    if (mesh) CreateGeometry(mesh, meshComponent.meshRef.guid);
+
+    MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
+    Material* mat = &meshRenderer.material;
+    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTextureGuid));
+    if (tex) CreatePlainTexture(tex, mat->diffuseTextureGuid);
+    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.shaderlabRef.guid));
+    if (shaderlab) CreateShaderlab(*shaderlab);
+
+    CreateRenderItem(entity);
+}
+
+void D3DContext::CreatePlainTexture(Texture* texture, std::string_view guid)
+{
+    if (mTextures.find(texture->name) != mTextures.end()) return;
 
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreatePlainTexture"));
     auto cmdList = cmdBuffer->commandList;
 
     TextureDescriptor texDescriptor;
     {
-        texDescriptor.width = texture.width;
-        texDescriptor.height = texture.height;
+        texDescriptor.width = texture->width;
+        texDescriptor.height = texture->height;
         texDescriptor.slices = 1;
         texDescriptor.sparse = false;
         texDescriptor.mipLevel = 1;
@@ -278,9 +300,9 @@ void D3DContext::CreatePlainTexture(Texture& texture)
     // Copy data from upload buffer to default buffer
     {
         D3D12_SUBRESOURCE_DATA texData = {};
-        texData.pData = texture.data;
-        texData.RowPitch = texture.width * 4;
-        texData.SlicePitch = texture.height * texData.RowPitch;
+        texData.pData = texture->data;
+        texData.RowPitch = texture->width * 4;
+        texData.SlicePitch = texture->height * texData.RowPitch;
         UpdateSubresources(cmdList.Get(), tex->resource->defaultResource.Get(), tex->resource->uploadResource.Get(), 0, 0, 1, &texData);
     }
 
@@ -288,7 +310,7 @@ void D3DContext::CreatePlainTexture(Texture& texture)
     CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(tex->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     cmdList->ResourceBarrier(1, &barrier);
 
-    mTextures[texture.name] = std::move(tex);
+    mTextures[guid.data()] = std::move(tex);
 
     ExecuteCmdBuffer(cmdBuffer);
     ReleaseCmdBuffer(cmdBuffer);
@@ -338,36 +360,41 @@ void D3DContext::CreateCubeMap(std::vector<Texture>& textures)
     ReleaseCmdBuffer(cmdBuffer);
 }
 
-void D3DContext::CreateGeometry(const Mesh& mesh)
+void D3DContext::CreateGeometry(const Mesh& mesh, std::string_view guid)
 {
-    if (mMeshes.find(mesh.name) != mMeshes.end()) return;
+    CreateGeometry(const_cast<Mesh*>(&mesh), guid);
+}
+
+void D3DContext::CreateGeometry(Mesh* mesh, std::string_view guid)
+{
+    if (mMeshes.find(mesh->name) != mMeshes.end()) return;
 
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreateGeo"));
     auto cmdList = cmdBuffer->commandList;
 
     auto geometry = std::make_unique<D3DMeshGeometry>();
-    geometry->name = mesh.name;
+    geometry->name = mesh->name;
 
-    const UINT vbByteSize = (UINT)mesh.vertices.size() * sizeof(Vertex);
-    const UINT ibByteSize = (UINT)mesh.indices.size() * sizeof(std::uint32_t);
+    const UINT vbByteSize = (UINT)mesh->vertices.size() * sizeof(Vertex);
+    const UINT ibByteSize = (UINT)mesh->indices.size() * sizeof(std::uint32_t);
 
     geometry->vertexByteStride = sizeof(Vertex);
     geometry->vertexBufferByteSize = vbByteSize;
     geometry->indexFormat = DXGI_FORMAT_R32_UINT;
     geometry->indexBufferByteSize = ibByteSize;
-    geometry->indexCount = mesh.indices.size();
+    geometry->indexCount = mesh->indices.size();
 
     ThrowIfFailed(D3DCreateBlob(vbByteSize, &geometry->vertexBufferCPU));
-    CopyMemory(geometry->vertexBufferCPU->GetBufferPointer(), mesh.vertices.data(), vbByteSize);
+    CopyMemory(geometry->vertexBufferCPU->GetBufferPointer(), mesh->vertices.data(), vbByteSize);
 
     ThrowIfFailed(D3DCreateBlob(ibByteSize, &geometry->indexBufferCPU));
-    CopyMemory(geometry->indexBufferCPU->GetBufferPointer(), mesh.indices.data(), ibByteSize);
+    CopyMemory(geometry->indexBufferCPU->GetBufferPointer(), mesh->indices.data(), ibByteSize);
 
     // Create resource buffer
     BufferDescriptor desc;
     {
-        desc.name = mesh.name;
-        desc.count = (UINT)mesh.vertices.size();
+        desc.name = mesh->name;
+        desc.count = (UINT)mesh->vertices.size();
         desc.stride = sizeof(Vertex);
         desc.usageType = EUsageType::Default;
         desc.bufferType = EBufferType::Vertex;
@@ -376,7 +403,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
     };
     geometry->vertexBufferGPU = std::make_unique<D3DBuffer>(mDevice.get(), desc);
     {
-        desc.count = (UINT)mesh.indices.size();
+        desc.count = (UINT)mesh->indices.size();
         desc.stride = sizeof(uint32_t);
         desc.bufferType = EBufferType::Index;
     }
@@ -385,7 +412,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
     // Copy data from upload buffer to default buffer
     {   // Vertex
         D3D12_SUBRESOURCE_DATA subResourceData = {};
-        subResourceData.pData = mesh.vertices.data();
+        subResourceData.pData = mesh->vertices.data();
         subResourceData.RowPitch = vbByteSize;
         subResourceData.SlicePitch = subResourceData.RowPitch;
 
@@ -396,7 +423,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
     }
     {   // Index
         D3D12_SUBRESOURCE_DATA subResourceData = {};
-        subResourceData.pData = mesh.indices.data();
+        subResourceData.pData = mesh->indices.data();
         subResourceData.RowPitch = ibByteSize;
         subResourceData.SlicePitch = subResourceData.RowPitch;
 
@@ -406,7 +433,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
         cmdList->ResourceBarrier(1, &barrier);
     }
 
-    mMeshes[mesh.name] = std::move(geometry);
+    mMeshes[guid.data()] = std::move(geometry);
 
     ExecuteCmdBuffer(cmdBuffer);
     ReleaseCmdBuffer(cmdBuffer);
@@ -414,30 +441,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh)
 
 void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
 {
-    // Hard code now, may can precompile shaderlab to support more flexible parameter binding later
-    auto baseTexture = std::get<std::string>(shaderlab.properties.at("_MainTex").value);
-    if (baseTexture == "skybox")
-    {
-        std::vector<Texture> textures;
-        // Right
-        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("edb6126b-2dcb-4bca-9feb-e5b8fcb13e7a")));
-        // Left
-        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("8bf66627-d9e8-4796-bcce-4e9aa086b7e5")));
-        // Top
-        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("bc7da57a-cd37-4654-81a6-c9fa8fbabbf2")));
-        // Bottom
-        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("60111c87-e1af-462b-b3dd-0284a6f27998")));
-        // Front
-        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("2f460232-0bad-45ce-ac41-bb34b280692b")));
-        // Back
-        textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("89999e83-d4c2-436e-8084-2aa3b1644cca")));
-        CreateCubeMap(textures);
-    }
-    else
-    {
-        auto tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(baseTexture));
-        CreatePlainTexture(*tex);
-    }
+    if (mShaders.find(shaderlab.name) != mShaders.end()) return;
 
     for (auto kernel : shaderlab.category.kernels)
     {
@@ -452,11 +456,18 @@ void D3DContext::CreateRenderItem(const Entity& entity)
 {
     auto item = std::make_unique<D3DRenderItem>();
     item->name = entity.GetName();
-    auto meshName = entity.GetMeshContainer().meshRef.name;
-    if (mMeshes.find(meshName) != mMeshes.end())
-        item->mesh = mMeshes.at(meshName).get();
+
+    auto meshGuid = entity.GetMeshContainer().meshRef.guid;
+    if (mMeshes.find(meshGuid) != mMeshes.end())
+        item->mesh = mMeshes.at(meshGuid).get();
+
+    auto texGuid = entity.GetMeshRenderer().material.diffuseTextureGuid;
+    if (mTextures.find(texGuid) != mTextures.end())
+        item->diffuseHandle = mTextures.at(texGuid)->srvView->gpuDescriptorHandleGPU;
+
     item->objectCBIndex = mIncreRenderItemIndex++;
     item->guid = entity.GetGuid().str();
+
     mRenderItems[(uint32_t)ERenderLayer::Opaque].push_back(item.get());
     mAllRenderItems[item->guid] = std::move(item);
 }
@@ -472,6 +483,22 @@ void D3DContext::RemoveRenderItem(std::string_view guid)
 
 void D3DContext::CreateSkyItem()
 {
+    // Hard code now, may can precompile shaderlab to support more flexible parameter binding later
+    std::vector<Texture> textures;
+    // Right
+    textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("edb6126b-2dcb-4bca-9feb-e5b8fcb13e7a")));
+    // Left
+    textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("8bf66627-d9e8-4796-bcce-4e9aa086b7e5")));
+    // Top
+    textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("bc7da57a-cd37-4654-81a6-c9fa8fbabbf2")));
+    // Bottom
+    textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("60111c87-e1af-462b-b3dd-0284a6f27998")));
+    // Front
+    textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("2f460232-0bad-45ce-ac41-bb34b280692b")));
+    // Back
+    textures.emplace_back(*AssetManager::GetInstance().GetTextureByGUID(xg::Guid("89999e83-d4c2-436e-8084-2aa3b1644cca")));
+    CreateCubeMap(textures);
+
     auto skyItem = std::make_unique<D3DRenderItem>();
     skyItem->name = "skybox";
     skyItem->mesh = mMeshes.at("sphere-builtin").get();

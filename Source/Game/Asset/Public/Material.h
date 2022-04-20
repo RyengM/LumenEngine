@@ -9,15 +9,13 @@ namespace Lumen::Game
 {
     struct Material : public BaseObject
     {
+        Material();
+
         std::string name;
 
         [[serialize(true)]]
-        std::string shaderLabGuid;
-    };
+        std::string diffuseTextureGuid;
 
-    class MaterialLoader
-    {
-    public:
-        static void LoadMaterial(Material* mat, std::string_view sourceFile) {};
+        RTTR_ENABLE(BaseObject)
     };
 }

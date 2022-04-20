@@ -26,8 +26,8 @@ bool Scene::CreateEntity(std::string_view className)
 
 	entities.emplace_back(consistentEntity);
 
-	ENQUEUE_RENDER_COMMAND("CreateRenderItem", [entityProxy = Entity(*consistentEntity.get())](RHIContext* graphicsContext) {
-		graphicsContext->CreateRenderItem(entityProxy);
+	ENQUEUE_RENDER_COMMAND("CreateEntity", [entityProxy = Entity(*consistentEntity.get())](RHIContext* graphicsContext) {
+		graphicsContext->CreateEntity(entityProxy);
 	});
 
 	return true;

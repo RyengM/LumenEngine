@@ -45,11 +45,15 @@ namespace Lumen::Render
 
         virtual void CreateSceneBuffer(VisualBuffer* buffer) override;
 
-        virtual void CreatePlainTexture(Texture& texture) override;
+        virtual void CreateEntity(const Entity& entity) override;
+
+        virtual void CreatePlainTexture(Texture* texture, std::string_view guid) override;
 
         virtual void CreateCubeMap(std::vector<Texture>& textures) override;
 
-        virtual void CreateGeometry(const Mesh& mesh) override;
+        virtual void CreateGeometry(Mesh* mesh, std::string_view guid) override;
+
+        virtual void CreateGeometry(const Mesh& mesh, std::string_view guid) override;
 
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
@@ -79,6 +83,9 @@ namespace Lumen::Render
         std::unique_ptr<D3DDescriptorHeap>                  mDsvDescriptorHeap;
         std::unique_ptr<D3DDescriptorHeap>                  mSamplerDescriptorHeap;
 
+        // Param: std::string
+        // -- texture mesh renderItem: guid
+        // -- pso shader builtinMesh : name
         std::unordered_map<std::string, std::unique_ptr<D3DPlainTexture>>       mTextures;
         std::unordered_map<std::string, std::unique_ptr<D3DMeshGeometry>>       mMeshes;
         std::unordered_map<std::string, std::unique_ptr<D3DMaterial>>           mMaterials;

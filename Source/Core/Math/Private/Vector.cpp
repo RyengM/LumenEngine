@@ -181,7 +181,12 @@ float Vec3::Length()
 Vec3 Vec3::Normalize()
 {
     Vec3 vec3;
-    float invn = 1 / Length();
+
+    // Prevent zero exception
+    float len = Length();
+    if (len < 1e-10) return vec3;
+
+    float invn = 1 / len;
     vec3.x = x * invn;
     vec3.y = y * invn;
     vec3.z = z * invn;
