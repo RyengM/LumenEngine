@@ -68,10 +68,10 @@ void WindowsFramework::InitUI()
     gImguiManager = &mImguiManager;
 
     ImGui_ImplWin32_Init(mWindowInfo.mainWnd);
-    // Make sure fonts is initialized
-    unsigned char* pixels;
-    int width, height;
-    ImGui::GetIO().Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontFromFileTTF("../../Assets/Font/msyh.ttc", 17.f, NULL);
+    io.Fonts->Build();
 }
 
 void WindowsFramework::UpdateUI()
