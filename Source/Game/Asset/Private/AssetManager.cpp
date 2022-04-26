@@ -114,7 +114,7 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
         Mesh* mesh = mMeshStorage.RequestElement();
         new(mesh)Mesh();
         mesh->name = stem.string();
-        MeshLoader::LoadObj(mesh, path.string());
+        MeshLoader::LoadModel(mesh, path.string());
         mGuid2MeshMap.emplace(meta.guid, mesh);
     }
     // ShaderLab

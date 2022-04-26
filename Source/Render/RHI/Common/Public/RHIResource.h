@@ -289,7 +289,7 @@ namespace Lumen::Render
 
     };
 
-    struct RHIRenderItem : public RHIResource
+    struct RHIRenderItem
     {
 
     };

@@ -14,19 +14,13 @@ bool Scene::CreateEntity(std::string_view className)
 	rttr::type derivedType = rttr::type::get_by_name(className.data());
 	if (!derivedType.is_valid()) return false;
 
-	// Note variant manage data life itself, we need to set consistent data to shared_ptr
+	// Note variant manage data life itself, we need to persistent data with shared_ptr
 	variant derived = derivedType.create();
-	Entity* d = derived.get_value<Entity*>();
+	auto entity = derived.get_value<std::shared_ptr<Entity>>();
+	entity->SetName(className.data() + std::string("_") + std::to_string(nameIndex++));
+	entities.emplace_back(entity);
 
-	std::shared_ptr<Entity> consistentEntity = std::make_shared<Entity>();
-	rttr::instance entityRef(consistentEntity);
-
-	FillEntityInternal(derivedType, entityRef, derived);
-	consistentEntity->SetName(className.data() + std::string("_") + std::to_string(nameIndex++));
-
-	entities.emplace_back(consistentEntity);
-
-	ENQUEUE_RENDER_COMMAND("CreateEntity", [entityProxy = Entity(*consistentEntity.get())](RHIContext* graphicsContext) {
+	ENQUEUE_RENDER_COMMAND("CreateEntity", [entityProxy = Entity(*entity.get())](RHIContext* graphicsContext) {
 		graphicsContext->CreateEntity(entityProxy);
 	});
 
@@ -46,18 +40,6 @@ void Scene::DeleteEntity(std::string_view name)
 
 			entities.erase(entities.begin() + i);
 			break;
-		}
-	}
-}
-
-void Scene::FillEntityInternal(const rttr::type& t, rttr::instance dstObj, const rttr::instance& srcObj)
-{
-	for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
-	{
-		if (p.get_metadata("serialize").is_valid() && p.get_metadata("serialize").to_bool())
-		{
-			variant var = p.get_value(srcObj);
-			p.set_value(dstObj, var);
 		}
 	}
 }

@@ -275,7 +275,7 @@ void D3DContext::CreateEntity(const Entity& entity)
 
 void D3DContext::CreatePlainTexture(Texture* texture, std::string_view guid)
 {
-    if (mTextures.find(texture->name) != mTextures.end()) return;
+    if (mTextures.find(guid.data()) != mTextures.end()) return;
 
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreatePlainTexture"));
     auto cmdList = cmdBuffer->commandList;
@@ -367,7 +367,7 @@ void D3DContext::CreateGeometry(const Mesh& mesh, std::string_view guid)
 
 void D3DContext::CreateGeometry(Mesh* mesh, std::string_view guid)
 {
-    if (mMeshes.find(mesh->name) != mMeshes.end()) return;
+    if (mMeshes.find(guid.data()) != mMeshes.end()) return;
 
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "CreateGeo"));
     auto cmdList = cmdBuffer->commandList;
@@ -455,7 +455,6 @@ void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
 void D3DContext::CreateRenderItem(const Entity& entity)
 {
     auto item = std::make_unique<D3DRenderItem>();
-    item->name = entity.GetName();
 
     auto meshGuid = entity.GetMeshContainer().meshRef.guid;
     if (mMeshes.find(meshGuid) != mMeshes.end())
@@ -500,11 +499,11 @@ void D3DContext::CreateSkyItem()
     CreateCubeMap(textures);
 
     auto skyItem = std::make_unique<D3DRenderItem>();
-    skyItem->name = "skybox";
+    skyItem->guid = "skybox";
     skyItem->mesh = mMeshes.at("sphere-builtin").get();
     skyItem->objectCBIndex = mIncreRenderItemIndex++;
     mRenderItems[(uint32_t)ERenderLayer::Sky].push_back(skyItem.get());
-    mAllRenderItems[xg::newGuid()] = std::move(skyItem);
+    mAllRenderItems[skyItem->guid] = std::move(skyItem);
 }
 
 RHICommandContext* D3DContext::GetContext(const EContextType& type)

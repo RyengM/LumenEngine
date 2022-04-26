@@ -175,7 +175,7 @@ void WindowsFramework::UpdateGuiWindow()
     {
         ImGui::Begin("Detail");
         auto scene = AssetManager::GetInstance().GetScene();
-        if (scene)
+        if (scene && scene->entities.size())
         {
             Entity* selectedEntity = scene->entities[selected].get();
 
