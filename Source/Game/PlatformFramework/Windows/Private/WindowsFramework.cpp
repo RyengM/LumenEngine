@@ -11,6 +11,8 @@ using namespace Lumen::Core;
 using namespace Lumen::Render;
 using namespace std::filesystem;
 
+static AssetTreeNode* activeAssetNode = nullptr;
+
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
 {
@@ -103,10 +105,13 @@ void WindowsFramework::Clean()
     mImguiManager.Clear();
 }
 
+// Selected entity in hierarchy
+static int selected = 0;
+// If entity property is changed manually with resource bind
+static bool bPropertyChanged = false;
+
 void WindowsFramework::UpdateGuiWindow()
 {
-    static int selected = 0;
-
     // Move camera
     Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
     if (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_D))
@@ -158,9 +163,7 @@ void WindowsFramework::UpdateGuiWindow()
                             if (name == "Camera" || name == "DirectionalLight")
                                 continue;
                             if (ImGui::Button(name.data()))
-                            {
                                 scene->CreateEntity(name.data());
-                            }
                         }
                     }
                     ImGui::TreePop();
@@ -184,14 +187,35 @@ void WindowsFramework::UpdateGuiWindow()
             ShowDetailInternal(selectedEntity);
         }
         ImGui::End();
+
+        // Update entity data bind in render thread if property is changed
+        if (bPropertyChanged)
+        {
+            // Update info in render side
+            auto scene = AssetManager::GetInstance().GetScene();
+            if (scene && scene->entities.size())
+            {
+                Entity* selectedEntity = scene->entities[selected].get();
+                scene->UpdateEntity(selectedEntity);
+            }
+            bPropertyChanged = false;
+        }
     }
 
     // Show asset manager
     {
         ImGui::Begin("Asset maneger");
-        if (ImGui::TreeNode("Assets"))
+        ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
+        if (ImGui::BeginTable("Assets", 2, flags))
         {
-            EnterDictRecur(AssetManager::GetInstance().GetAssetTree());
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            if (ImGui::TreeNode("Assets"))
+                EnterDictRecur(AssetManager::GetInstance().GetAssetTree());
+
+            ImGui::TableSetColumnIndex(1);
+            ShowFolderContext();
+            ImGui::EndTable();
         }
         ImGui::End();
     }
@@ -229,10 +253,33 @@ void WindowsFramework::EnterDictRecur(AssetTreeNode* node)
             if (ImGui::TreeNode(childNode->fileName.data()))
                 EnterDictRecur(childNode.get());
         }
-        else if (childNode->fileType == "Regular")
-            ImGui::Text(childNode->fileName.data());
+        if (ImGui::IsItemClicked())
+            activeAssetNode = childNode.get();
     }
     ImGui::TreePop();
+}
+
+void WindowsFramework::ShowFolderContext()
+{
+    if (!activeAssetNode) return;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+
+    for (auto node : activeAssetNode->children)
+    {
+        ImGui::Button(node->fileName.c_str());
+        float next_button_x2 = ImGui::GetItemRectMax().x + style.ItemSpacing.x + ImGui::CalcTextSize(node->fileName.c_str(), NULL, true).x;
+        if (next_button_x2 < window_visible_x2)
+            ImGui::SameLine();
+
+        if (ImGui::BeginDragDropSource())
+        {
+            ImGui::SetDragDropPayload("FileBind", node.get(), sizeof(AssetTreeNode), ImGuiCond_Once);
+            ImGui::Text(node->fileName.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
 }
 
 void WindowsFramework::ShowDetailInternal(rttr::instance obj)
@@ -291,6 +338,29 @@ bool WindowsFramework::ShowDetailAtomic(rttr::instance obj, const rttr::property
     else if (t == type::get<std::string>())
     {
         ImGui::LabelText(propertyName, var.to_string().c_str());
+
+        // Special handling for asset bind
+        if (p.get_name() == "guid")
+        {
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FileBind"))
+                {
+                    AssetTreeNode* node = (AssetTreeNode*)payload->Data;
+                    std::string guid = node->fileGuid;
+                    std::filesystem::path path = node->fileName;
+                    // Mesh bind
+                    if (path.extension() == ".obj")
+                    {
+                        // Update info in editor
+                        var.get_value<std::string>() = guid;
+                        bPropertyChanged = true;
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
+
         return true;
     }
     return false;

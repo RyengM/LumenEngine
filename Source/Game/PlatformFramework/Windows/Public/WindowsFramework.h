@@ -32,6 +32,8 @@ namespace Lumen::Game
         // @param0: object ref, @param1: property, @param2: deep copied variant of object
         bool ShowDetailAtomic(rttr::instance obj, const rttr::property& p, rttr::variant& var);
         void BindVariant(rttr::instance obj, const rttr::property& p, rttr::variant& var);
+        // Show folder context when folder is activated
+        void ShowFolderContext();
         void UpdateGuiWindow();
 
     public:

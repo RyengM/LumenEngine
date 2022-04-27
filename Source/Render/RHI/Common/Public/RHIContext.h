@@ -62,6 +62,9 @@ namespace Lumen::Render
         // Create all GPU resources related to entity
         virtual void CreateEntity(const Entity& entity) = 0;
 
+        // Update all GPU resources related to entity
+        virtual void UpdateEntity(const Entity& entity) = 0;
+
         // Create geometry directly, make sure mesh is static
         virtual void CreateGeometry(const Mesh& mesh, std::string_view guid) = 0;
 
@@ -88,5 +91,8 @@ namespace Lumen::Render
 
         // Create render item
         virtual void CreateRenderItem(const Entity& entity) = 0;
+
+        // Update render item
+        virtual void UpdateRenderItem(const Entity& entity) = 0;
     };
 }

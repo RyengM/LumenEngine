@@ -273,6 +273,22 @@ void D3DContext::CreateEntity(const Entity& entity)
     CreateRenderItem(entity);
 }
 
+void D3DContext::UpdateEntity(const Entity& entity)
+{
+    MeshComponent meshComponent = entity.GetMeshContainer();
+    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.meshRef.guid));
+    if (mesh) CreateGeometry(mesh, meshComponent.meshRef.guid);
+
+    MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
+    Material* mat = &meshRenderer.material;
+    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTextureGuid));
+    if (tex) CreatePlainTexture(tex, mat->diffuseTextureGuid);
+    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.shaderlabRef.guid));
+    if (shaderlab) CreateShaderlab(*shaderlab);
+
+    UpdateRenderItem(entity);
+}
+
 void D3DContext::CreatePlainTexture(Texture* texture, std::string_view guid)
 {
     if (mTextures.find(guid.data()) != mTextures.end()) return;
@@ -469,6 +485,21 @@ void D3DContext::CreateRenderItem(const Entity& entity)
 
     mRenderItems[(uint32_t)ERenderLayer::Opaque].push_back(item.get());
     mAllRenderItems[item->guid] = std::move(item);
+}
+
+void D3DContext::UpdateRenderItem(const Entity& entity)
+{
+    auto guid = entity.GetGuid().str();
+    if (mAllRenderItems.find(guid) == mAllRenderItems.end()) return;
+
+    auto item = mAllRenderItems.at(guid).get();
+    auto meshGuid = entity.GetMeshContainer().meshRef.guid;
+    if (mMeshes.find(meshGuid) != mMeshes.end())
+        item->mesh = mMeshes.at(meshGuid).get();
+
+    auto texGuid = entity.GetMeshRenderer().material.diffuseTextureGuid;
+    if (mTextures.find(texGuid) != mTextures.end())
+        item->diffuseHandle = mTextures.at(texGuid)->srvView->gpuDescriptorHandleGPU;
 }
 
 void D3DContext::RemoveRenderItem(std::string_view guid)

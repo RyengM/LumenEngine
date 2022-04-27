@@ -17,6 +17,7 @@ namespace Lumen::Game
         std::string fileName;
         std::string filePath;
         std::string fileType;
+        std::string fileGuid;
         std::vector<std::shared_ptr<AssetTreeNode>> children;
 
         AssetTreeNode() = default;

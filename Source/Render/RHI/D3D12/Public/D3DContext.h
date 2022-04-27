@@ -47,6 +47,8 @@ namespace Lumen::Render
 
         virtual void CreateEntity(const Entity& entity) override;
 
+        virtual void UpdateEntity(const Entity& entity) override;
+
         virtual void CreatePlainTexture(Texture* texture, std::string_view guid) override;
 
         virtual void CreateCubeMap(std::vector<Texture>& textures) override;
@@ -58,6 +60,8 @@ namespace Lumen::Render
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
         virtual void CreateRenderItem(const Entity& entity) override;
+
+        virtual void UpdateRenderItem(const Entity& entity) override;
 
         virtual void RemoveRenderItem(std::string_view guid) override;
 

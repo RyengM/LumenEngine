@@ -17,6 +17,8 @@ namespace Lumen::Game
         // Delete an entity by editor reflection
         // Erase opeartion is not efficient, improve it later
         void DeleteEntity(std::string_view name);
+        // Update entity data binding in render thread
+        void UpdateEntity(Entity* entity);
         
         // TODO. Settings
 

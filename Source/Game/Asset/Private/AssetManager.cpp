@@ -58,6 +58,20 @@ void AssetManager::EnterDictRecur(const std::string& dir, AssetTreeNode* node) {
             // Load asset and build resource map
             LoadAsset(path);
         }
+
+        // Build and fill guid for resource bind
+        Meta meta;
+        std::filesystem::path metaPath = std::filesystem::path(path).concat(".meta");
+        bool bMetaExisted = std::filesystem::exists(metaPath);
+        if (!bMetaExisted)
+        {
+            meta.guid = xg::newGuid().str();
+            Serializer::GetInstance().Serialize(&meta, metaPath.string());
+        }
+        else
+            Serializer::GetInstance().Deserialize(&meta, metaPath.string());
+        childNode->fileGuid = meta.guid;
+
         // Build asset tree
         node->children.emplace_back(childNode);
     }
