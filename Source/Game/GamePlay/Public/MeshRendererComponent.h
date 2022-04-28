@@ -12,9 +12,6 @@ namespace Lumen::Game
 
     public:
         [[serialize(true)]]
-        AssetRef shaderlabRef;
-
-        [[serialize(true)]]
         Material material;
 
         RTTR_ENABLE(Component)

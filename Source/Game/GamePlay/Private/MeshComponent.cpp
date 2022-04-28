@@ -13,7 +13,7 @@ RTTR_REGISTRATION
 {
 	registration::class_<Lumen::Game::MeshComponent>("MeshComponent")
 		.constructor<>()
-		.property("meshRef", &MeshComponent::meshRef)
+		.property("mesh", &MeshComponent::mesh)
 		(
 			metadata("serialize", true)
 		)

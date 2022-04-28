@@ -11,17 +11,6 @@ Component::Component()
 
 RTTR_REGISTRATION
 {
-	registration::class_<Lumen::Game::AssetRef>("AssetRef")
-		.property("name", &AssetRef::name)
-		(
-			metadata("serialize", true)
-		)
-		.property("guid", &AssetRef::guid)
-		(
-			metadata("serialize", true)
-		)
-		.constructor<>()
-	;
 	registration::class_<Lumen::Game::Component>("Component")
 		.constructor<>()
 	;

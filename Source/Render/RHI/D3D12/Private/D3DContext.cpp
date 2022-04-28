@@ -260,14 +260,14 @@ void D3DContext::CreateSceneBuffer(VisualBuffer* buffer)
 void D3DContext::CreateEntity(const Entity& entity)
 {
     MeshComponent meshComponent = entity.GetMeshContainer();
-    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.meshRef.guid));
-    if (mesh) CreateGeometry(mesh, meshComponent.meshRef.guid);
+    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.mesh.guid));
+    if (mesh) CreateGeometry(mesh, meshComponent.mesh.guid);
 
     MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
     Material* mat = &meshRenderer.material;
-    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTextureGuid));
-    if (tex) CreatePlainTexture(tex, mat->diffuseTextureGuid);
-    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.shaderlabRef.guid));
+    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTexture.guid));
+    if (tex) CreatePlainTexture(tex, mat->diffuseTexture.guid);
+    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.material.shaderlab.guid));
     if (shaderlab) CreateShaderlab(*shaderlab);
 
     CreateRenderItem(entity);
@@ -276,14 +276,14 @@ void D3DContext::CreateEntity(const Entity& entity)
 void D3DContext::UpdateEntity(const Entity& entity)
 {
     MeshComponent meshComponent = entity.GetMeshContainer();
-    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.meshRef.guid));
-    if (mesh) CreateGeometry(mesh, meshComponent.meshRef.guid);
+    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.mesh.guid));
+    if (mesh) CreateGeometry(mesh, meshComponent.mesh.guid);
 
     MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
     Material* mat = &meshRenderer.material;
-    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTextureGuid));
-    if (tex) CreatePlainTexture(tex, mat->diffuseTextureGuid);
-    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.shaderlabRef.guid));
+    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTexture.guid));
+    if (tex) CreatePlainTexture(tex, mat->diffuseTexture.guid);
+    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.material.shaderlab.guid));
     if (shaderlab) CreateShaderlab(*shaderlab);
 
     UpdateRenderItem(entity);
@@ -472,11 +472,11 @@ void D3DContext::CreateRenderItem(const Entity& entity)
 {
     auto item = std::make_unique<D3DRenderItem>();
 
-    auto meshGuid = entity.GetMeshContainer().meshRef.guid;
+    auto meshGuid = entity.GetMeshContainer().mesh.guid;
     if (mMeshes.find(meshGuid) != mMeshes.end())
         item->mesh = mMeshes.at(meshGuid).get();
 
-    auto texGuid = entity.GetMeshRenderer().material.diffuseTextureGuid;
+    auto texGuid = entity.GetMeshRenderer().material.diffuseTexture.guid;
     if (mTextures.find(texGuid) != mTextures.end())
         item->diffuseHandle = mTextures.at(texGuid)->srvView->gpuDescriptorHandleGPU;
 
@@ -493,11 +493,11 @@ void D3DContext::UpdateRenderItem(const Entity& entity)
     if (mAllRenderItems.find(guid) == mAllRenderItems.end()) return;
 
     auto item = mAllRenderItems.at(guid).get();
-    auto meshGuid = entity.GetMeshContainer().meshRef.guid;
+    auto meshGuid = entity.GetMeshContainer().mesh.guid;
     if (mMeshes.find(meshGuid) != mMeshes.end())
         item->mesh = mMeshes.at(meshGuid).get();
 
-    auto texGuid = entity.GetMeshRenderer().material.diffuseTextureGuid;
+    auto texGuid = entity.GetMeshRenderer().material.diffuseTexture.guid;
     if (mTextures.find(texGuid) != mTextures.end())
         item->diffuseHandle = mTextures.at(texGuid)->srvView->gpuDescriptorHandleGPU;
 }

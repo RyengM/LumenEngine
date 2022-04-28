@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Component.h"
+#include "AssetRef.h"
 #include "Game/Asset/Public/Mesh.h"
 
 namespace Lumen::Game
@@ -12,9 +13,8 @@ namespace Lumen::Game
 
     public:
         [[serialize(true)]]
-        AssetRef meshRef;
+        AssetRef mesh;
 
-        RTTR_REGISTRATION_FRIEND
         RTTR_ENABLE(Component)
     };
 }

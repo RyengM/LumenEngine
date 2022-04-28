@@ -4,9 +4,9 @@
         "mName": "",
         "mTransform": {
             "position": {
-                "x": 5.214689254760742,
-                "y": 2.3648617267608643,
-                "z": -4.219837188720703
+                "x": -6.68470573425293,
+                "y": 12.4050874710083,
+                "z": -8.490377426147461
             },
             "rotation": {
                 "x": 0.0,
@@ -20,18 +20,21 @@
             }
         },
         "mMeshContainer": {
-            "meshRef": {
+            "mesh": {
                 "name": "",
                 "guid": ""
             }
         },
         "mMeshRenderer": {
-            "shaderlabRef": {
-                "name": "",
-                "guid": ""
-            },
             "material": {
-                "diffuseTextureGuid": ""
+                "shaderlab": {
+                    "name": "",
+                    "guid": ""
+                },
+                "diffuseTexture": {
+                    "name": "",
+                    "guid": ""
+                }
             }
         },
         "mFov": 45.0,
@@ -39,8 +42,8 @@
         "mNearPlane": 0.10000000149011612,
         "mFarPlane": 100.0,
         "mMoveSpeed": 0.20000000298023224,
-        "mYaw": 34.80000686645508,
-        "mPitch": 20.800004959106445
+        "mYaw": -42.60007095336914,
+        "mPitch": 46.800010681152344
     },
     "light": {
         "mClassName": "Entity",
@@ -63,18 +66,21 @@
             }
         },
         "mMeshContainer": {
-            "meshRef": {
+            "mesh": {
                 "name": "",
                 "guid": ""
             }
         },
         "mMeshRenderer": {
-            "shaderlabRef": {
-                "name": "",
-                "guid": ""
-            },
             "material": {
-                "diffuseTextureGuid": ""
+                "shaderlab": {
+                    "name": "",
+                    "guid": ""
+                },
+                "diffuseTexture": {
+                    "name": "",
+                    "guid": ""
+                }
             }
         },
         "strength": {
@@ -105,18 +111,21 @@
                 }
             },
             "mMeshContainer": {
-                "meshRef": {
+                "mesh": {
                     "name": "box",
                     "guid": "fbcc47a7-c788-4222-8f6d-ec8c86c283c8"
                 }
             },
             "mMeshRenderer": {
-                "shaderlabRef": {
-                    "name": "simpleForward",
-                    "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
-                },
                 "material": {
-                    "diffuseTextureGuid": "d4263b4d-154c-4c85-9ed3-8b5e9bb93301"
+                    "shaderlab": {
+                        "name": "SimpleForward",
+                        "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
+                    },
+                    "diffuseTexture": {
+                        "name": "boxBaseColor",
+                        "guid": "d4263b4d-154c-4c85-9ed3-8b5e9bb93301"
+                    }
                 }
             }
         }

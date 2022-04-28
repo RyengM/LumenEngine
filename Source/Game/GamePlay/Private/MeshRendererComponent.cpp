@@ -13,10 +13,6 @@ RTTR_REGISTRATION
 {
 	registration::class_<Lumen::Game::MeshRendererComponent>("MeshRendererComponent")
 		.constructor<>()
-		.property("shaderlabRef", &MeshRendererComponent::shaderlabRef)
-		(
-			metadata("serialize", true)
-		)
 		.property("material", &MeshRendererComponent::material)
 		(
 			metadata("serialize", true)

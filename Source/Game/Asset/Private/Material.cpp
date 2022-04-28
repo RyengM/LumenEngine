@@ -14,7 +14,11 @@ RTTR_REGISTRATION
 	registration::class_<Lumen::Game::Material>("Material")
 		.constructor<>()
 		.property("name", &Material::name)
-		.property("diffuseTextureGuid", &Material::diffuseTextureGuid)
+		.property("shaderlab", &Material::shaderlab)
+		(
+			metadata("serialize", true)
+		)
+		.property("diffuseTexture", &Material::diffuseTexture)
 		(
 			metadata("serialize", true)
 		)

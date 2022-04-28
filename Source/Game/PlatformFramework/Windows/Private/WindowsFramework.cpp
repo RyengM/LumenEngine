@@ -316,6 +316,29 @@ void WindowsFramework::BindVariant(rttr::instance obj, const rttr::property& p, 
             auto childProps = t.get_properties();
             if (!childProps.empty())
                 ShowDetailInternal(var);
+
+            // Drag data bind and update info in editor
+            if (t.get_name() == "AssetRef" || "Material")
+            {
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FileBind"))
+                    {
+                        AssetTreeNode* node = (AssetTreeNode*)payload->Data;
+                        std::string guid = node->fileGuid;
+                        std::filesystem::path path = node->fileName;
+                        // Asset bind
+                        if (path.extension() == ".obj" && p.get_name() == "mesh" ||                                             // Mesh bind
+                            (path.extension() == ".png" || path.extension() == ".jpg") && p.get_name() == "diffuseTexture")     // Texture bind
+                        {
+                            var.get_value<AssetRef>().guid = guid;
+                            var.get_value<AssetRef>().name = path.stem().string();
+                            bPropertyChanged = true;
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+            }
         }
     }
 }
@@ -338,29 +361,6 @@ bool WindowsFramework::ShowDetailAtomic(rttr::instance obj, const rttr::property
     else if (t == type::get<std::string>())
     {
         ImGui::LabelText(propertyName, var.to_string().c_str());
-
-        // Special handling for asset bind
-        if (p.get_name() == "guid")
-        {
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FileBind"))
-                {
-                    AssetTreeNode* node = (AssetTreeNode*)payload->Data;
-                    std::string guid = node->fileGuid;
-                    std::filesystem::path path = node->fileName;
-                    // Mesh bind
-                    if (path.extension() == ".obj")
-                    {
-                        // Update info in editor
-                        var.get_value<std::string>() = guid;
-                        bPropertyChanged = true;
-                    }
-                }
-                ImGui::EndDragDropTarget();
-            }
-        }
-
         return true;
     }
     return false;
