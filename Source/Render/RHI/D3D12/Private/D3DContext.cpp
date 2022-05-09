@@ -213,7 +213,7 @@ void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::
 
         D3D12_GPU_VIRTUAL_ADDRESS objectCBAddress = mGraphicsContext->currentFrameResource->objectBuffers->uploadResource->GetGPUVirtualAddress();
         cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
-        if (item->guid != "skybox")
+        if (item->guid != "skybox" && item->material)
             cmdList->SetGraphicsRootConstantBufferView(2, mGraphicsContext->currentFrameResource->materialBuffers->uploadResource->GetGPUVirtualAddress() + item->material->matCBOffset);
         cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("skyBox")->srvView->gpuDescriptorHandleGPU);
         if (item->material && item->material->diffuseSrvHandle.ptr)
@@ -227,7 +227,8 @@ void D3DContext::DrawUI(void* data)
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "RenderScene"));
     auto cmdList = cmdBuffer->commandList;
 
-    const float clearColor[4] = { 0.2, 0.3, 0.4, 1.0 };
+    //const float clearColor[4] = { 0.2, 0.3, 0.4, 1.0 };
+    const float clearColor[4] = { 0.31, 0.32, 0.32, 1.0 };
 
     CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetCurrentBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     CD3DX12_RESOURCE_BARRIER afterBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetCurrentBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

@@ -38,6 +38,8 @@ namespace Lumen::Game
         void ShowFolderContext();
         void UpdateGuiWindow();
 
+
+        void UpdateGuiWindow_Hierarchy_MenuBar(Scene* scene);
     public:
         // Imgui settings
         ImguiManagerDx12    mImguiManager;

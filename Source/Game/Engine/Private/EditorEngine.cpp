@@ -69,7 +69,8 @@ void EditorEngine::Tick()
     std::set<Material*> usedMaterials;
     for (auto entityPtr : entities)
     {
-        usedMaterials.emplace(AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(entityPtr->GetMeshRendererPtr()->material.guid)));
+        if (Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(entityPtr->GetMeshRendererPtr()->material.guid)))
+            usedMaterials.emplace(mat);
         ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entityProxy = Entity(*entityPtr.get())](RHIContext* graphicsContext) {
             graphicsContext->UpdateObjectCB(entityProxy);
         });
