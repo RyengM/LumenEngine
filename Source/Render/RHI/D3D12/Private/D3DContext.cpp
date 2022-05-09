@@ -213,7 +213,7 @@ void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::
 
         D3D12_GPU_VIRTUAL_ADDRESS objectCBAddress = mGraphicsContext->currentFrameResource->objectBuffers->uploadResource->GetGPUVirtualAddress();
         cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
-        if (item->guid != "skybox")
+        if (item->guid != "skybox" && item->material)
             cmdList->SetGraphicsRootConstantBufferView(2, mGraphicsContext->currentFrameResource->materialBuffers->uploadResource->GetGPUVirtualAddress() + item->material->matCBOffset);
         cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("skyBox")->srvView->gpuDescriptorHandleGPU);
         if (item->material && item->material->diffuseSrvHandle.ptr)

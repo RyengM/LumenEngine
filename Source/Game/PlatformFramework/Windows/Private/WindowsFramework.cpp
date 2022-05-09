@@ -181,7 +181,8 @@ void WindowsFramework::UpdateGuiWindow()
             // Delete entity by delete key
             if (ImGui::IsWindowHovered() && ImGui::IsKeyReleased(ImGuiKey_Delete))
             {
-                scene->DeleteEntity(scene->entities[selected]->GetName());
+                if (scene->entities.size())
+                    scene->DeleteEntity(scene->entities[selected]->GetName());
                 selected = 0;
             }
             // Popup window to operate entities

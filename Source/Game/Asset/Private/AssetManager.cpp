@@ -181,7 +181,7 @@ void AssetManager::CreateMaterial()
 {
     Material* mat = mMaterialStorage.RequestElement();
     new(mat)Material();
-    mat->name = "new-material_" + std::to_string(matIndex) + ".mat";
+    mat->name = "new-material_" + std::to_string(matIndex++) + ".mat";
     // Extract shaderlab property to material
     ShaderLab* shader = mGuid2ShaderLabMap.at(mDefaultShaderGuid);
     mat->shaderlab.name = shader->name;

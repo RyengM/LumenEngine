@@ -59,7 +59,7 @@ Shader "Default"
                 Material mat;
                 mat.DiffuseAlbedo = _DiffuseAlbedo;
                 mat.Shininess = 1.f - _Roughness;
-                mat.FresnelR0 = _FresnelR0;
+                mat.FresnelR0 = _FresnelR0.xyz;
 
                 In.normalW = normalize(In.normalW);
 
@@ -71,7 +71,7 @@ Shader "Default"
 
                 // Specular reflection
                 float3 r = reflect(-toEyeW, In.normalW);
-                float3 fresnelFactor = SchlickFresnel(_FresnelR0, In.normalW, r);
+                float3 fresnelFactor = SchlickFresnel(mat.FresnelR0, In.normalW, r);
                 litColor += mat.Shininess * fresnelFactor * 0.4;
 
                 return float4(diffuse.xyz * litColor, 1.0);
