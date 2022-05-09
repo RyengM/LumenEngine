@@ -123,6 +123,8 @@ Material* matShownInDetail;
 // Current asset target position type, used to specific the type of drag asset
 std::string currentAssetTargetType = "";
 
+
+
 void WindowsFramework::UpdateGuiWindow()
 {
     // Move camera
@@ -145,11 +147,40 @@ void WindowsFramework::UpdateGuiWindow()
 
     // Show scene hierarchy
     {
-        ImGui::Begin("Hierarchy");
+        ImGuiWindowFlags window_flags = 0;
+        window_flags |= ImGuiWindowFlags_MenuBar;
+
+        ImGui::Begin("Hierarchy", NULL, window_flags);
 
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
+            std::string wanttofind;
+            ImGui::InputText(" ", &wanttofind, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImGui::SameLine();
+            ImGui::Button("search");
+            {
+                for (auto iter = scene->entities.begin(); iter != scene->entities.end(); iter++)
+                {
+                    if (wanttofind == (*iter)->GetName().c_str())
+                    {
+                        selected = iter - scene->entities.begin();
+                    }
+                }
+            }
+
+            //MenuBar
+            if (ImGui::BeginMenuBar())
+            {
+                if (ImGui::BeginMenu("Menu"))
+                {
+                    UpdateGuiWindow_Hierarchy_MenuBar(scene);
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenuBar();
+            }
+
+
             // Show or rename entity
             for (int i = 0; i < scene->entities.size(); i++)
             {
@@ -560,9 +591,45 @@ bool WindowsFramework::HandleIO()
             }
         }
     }
-
     return true;
 }
+
+//Some functions have quick operations in UpdateGuiWindow , now we  add it to the menu bar and keep the shortcut unchanged
+void WindowsFramework::UpdateGuiWindow_Hierarchy_MenuBar(Scene* scene)
+{
+    ImGui::MenuItem("(Some strange operations)", NULL, false, false);
+    if (ImGui::BeginMenu("New"))
+    {
+        for (auto t : rttr::type::get_types())
+        {
+            if (t.is_derived_from<Entity>() && t.is_class())
+            {
+                auto name = t.get_name();
+                // Do not support create camera and light yet
+                if (name == "Camera" || name == "DirectionalLight")
+                    continue;
+                if (ImGui::Button(name.data()))
+                    scene->CreateEntity(name.data());
+            }
+        }
+        ImGui::EndMenu();
+    }
+    if (ImGui::MenuItem("Delete"))
+    {
+        if (scene->entities.size())
+        {
+            scene->DeleteEntity(scene->entities[selected]->GetName());
+            selected = 0;
+        }
+    }
+
+    if (ImGui::MenuItem("Rename"))
+    {
+        //rename (todo)
+    }
+}
+
+
 
 bool WindowsFramework::InitMainWindow()
 {

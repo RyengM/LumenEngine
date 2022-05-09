@@ -30,6 +30,7 @@ namespace Lumen::Game
 
         inline std::vector<ImGuiContext*>& GetContexts() noexcept { return mContexts; }
 
+        void LoadStyle();
     private:
         int mCurrentFrameNum = 0;
         int mFrameNum = 0;
