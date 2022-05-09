@@ -1,5 +1,7 @@
 #include "Game/PlatformFramework/Windows/Public/WindowsFramework.h"
 #include "Game/PlatformFramework/Windows/Public/imgui_impl_win32.h"
+#include "Game/Asset/Public/Serializer.h"
+#include "ThirdParty/Imgui/imgui_stdlib.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
 #include "Render/RHI/D3D12/Public/D3DContext.h"
 #include <cassert>
@@ -10,8 +12,6 @@ using namespace Lumen::Game;
 using namespace Lumen::Core;
 using namespace Lumen::Render;
 using namespace std::filesystem;
-
-static AssetTreeNode* activeAssetNode = nullptr;
 
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
@@ -105,10 +105,23 @@ void WindowsFramework::Clean()
     mImguiManager.Clear();
 }
 
+static AssetTreeNode* activeAssetNode = nullptr;
 // Selected entity in hierarchy
 static int selected = 0;
-// If entity property is changed manually with resource bind
-static bool bPropertyChanged = false;
+// If entity asset bind is changed manually
+static bool bAssetBindChanged = false;
+// If asset is binding: guid is bind but name is not changed
+static bool bAssetBinding = false;
+// Asset bind name
+std::string assetBindName = "";
+// If is in text input mode
+static bool bTextInput = false;
+// 0: entity, 1: material asset file
+static int detailShowType = 0;
+// Current material shown in detail
+Material* matShownInDetail;
+// Current asset target position type, used to specific the type of drag asset
+std::string currentAssetTargetType = "";
 
 void WindowsFramework::UpdateGuiWindow()
 {
@@ -137,19 +150,41 @@ void WindowsFramework::UpdateGuiWindow()
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
+            // Show or rename entity
             for (int i = 0; i < scene->entities.size(); i++)
             {
                 auto& entity = scene->entities[i];
-                if (ImGui::Selectable(entity->GetName().c_str(), selected == i))
-                    selected = i;
+                // Normal frame
+                if (!bTextInput)
+                {
+                    if (ImGui::Selectable(entity->GetName().c_str(), selected == i))
+                    {
+                        detailShowType = 0;
+                        selected = i;
+                    }
+                }
+                // Rename frame
+                else
+                {
+                    std::string name = entity->GetName();
+                    if (ImGui::InputText("new name##rename", &name, ImGuiInputTextFlags_EnterReturnsTrue))
+                    {
+                        if (name == "") { bTextInput = false; continue; }      // empty name
+                        entity->SetName(name);
+                        bTextInput = false;
+                    }
+                }
+                // Trigger rename
+                if (ImGui::IsMouseDoubleClicked(0) && selected == i && ImGui::IsItemActivated())
+                    bTextInput = true;
             }
-
+            // Delete entity by delete key
             if (ImGui::IsWindowHovered() && ImGui::IsKeyReleased(ImGuiKey_Delete))
             {
                 scene->DeleteEntity(scene->entities[selected]->GetName());
                 selected = 0;
             }
-
+            // Popup window to operate entities
             if (ImGui::BeginPopupContextWindow())
             {
                 if (ImGui::TreeNode("Add entity"))
@@ -178,18 +213,24 @@ void WindowsFramework::UpdateGuiWindow()
     {
         ImGui::Begin("Detail");
         auto scene = AssetManager::GetInstance().GetScene();
-        if (scene && scene->entities.size())
+        // Show entity detail
+        if (detailShowType == 0)
         {
-            Entity* selectedEntity = scene->entities[selected].get();
-
-            // Get object ref, note variant will deep copy instance data
-            rttr::instance obj(selectedEntity);
-            ShowDetailInternal(selectedEntity);
+            if (scene && scene->entities.size())
+            {
+                Entity* selectedEntity = scene->entities[selected].get();
+                ShowDetailInternal(selectedEntity);
+            }
+        }
+        // Show asset file detail
+        else if (detailShowType == 1)
+        {
+            ShowDetailInternal(matShownInDetail);
         }
         ImGui::End();
 
-        // Update entity data bind in render thread if property is changed
-        if (bPropertyChanged)
+        // Update entity data bind in render thread if data bind is changed
+        if (bAssetBindChanged)
         {
             // Update info in render side
             auto scene = AssetManager::GetInstance().GetScene();
@@ -198,7 +239,7 @@ void WindowsFramework::UpdateGuiWindow()
                 Entity* selectedEntity = scene->entities[selected].get();
                 scene->UpdateEntity(selectedEntity);
             }
-            bPropertyChanged = false;
+            bAssetBindChanged = false;
         }
     }
 
@@ -214,8 +255,17 @@ void WindowsFramework::UpdateGuiWindow()
                 EnterDictRecur(AssetManager::GetInstance().GetAssetTree());
 
             ImGui::TableSetColumnIndex(1);
+            // Show files in folder context
             ShowFolderContext();
             ImGui::EndTable();
+        }
+        // Popup window to create new assets
+        if (ImGui::BeginPopupContextWindow())
+        {
+            // Material
+            if (ImGui::Button("Create material"))
+                AssetManager::GetInstance().CreateMaterial();
+            ImGui::EndPopup();
         }
         ImGui::End();
     }
@@ -268,7 +318,17 @@ void WindowsFramework::ShowFolderContext()
 
     for (auto node : activeAssetNode->children)
     {
-        ImGui::Button(node->fileName.c_str());
+        // If asset button is pressed, show file detail
+        if (ImGui::Button(node->fileName.c_str()))
+        {
+            std::filesystem::path path = node->fileName;
+            // Matrial
+            if (path.extension() == ".mat")
+            {
+                matShownInDetail = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(node->fileGuid));
+                detailShowType = 1;
+            }
+        }
         float next_button_x2 = ImGui::GetItemRectMax().x + style.ItemSpacing.x + ImGui::CalcTextSize(node->fileName.c_str(), NULL, true).x;
         if (next_button_x2 < window_visible_x2)
             ImGui::SameLine();
@@ -285,23 +345,34 @@ void WindowsFramework::ShowFolderContext()
 void WindowsFramework::ShowDetailInternal(rttr::instance obj)
 {
     type t = obj.get_derived_type();
+    if (t.is_wrapper())
+    {
+        instance wrappedInstance = obj.get_wrapped_instance();
+        t = wrappedInstance.get_derived_type();
+    }
     for (auto& p : t.get_properties(filter_item::instance_item | filter_item::non_public_access | filter_item::public_access))
     {
         if (p.get_metadata("serialize").is_valid() && p.get_metadata("serialize").to_bool())
         {
             variant var = p.get_value(obj);
-            BindVariant(obj, p, var);
+            BindVariant(p, var);
             // Must read back to modify origin data
             p.set_value(obj, var);
         }
     }
 }
 
-void WindowsFramework::BindVariant(rttr::instance obj, const rttr::property& p, rttr::variant& var)
+void WindowsFramework::BindVariant(const rttr::property& p, rttr::variant& var)
 {
     auto t = var.get_type();
     // Arithmetic
-    if (ShowDetailAtomic(obj, p, var)) {}
+    if (ShowDetailAtomic(p, var)) {}
+    // Array type
+    //else if (var.is_sequential_container())
+    //    ShowDetailSequential(p, var.create_sequential_view());
+    // Key-value type
+    else if (var.is_associative_container())
+        ShowDetailAssociative(p, var.create_associative_view());
     // Object
     else
     {
@@ -317,33 +388,15 @@ void WindowsFramework::BindVariant(rttr::instance obj, const rttr::property& p, 
             if (!childProps.empty())
                 ShowDetailInternal(var);
 
-            // Drag data bind and update info in editor
-            if (t.get_name() == "AssetRef" || "Material")
+            if (ImGui::IsItemHovered())
             {
-                if (ImGui::BeginDragDropTarget())
-                {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FileBind"))
-                    {
-                        AssetTreeNode* node = (AssetTreeNode*)payload->Data;
-                        std::string guid = node->fileGuid;
-                        std::filesystem::path path = node->fileName;
-                        // Asset bind
-                        if (path.extension() == ".obj" && p.get_name() == "mesh" ||                                             // Mesh bind
-                            (path.extension() == ".png" || path.extension() == ".jpg") && p.get_name() == "diffuseTexture")     // Texture bind
-                        {
-                            var.get_value<AssetRef>().guid = guid;
-                            var.get_value<AssetRef>().name = path.stem().string();
-                            bPropertyChanged = true;
-                        }
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                currentAssetTargetType = p.get_name().to_string();
             }
         }
     }
 }
 
-bool WindowsFramework::ShowDetailAtomic(rttr::instance obj, const rttr::property& p, rttr::variant& var)
+bool WindowsFramework::ShowDetailAtomic(const rttr::property& p, rttr::variant& var)
 {
     auto propertyName = p.get_name().data();
     auto t = var.get_type();
@@ -361,9 +414,90 @@ bool WindowsFramework::ShowDetailAtomic(rttr::instance obj, const rttr::property
     else if (t == type::get<std::string>())
     {
         ImGui::LabelText(propertyName, var.to_string().c_str());
+
+        // Drag data bind and update info in editor
+        if (p.get_name() == "name" && p.get_declaring_type().get_name() == "AssetRef" && bAssetBinding)
+        {
+            var.get_value<std::string>() = assetBindName;
+            bAssetBinding = false;
+        }
+        if (p.get_name() == "guid" && p.get_declaring_type().get_name() == "AssetRef")
+        {
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FileBind"))
+                {
+                    AssetTreeNode* node = (AssetTreeNode*)payload->Data;
+                    std::string guid = node->fileGuid;
+                    std::filesystem::path path = node->fileName;
+                    // Asset bind
+                    if (path.extension() == ".obj" && currentAssetTargetType == "mMeshContainer" ||                                // Mesh bind
+                        (path.extension() == ".png" || path.extension() == ".jpg") && currentAssetTargetType == "propertyList" ||  // Texture bind
+                        path.extension() == ".mat" && currentAssetTargetType == "mMeshRenderer")                                   // Material bind
+                    {
+                        var.get_value<std::string>() = guid;
+                        assetBindName = path.stem().string();
+                        bAssetBinding = true;
+                        bAssetBindChanged = true;
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
         return true;
     }
     return false;
+}
+
+bool WindowsFramework::ShowDetailSequential(const rttr::property& p, const rttr::variant_sequential_view& view)
+{
+    for (auto& item : view)
+    {
+        rttr::variant wrappedVar = item.extract_wrapped_value();
+        rttr::type t = wrappedVar.get_type();
+        if (t.is_arithmetic() || t == type::get<std::string>() || t.is_enumeration())
+            ShowDetailAtomic(p, wrappedVar);
+        else
+            ShowDetailInternal(wrappedVar);
+    }
+    return true;
+}
+
+bool WindowsFramework::ShowDetailAssociative(const rttr::property& p, const rttr::variant_associative_view& view)
+{
+    if (view.is_key_only_type())
+        for (auto& item : view)
+            BindVariant(p, const_cast<variant&>(item.first));
+    else
+    {
+        for (auto& item : view)
+        {
+            rttr::type t = item.second.get_type().get_wrapped_type();
+            if (t.is_arithmetic())
+            {
+                if (t == type::get<bool>())
+                    ImGui::Checkbox(item.first.to_string().c_str(), &const_cast<bool&>(item.second.get_wrapped_value<bool>()));
+                else if (t == type::get<int8_t>() || t == type::get<int16_t>() || t == type::get<int32_t>() || t == type::get<int64_t>() ||
+                    t == type::get<uint8_t>() || t == type::get<uint16_t>() || t == type::get<uint32_t>() || t == type::get<uint64_t>())
+                    ImGui::DragInt(item.first.to_string().c_str(), &const_cast<int&>(item.second.get_wrapped_value<int>()), 1);
+                else if (t == type::get<float>() || t == type::get<double>())
+                    ImGui::DragFloat(item.first.to_string().c_str(), &const_cast<float&>(item.second.get_wrapped_value<float>()), 0.1f);
+            }
+            else if (t == type::get<std::string>())
+            {
+                ImGui::LabelText(item.first.to_string().c_str(), item.second.to_string().c_str());
+            }
+            else if (t.get_name() == "Vec4") // Color
+            {
+                ImGui::ColorEdit4(item.first.to_string().c_str(), &const_cast<float&>(item.second.get_wrapped_value<Vec4>().x));
+            }
+            else // Object
+            {
+                ShowDetailInternal(item.second);
+            }
+        }
+    }
+    return true;
 }
 
 bool WindowsFramework::HandleIO()

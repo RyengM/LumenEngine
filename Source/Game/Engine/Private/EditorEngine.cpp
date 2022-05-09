@@ -64,12 +64,28 @@ void EditorEngine::Tick()
             entity->Tick();
     }
 
-    // Update object constant buffer
+    // Update object constant buffer, may be removed from tick with dirty flag later
     auto entities = AssetManager::GetInstance().GetScene()->entities;
+    std::set<Material*> usedMaterials;
     for (auto entityPtr : entities)
     {
+        usedMaterials.emplace(AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(entityPtr->GetMeshRendererPtr()->material.guid)));
         ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entityProxy = Entity(*entityPtr.get())](RHIContext* graphicsContext) {
             graphicsContext->UpdateObjectCB(entityProxy);
+        });
+    }
+    for (auto mat : usedMaterials)
+    {
+        // Update material buffer with data from editor
+        if (!mat->bOffsetMapInitialized) // Initialize property offset at first time
+        {
+            ShaderLab* shader = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(mat->shaderlab.guid));
+            mat->InitBuffer(shader);
+        }
+        mat->UpdateBuffer();
+        // Transport data to render side
+        ENQUEUE_RENDER_COMMAND("UpdateMaterialCB", [materialProxy = Material(*mat)](RHIContext* graphicsContext) {
+            graphicsContext->UpdateMaterialCB(materialProxy);
         });
     }
 

@@ -3498,10 +3498,10 @@ bool ImGui::IsItemHovered(ImGuiHoveredFlags flags)
             if ((flags & ImGuiHoveredFlags_AllowWhenOverlapped) == 0)
                 return false;
 
-        // Test if another item is active (e.g. being dragged)
-        if ((flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) == 0)
-            if (g.ActiveId != 0 && g.ActiveId != g.LastItemData.ID && !g.ActiveIdAllowOverlap && g.ActiveId != window->MoveId)
-                return false;
+        // Test if another item is active (e.g. being dragged), we need hover decision while dragging
+        //if ((flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) == 0)
+        //    if (g.ActiveId != 0 && g.ActiveId != g.LastItemData.ID && !g.ActiveIdAllowOverlap && g.ActiveId != window->MoveId)
+        //        return false;
 
         // Test if interactions on this window are blocked by an active popup or modal.
         // The ImGuiHoveredFlags_AllowWhenBlockedByPopup flag will be tested here.

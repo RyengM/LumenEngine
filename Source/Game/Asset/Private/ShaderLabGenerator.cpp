@@ -50,7 +50,7 @@ antlrcpp::Any ShaderLabGenerator::visitShader(ShaderLabParser::ShaderContext* ct
     shaderLab.name = std::move(shaderName);
     if (ctx->properties())
     {
-        std::unordered_map<std::string, Property> properties = visitProperties(ctx->properties());
+        std::vector<Property> properties = visitProperties(ctx->properties());
         shaderLab.properties = std::move(properties);
     }
     if (ctx->category())
@@ -64,12 +64,12 @@ antlrcpp::Any ShaderLabGenerator::visitShader(ShaderLabParser::ShaderContext* ct
 
 antlrcpp::Any ShaderLabGenerator::visitProperties(ShaderLabParser::PropertiesContext* ctx)
 {
-    std::unordered_map<std::string, Property> properties;
+    std::vector<Property> properties;
 
     for (auto propertyContext : ctx->property())
     {
         Property property = std::move(visitProperty(propertyContext));
-        properties.insert({ property.name, property });
+        properties.emplace_back(std::move(property));
     }
     
     return properties;

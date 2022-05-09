@@ -10,12 +10,13 @@ AssetRef::AssetRef()
 RTTR_REGISTRATION
 {
 	registration::class_<AssetRef>("AssetRef")
-		.constructor<>()
-		.property("name", &AssetRef::name)
+		.constructor<>()(policy::ctor::as_object)
+		.constructor<std::string_view, std::string_view>()
+		.property("guid", &AssetRef::guid)
 		(
 			metadata("serialize", true)
 		)
-		.property("guid", &AssetRef::guid)
+		.property("name", &AssetRef::name)
 		(
 			metadata("serialize", true)
 		)

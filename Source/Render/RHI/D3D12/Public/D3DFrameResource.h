@@ -59,6 +59,7 @@ namespace Lumen::Render
         // that reference it.  So each frame needs their own cbuffers.
         std::unique_ptr<D3DBufferResource> passBuffers;
         std::unique_ptr<D3DBufferResource> objectBuffers;
+        std::unique_ptr<D3DBufferResource> materialBuffers;
 
         // Fence value to mark commands up to this fence point.  This lets us
         // check if these frame resources are still in use by the GPU.

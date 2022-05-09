@@ -37,6 +37,8 @@ namespace Lumen::Render
                 uploadResource->Unmap(0, nullptr);
             }
         }
+        // Update unfixed buffer field, e.g. material constant buffer, make sure the buffer is multiplies of 256 bytes
+        void SetUnfixedBufferData(UINT offset, uint8_t* data, int subRegionSize);
         void UploadData(RHICommandBuffer* rhiCmdBuffer);
 
         BufferDescriptor                                    descriptor;

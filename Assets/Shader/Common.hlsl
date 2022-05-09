@@ -18,18 +18,6 @@
 // Include structures and functions for lighting.
 #include "../../Assets/Shader/LightingUtil.hlsl"
 
-struct MaterialData
-{
-	float4   DiffuseAlbedo;
-	float3   FresnelR0;
-	float    Roughness;
-	float4x4 MatTransform;
-	uint     DiffuseMapIndex;
-	uint     NormalMapIndex;
-	uint     MatPad1;
-	uint     MatPad2;
-};
-
 TextureCube gCubeMap : register(t0);
 Texture2D gShadowMap : register(t1);
 Texture2D gSsaoMap   : register(t2);
@@ -37,11 +25,6 @@ Texture2D gSsaoMap   : register(t2);
 // An array of textures, which is only supported in shader model 5.1+.  Unlike Texture2DArray, the textures
 // in this array can be different sizes and formats, making it more flexible than texture arrays.
 Texture2D gTextureMaps[1] : register(t3);
-
-// Put in space1, so the texture array does not overlap with these resources.  
-// The texture array will occupy registers t0, t1, ..., t3 in space0. 
-StructuredBuffer<MaterialData> gMaterialData : register(t0, space1);
-
 
 SamplerState gsamPointWrap        : register(s0);
 SamplerState gsamPointClamp       : register(s1);
@@ -147,4 +130,3 @@ float CalcShadowFactor(float4 shadowPosH)
     
     return percentLit / 9.0f;
 }
-

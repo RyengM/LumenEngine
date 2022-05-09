@@ -23,8 +23,10 @@ namespace Lumen::Render
         D3DContext(const WindowInfo& windowInfo);
 
     public:
+        // Switch frame resource and wait for gpu fence
         virtual void BeginFrame() override;
 
+        // Signal fence and reset allocator
         virtual void EndFrame() override;
 
         virtual RHICommandBuffer* RequestCmdBuffer(const EContextType& type, std::string_view name) override;
@@ -39,32 +41,49 @@ namespace Lumen::Render
 
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) override;
 
+        virtual void UpdateMaterialCB(const Material& mat) override;
+
         virtual void RenderScene(uint32_t width, uint32_t height) override;
 
         virtual void DrawUI(void* data) override;
 
+        // Create scene buffer for display
         virtual void CreateSceneBuffer(VisualBuffer* buffer) override;
 
+        // Create all GPU resources related to entity
         virtual void CreateEntity(const Entity& entity) override;
 
+        // Update all GPU resources related to entity
         virtual void UpdateEntity(const Entity& entity) override;
 
+        // Create texture
         virtual void CreatePlainTexture(Texture* texture, std::string_view guid) override;
 
+        // Create cubemap
         virtual void CreateCubeMap(std::vector<Texture>& textures) override;
 
+        // Create geometry
         virtual void CreateGeometry(Mesh* mesh, std::string_view guid) override;
 
+        // Create material, return offset of material constant buffer, not consider material remove yet
+        virtual uint32_t CreateMaterial(Material* mat, std::string_view guid) override;
+
+        // Create geometry directly, make sure mesh is static
         virtual void CreateGeometry(const Mesh& mesh, std::string_view guid) override;
 
+        // Create shaders
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
+        // Create render item
         virtual void CreateRenderItem(const Entity& entity) override;
 
+        // Update render item resource bind
         virtual void UpdateRenderItem(const Entity& entity) override;
 
+        // Remove render item
         virtual void RemoveRenderItem(std::string_view guid) override;
 
+        // Create sky render item
         virtual void CreateSkyItem() override;
 
         virtual RHICommandContext* GetContext(const EContextType& type) override;
@@ -98,6 +117,8 @@ namespace Lumen::Render
         std::unordered_map<std::string, std::unique_ptr<D3DRenderItem>>         mAllRenderItems;
         std::vector<D3DRenderItem*>                                             mRenderItems[(uint32_t)ERenderLayer::Count];
 
+        // Need more flexible pattern later
         UINT                                                                    mIncreRenderItemIndex = 0;
+        uint32_t                                                                mIncreMaterialOffset = 0;
     };
 }

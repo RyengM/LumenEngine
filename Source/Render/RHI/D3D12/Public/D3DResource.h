@@ -57,19 +57,12 @@ namespace Lumen::Render
     struct D3DMaterial : public RHIMaterial
     {
         D3DMaterial() = default;
-        
-        // Index to constant buffer
-        int matCBIndex = -1;
+
+        // Offset to material constant buffer
+        uint32_t matCBOffset = -1;
 
         // Index to SRV heap for diffuse texture
-        int diffuseSrvHandle = -1;
-
-        // Index to SRV heap for normal texture
-        int normalSrvHandle = -1;
-        
-        DirectX::XMFLOAT4 diffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-        DirectX::XMFLOAT3 fresnelR0 = { 0.01f, 0.01f, 0.01f };
-        float roughness = 0.25f;
+        D3D12_GPU_DESCRIPTOR_HANDLE diffuseSrvHandle;
     };
 
     struct D3DMeshGeometry : public RHIMeshGeometry
@@ -111,9 +104,7 @@ namespace Lumen::Render
 
         UINT objectCBIndex = -1;
 
-        // TODO. build material system
-        D3D12_GPU_DESCRIPTOR_HANDLE diffuseHandle;
-
+        D3DMaterial* material;
         D3DMeshGeometry* mesh;
         D3D12_PRIMITIVE_TOPOLOGY primitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 

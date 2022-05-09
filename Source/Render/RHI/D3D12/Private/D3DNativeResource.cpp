@@ -235,6 +235,19 @@ D3DBufferResource::D3DBufferResource(RHIDevice* rhiDevice, const BufferDescripto
     }
 }
 
+void D3DBufferResource::SetUnfixedBufferData(UINT offset, uint8_t* data, int subRegionSize)
+{
+    if ((uint32_t)descriptor.storageType & (uint32_t)EStorageType::Static || (uint32_t)descriptor.storageType & (uint32_t)EStorageType::Dynamic)
+    {
+        int bytesize = (subRegionSize + 255) & ~255;
+        BYTE* uploadData;
+        // Map cpu pointer to gpu upload resource so we can copy data to resource
+        ThrowIfFailed(uploadResource->Map(0, nullptr, reinterpret_cast<void**>(&uploadData)));
+        memcpy(&uploadData[offset], data, subRegionSize);
+        uploadResource->Unmap(0, nullptr);
+    }
+}
+
 void D3DBufferResource::UploadData(RHICommandBuffer* cmdBuffer)
 {
     if ((uint32_t)descriptor.storageType & (uint32_t)EStorageType::Default &&

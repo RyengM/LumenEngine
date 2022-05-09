@@ -12,7 +12,7 @@ namespace Lumen::Game
 
     public:
         [[serialize(true)]]
-        Material material;
+        AssetRef material;
 
         RTTR_ENABLE(Component)
     };

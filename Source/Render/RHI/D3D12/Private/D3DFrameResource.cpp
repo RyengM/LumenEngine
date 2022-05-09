@@ -24,6 +24,13 @@ D3DFrameResource::D3DFrameResource(RHIDevice* rhiDevice)
         desc.stride = CalcStride(sizeof(ObjectConstants));
     }
     objectBuffers = std::make_unique<D3DBufferResource>(device, desc);
+    {
+        // Note that the size of material CB is not fixed, but aligned with 256
+        desc.name = "materialCB";
+        desc.count = 128;
+        desc.stride = 256;
+    }
+    materialBuffers = std::make_unique<D3DBufferResource>(device, desc);
 }
 
 D3DFrameResource::~D3DFrameResource()

@@ -36,8 +36,12 @@ namespace Lumen::Game
         // Serialize scene to asset folder, TODO, now only support one default scene
         void SaveScene();
 
+        // Create default material asset
+        void CreateMaterial();
+
         Mesh* GetMeshByGUID(xg::Guid guid);
         Texture* GetTextureByGUID(xg::Guid guid);
+        Material* GetMaterialByGUID(xg::Guid guid);
         ShaderLab* GetShaderlabByGUID(xg::Guid guid);
         
         inline Scene* GetScene() noexcept { return mScene.get(); }
@@ -61,10 +65,10 @@ namespace Lumen::Game
         std::unique_ptr<AssetTreeNode> mAssetTree;
 
         // ID-Resource map with original pointer
-        std::unordered_map<xg::Guid, Mesh*> mGuid2MeshMap;
-        std::unordered_map<xg::Guid, Texture*> mGuid2TextureMap;
-        std::unordered_map<xg::Guid, Material*> mGuid2MaterialMap;
-        std::unordered_map<xg::Guid, ShaderLab*> mGuid2ShaderLabMap;
+        std::map<xg::Guid, Mesh*> mGuid2MeshMap;
+        std::map<xg::Guid, Texture*> mGuid2TextureMap;
+        std::map<xg::Guid, Material*> mGuid2MaterialMap;
+        std::map<xg::Guid, ShaderLab*> mGuid2ShaderLabMap;
 
         // Built-in meshes
         std::unordered_map<std::string, Mesh*> mBuiltInMeshMap;
@@ -74,5 +78,12 @@ namespace Lumen::Game
         MemoryPool<Texture> mTextureStorage;
         MemoryPool<Material> mMaterialStorage;
         MemoryPool<ShaderLab> mShaderLabStorage;
+
+        // The index is used for avoiding name duplication
+        // TODO. use a better way to manage index to avoid name duplication
+        uint32_t matIndex = 0;
+
+        // Default shaderlab guid to initialize default material
+        xg::Guid mDefaultShaderGuid;
     };
 }

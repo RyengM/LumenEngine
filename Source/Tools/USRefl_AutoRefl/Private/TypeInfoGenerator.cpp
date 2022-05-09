@@ -64,6 +64,9 @@ string TypeInfoGenerator::Generate(const vector<TypeMeta>& typeMetas) {
                     ss << ">(" + GetAccessLevel(field.accessSpecifier) + ")" << endl;
                     continue;
                 }
+                // Destructor
+                if (field.name[0] == '~' && field.name.substr(1) == typeMeta.name)
+                    continue;
                 // Method
                 if (field.mode == Field::Mode::Function && field.name != typeMeta.name) {
                     ss << "\t\t.method(\"" + field.name + "\", ";

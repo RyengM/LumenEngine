@@ -331,7 +331,7 @@ RTTR_REGISTRATION
         (
             metadata("serialize", true)
         )
-        .constructor<>()
+        .constructor<>()(policy::ctor::as_object)
         .constructor<float, float>()
         .method("operator+", &Vec2::operator+)
         .method("operator-", &Vec2::operator-)
@@ -358,7 +358,7 @@ RTTR_REGISTRATION
         (
             metadata("serialize", true)
         )
-        .constructor<>()
+        .constructor<>()(policy::ctor::as_object)
         .constructor<float>()
         .constructor<float, float, float>()
         .method("operator-", select_overload<Vec3(void)>(&Vec3::operator-))
@@ -395,7 +395,7 @@ RTTR_REGISTRATION
         (
             metadata("serialize", true)
         )
-        .constructor<>()
+        .constructor<>()(policy::ctor::as_object)
         .constructor<float, float, float, float>()
         .constructor<const Vec3&>()
         .constructor<const Vec3&, float>()

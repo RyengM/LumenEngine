@@ -133,6 +133,21 @@ void D3DContext::UpdatePassCB(const Camera& camera, const DirectionalLight& ligh
     passCB->SetData<PassConstants>(0, constants, true);
 }
 
+void D3DContext::UpdateMaterialCB(const Material& mat)
+{
+    if (mMaterials.find(mat.guid.data()) == mMaterials.end()) return;
+
+    auto materialCB = mGraphicsContext->currentFrameResource->materialBuffers.get();
+    D3DMaterial* material = mMaterials.at(mat.guid.data()).get();
+    // Update texture bind, now only support _MainTex diffuse
+    for (auto& iter : mat.propertyList.texMap)
+        if (mTextures.find(iter.second.guid) != mTextures.end())
+            material->diffuseSrvHandle = mTextures.at(iter.second.guid)->srvView->gpuDescriptorHandleGPU;
+
+    UINT offset = material->matCBOffset;
+    materialCB->SetUnfixedBufferData(offset, mat.buffer, mat.propertyListSize);
+}
+
 void D3DContext::RenderScene(uint32_t width, uint32_t height)
 {
     CD3DX12_RESOURCE_BARRIER beforeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mSceneRT->colorBuffer->resource->defaultResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -141,7 +156,7 @@ void D3DContext::RenderScene(uint32_t width, uint32_t height)
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "RenderScene"));
     auto cmdList = cmdBuffer->commandList;
 
-    auto pso = mPSOs.at("SimpleForward").get();
+    auto pso = mPSOs.at("Default").get();
     auto frameResource = mGraphicsContext->currentFrameResource;
 
     cmdList->Close();
@@ -198,8 +213,11 @@ void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::
 
         D3D12_GPU_VIRTUAL_ADDRESS objectCBAddress = mGraphicsContext->currentFrameResource->objectBuffers->uploadResource->GetGPUVirtualAddress();
         cmdList->SetGraphicsRootConstantBufferView(0, objectCBAddress + item->objectCBIndex * ((sizeof(ObjectConstants) + 255) & ~255));
-        cmdList->SetGraphicsRootDescriptorTable(2, mTextures.at("skyBox")->srvView->gpuDescriptorHandleGPU);
-        if (item->diffuseHandle.ptr) cmdList->SetGraphicsRootDescriptorTable(3, item->diffuseHandle);
+        if (item->guid != "skybox")
+            cmdList->SetGraphicsRootConstantBufferView(2, mGraphicsContext->currentFrameResource->materialBuffers->uploadResource->GetGPUVirtualAddress() + item->material->matCBOffset);
+        cmdList->SetGraphicsRootDescriptorTable(3, mTextures.at("skyBox")->srvView->gpuDescriptorHandleGPU);
+        if (item->material && item->material->diffuseSrvHandle.ptr)
+            cmdList->SetGraphicsRootDescriptorTable(4, item->material->diffuseSrvHandle);
         cmdList->DrawIndexedInstanced(geo->indexCount, 1, 0, 0, 0);
     }
 }
@@ -264,12 +282,19 @@ void D3DContext::CreateEntity(const Entity& entity)
     if (mesh) CreateGeometry(mesh, meshComponent.mesh.guid);
 
     MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
-    Material* mat = &meshRenderer.material;
-    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTexture.guid));
-    if (tex) CreatePlainTexture(tex, mat->diffuseTexture.guid);
-    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.material.shaderlab.guid));
-    if (shaderlab) CreateShaderlab(*shaderlab);
-
+    Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(meshRenderer.material.guid));
+    if (mat)
+    {
+        // Only consider 2d plain texture now
+        for (auto& texIter : mat->propertyList.texMap)
+        {
+            Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(texIter.second.guid));
+            if (tex) CreatePlainTexture(tex, texIter.second.guid);
+        }
+        CreateMaterial(mat, meshRenderer.material.guid);
+        ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(mat->shaderlab.guid));
+        if (shaderlab) CreateShaderlab(*shaderlab);
+    }
     CreateRenderItem(entity);
 }
 
@@ -280,11 +305,20 @@ void D3DContext::UpdateEntity(const Entity& entity)
     if (mesh) CreateGeometry(mesh, meshComponent.mesh.guid);
 
     MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
-    Material* mat = &meshRenderer.material;
-    Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(mat->diffuseTexture.guid));
-    if (tex) CreatePlainTexture(tex, mat->diffuseTexture.guid);
-    ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(meshRenderer.material.shaderlab.guid));
-    if (shaderlab) CreateShaderlab(*shaderlab);
+    Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(meshRenderer.material.guid));
+    // Try to create every resource of material, create operation will return immediately if resource is existed
+    if (mat)
+    {
+        // Only consider 2d plain texture now
+        for (auto& texGuid : mat->propertyList.texMap)
+        {
+            Texture* tex = AssetManager::GetInstance().GetTextureByGUID(xg::Guid(texGuid.second.guid));
+            if (tex) CreatePlainTexture(tex, texGuid.second.guid);
+        }
+        CreateMaterial(mat, meshRenderer.material.guid);
+        ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(mat->shaderlab.guid));
+        if (shaderlab) CreateShaderlab(*shaderlab);
+    }
 
     UpdateRenderItem(entity);
 }
@@ -455,6 +489,25 @@ void D3DContext::CreateGeometry(Mesh* mesh, std::string_view guid)
     ReleaseCmdBuffer(cmdBuffer);
 }
 
+uint32_t D3DContext::CreateMaterial(Material* mat, std::string_view guid)
+{
+    if (mMaterials.find(guid.data()) != mMaterials.end()) return mMaterials.at(guid.data())->matCBOffset;
+
+    // Get material constant buffer offset, the buffer contains all material data except textures
+    auto material = std::make_unique<D3DMaterial>();
+    material->matCBOffset = mIncreMaterialOffset;
+    // Bind textures, now only support main diffuse texture
+    for (auto& iter : mat->propertyList.texMap)
+    {
+        if (mTextures.find(iter.second.guid) != mTextures.end())
+            material->diffuseSrvHandle = mTextures.at(iter.second.guid)->srvView->gpuDescriptorHandleGPU;
+    }
+    mMaterials[guid.data()] = std::move(material);
+    mIncreMaterialOffset += mat->propertyListSize;
+
+    return mMaterials[guid.data()]->matCBOffset;
+}
+
 void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
 {
     if (mShaders.find(shaderlab.name) != mShaders.end()) return;
@@ -476,9 +529,9 @@ void D3DContext::CreateRenderItem(const Entity& entity)
     if (mMeshes.find(meshGuid) != mMeshes.end())
         item->mesh = mMeshes.at(meshGuid).get();
 
-    auto texGuid = entity.GetMeshRenderer().material.diffuseTexture.guid;
-    if (mTextures.find(texGuid) != mTextures.end())
-        item->diffuseHandle = mTextures.at(texGuid)->srvView->gpuDescriptorHandleGPU;
+    auto matGuid = entity.GetMeshRenderer().material.guid;
+    if (mMaterials.find(matGuid) != mMaterials.end())
+        item->material = mMaterials.at(matGuid).get();
 
     item->objectCBIndex = mIncreRenderItemIndex++;
     item->guid = entity.GetGuid().str();
@@ -496,10 +549,9 @@ void D3DContext::UpdateRenderItem(const Entity& entity)
     auto meshGuid = entity.GetMeshContainer().mesh.guid;
     if (mMeshes.find(meshGuid) != mMeshes.end())
         item->mesh = mMeshes.at(meshGuid).get();
-
-    auto texGuid = entity.GetMeshRenderer().material.diffuseTexture.guid;
-    if (mTextures.find(texGuid) != mTextures.end())
-        item->diffuseHandle = mTextures.at(texGuid)->srvView->gpuDescriptorHandleGPU;
+    auto matGuid = entity.GetMeshRenderer().material.guid;
+    if (mMaterials.find(matGuid) != mMaterials.end())
+        item->material = mMaterials.at(matGuid).get();
 }
 
 void D3DContext::RemoveRenderItem(std::string_view guid)

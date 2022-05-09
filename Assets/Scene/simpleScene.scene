@@ -21,20 +21,14 @@
         },
         "mMeshContainer": {
             "mesh": {
-                "name": "",
-                "guid": ""
+                "guid": "",
+                "name": ""
             }
         },
         "mMeshRenderer": {
             "material": {
-                "shaderlab": {
-                    "name": "",
-                    "guid": ""
-                },
-                "diffuseTexture": {
-                    "name": "",
-                    "guid": ""
-                }
+                "guid": "",
+                "name": ""
             }
         },
         "mFov": 45.0,
@@ -67,26 +61,20 @@
         },
         "mMeshContainer": {
             "mesh": {
-                "name": "",
-                "guid": ""
+                "guid": "",
+                "name": ""
             }
         },
         "mMeshRenderer": {
             "material": {
-                "shaderlab": {
-                    "name": "",
-                    "guid": ""
-                },
-                "diffuseTexture": {
-                    "name": "",
-                    "guid": ""
-                }
+                "guid": "",
+                "name": ""
             }
         },
         "strength": {
-            "x": 0.5,
-            "y": 0.5,
-            "z": 0.5
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
         }
     },
     "entities": [
@@ -112,20 +100,14 @@
             },
             "mMeshContainer": {
                 "mesh": {
-                    "name": "box",
-                    "guid": "fbcc47a7-c788-4222-8f6d-ec8c86c283c8"
+                    "guid": "fbcc47a7-c788-4222-8f6d-ec8c86c283c8",
+                    "name": "box"
                 }
             },
             "mMeshRenderer": {
                 "material": {
-                    "shaderlab": {
-                        "name": "SimpleForward",
-                        "guid": "2beb9da1-9752-4012-95f3-eb14e00140de"
-                    },
-                    "diffuseTexture": {
-                        "name": "boxBaseColor",
-                        "guid": "d4263b4d-154c-4c85-9ed3-8b5e9bb93301"
-                    }
+                    "guid": "4525064d-b66c-4995-abcc-36136bfd8070",
+                    "name": "defualt"
                 }
             }
         }

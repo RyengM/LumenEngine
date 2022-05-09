@@ -361,13 +361,14 @@ rttr::variant Serializer::ExtractValue(Value::MemberIterator& itr, const type& t
     {
         if (value.IsObject())
         {
-            constructor ctor = t.get_constructor();
-            for (auto& item : t.get_constructors())
+            type derivedType = type::get_by_name(t.get_name());
+            if (derivedType.is_wrapper() && derivedType.get_wrapped_type().is_pointer())
             {
-                if (item.get_instantiated_type() == t)
-                    ctor = item;
+                std::string name = derivedType.get_wrapped_type().get_name().data();
+                std::string pureName = name.substr(0, name.length() - 1);
+                derivedType = type::get_by_name(pureName);
             }
-            extractedValue = ctor.invoke();
+            extractedValue = derivedType.create();
             DeserializeInternal(extractedValue, value);
         }
     }
@@ -444,10 +445,9 @@ void Serializer::ReadAssociative(variant_associative_view& view, Value& value)
             {
                 auto keyVar = ExtractValue(keyItr, view.get_key_type());
                 auto valueVar = ExtractValue(valueItr, view.get_value_type());
+
                 if (keyVar && valueVar)
-                {
                     view.insert(keyVar, valueVar);
-                }
             }
         }
         // Key only associative type

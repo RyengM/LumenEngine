@@ -16,6 +16,7 @@ RTTR_REGISTRATION
 		.constructor<>()
 		.method("BeginPlay", &Entity::BeginPlay)
 		.method("Tick", &Entity::Tick)
+		.method("GetEntityClassName", &Entity::GetEntityClassName)
 		.method("GetName", &Entity::GetName)
 		.method("SetName", &Entity::SetName)
 		.method("GetTransform", &Entity::GetTransform)
@@ -24,7 +25,8 @@ RTTR_REGISTRATION
 		.method("GetMeshContainerPtr", &Entity::GetMeshContainerPtr)
 		.method("SetMeshGUID", &Entity::SetMeshGUID)
 		.method("GetMeshRenderer", &Entity::GetMeshRenderer)
-		.method("SetShaderGUID", &Entity::SetShaderGUID)
+		.method("GetMeshRendererPtr", &Entity::GetMeshRendererPtr)
+		.method("GetGuid", &Entity::GetGuid)
 		.property("mClassName", &Entity::mClassName, registration::protected_access)
 		(
 			metadata("serialize", true)
@@ -45,5 +47,6 @@ RTTR_REGISTRATION
 		(
 			metadata("serialize", true)
 		)
+		.property("mGuid", &Entity::mGuid, registration::protected_access)
 	;
 }

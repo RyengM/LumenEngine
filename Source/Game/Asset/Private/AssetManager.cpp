@@ -35,6 +35,12 @@ void AssetManager::BuildResourceMap()
     mAssetTree = std::make_unique<AssetTreeNode>(0,
         entry.path().filename().string(), entry.path().string(), GetFileType(entry.status().type()));
     EnterDictRecur(assetFolder, mAssetTree.get());
+    // Make sure default shaderlab is existed in asset folder
+    bool bHasDefaultShader = false;
+    for (auto iter : mGuid2ShaderLabMap)
+        if (iter.second->name == "Default")
+            bHasDefaultShader = true;
+    assert(bHasDefaultShader);
 }
 
 void AssetManager::SaveScene()
@@ -131,6 +137,20 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
         MeshLoader::LoadModel(mesh, path.string());
         mGuid2MeshMap.emplace(meta.guid, mesh);
     }
+    // Material
+    else if (ext == ".mat")
+    {
+        if (!bSkipMemoryCheck)
+            if (mGuid2MaterialMap.find(guid) != mGuid2MaterialMap.end())
+                return true;
+
+        Material* mat = mMaterialStorage.RequestElement();
+        new(mat)Material();
+        Serializer::GetInstance().Deserialize(mat, path.string());
+        mat->name = stem.string();
+        mat->guid = meta.guid;
+        mGuid2MaterialMap.emplace(meta.guid, mat);
+    }
     // ShaderLab
     else if (ext == ".shader")
     {
@@ -142,6 +162,7 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
         new(shaderLab)ShaderLab();
         shaderLab->name = stem.string();
         ShaderLabCompiler::GetInstance().Compile(shaderLab, path.string());
+        if (shaderLab->name == "Default") mDefaultShaderGuid = xg::Guid(meta.guid);
         mGuid2ShaderLabMap.emplace(meta.guid, shaderLab);
     }
     // Scene
@@ -154,6 +175,50 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
     }
 
     return true;
+}
+
+void AssetManager::CreateMaterial()
+{
+    Material* mat = mMaterialStorage.RequestElement();
+    new(mat)Material();
+    mat->name = "new-material_" + std::to_string(matIndex) + ".mat";
+    // Extract shaderlab property to material
+    ShaderLab* shader = mGuid2ShaderLabMap.at(mDefaultShaderGuid);
+    mat->shaderlab.name = shader->name;
+    mat->shaderlab.guid = mDefaultShaderGuid;
+    mat->propertyListSize = shader->propertyCapacity;
+    for (const auto& prop : shader->properties)
+    {
+        auto index = prop.value.index();
+        if (index == 0)      // int
+            mat->propertyList.integerMap.emplace(prop.name, std::get<int>(prop.value));
+        else if (index == 1) // float
+            mat->propertyList.floatMap.emplace(prop.name, std::get<float>(prop.value));
+        else if (index == 2) // vec4
+            mat->propertyList.colorMap.emplace(prop.name, std::get<Vec4>(prop.value));
+        else if (index == 3) // string
+            mat->propertyList.texMap.emplace(prop.name, AssetRef(prop.displayName, std::get<std::string>(prop.value)));
+    }
+    mat->InitBuffer(shader);
+    mat->UpdateBuffer();
+    // Save default material and related .meta file
+    std::filesystem::path path = "../../Assets/Material/" + mat->name;
+    Serializer::GetInstance().Serialize(mat, path.string());
+    Meta meta;
+    std::filesystem::path metaPath = std::filesystem::path(path).concat(".meta");
+    meta.guid = xg::newGuid().str();
+    mat->guid = meta.guid;
+    Serializer::GetInstance().Serialize(&meta, metaPath.string());
+    // Add material info to asset tree
+    for (auto node : mAssetTree->children)
+        if (node->fileName == "Material")
+        {
+            auto childNode = std::make_shared<AssetTreeNode>(node->depth + 1, path.filename().string(), path.string(), "Regular");
+            childNode->fileGuid = meta.guid;
+            node->children.emplace_back(childNode);
+        }
+    // Add material to map
+    mGuid2MaterialMap.emplace(meta.guid, mat);
 }
 
 void AssetManager::CreateBuiltInMeshes()
@@ -178,6 +243,14 @@ Texture* AssetManager::GetTextureByGUID(xg::Guid guid)
     if (mGuid2TextureMap.find(guid) != mGuid2TextureMap.end())
         tex = mGuid2TextureMap.at(guid);
     return tex;
+}
+
+Material* AssetManager::GetMaterialByGUID(xg::Guid guid)
+{
+    Material* mat = nullptr;
+    if (mGuid2MaterialMap.find(guid) != mGuid2MaterialMap.end())
+        mat = mGuid2MaterialMap.at(guid);
+    return mat;
 }
 
 ShaderLab* AssetManager::GetShaderlabByGUID(xg::Guid guid)

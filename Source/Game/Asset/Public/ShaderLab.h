@@ -89,8 +89,10 @@ namespace Lumen::Game
     struct ShaderLab
     {
         std::string name;
-        std::unordered_map<std::string, Property> properties;
+        std::vector<Property> properties;
         Category category;
+        uint32_t propertyCapacity = 0;
+        std::vector<uint32_t> offsets;
 
         ShaderLab() {};
         ShaderLab(const ShaderLab& rhs);
