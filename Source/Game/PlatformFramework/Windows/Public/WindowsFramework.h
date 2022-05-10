@@ -37,12 +37,13 @@ namespace Lumen::Game
         // Show folder context when folder is activated
         void ShowFolderContext();
         void UpdateGuiWindow();
+        // Add quick operations to the menu bar
+        void UpdateGuiWindowHierarchyMenuBar(Scene* scene);
 
-
-        void UpdateGuiWindow_Hierarchy_MenuBar(Scene* scene);
     public:
         // Imgui settings
         ImguiManagerDx12    mImguiManager;
+        ImGuiWindowFlags    mWindowFlags = 0;
 
         // Win32 settings
         HINSTANCE           mhAppInst = nullptr;            // Application instance handle

@@ -68,6 +68,7 @@ void WindowsFramework::InitUI()
 {
     mImguiManager.Init(mEngine.GetConfig().frameBufferNum);
     gImguiManager = &mImguiManager;
+    mWindowFlags |= ImGuiWindowFlags_MenuBar;
 
     ImGui_ImplWin32_Init(mWindowInfo.mainWnd);
 
@@ -123,8 +124,6 @@ Material* matShownInDetail;
 // Current asset target position type, used to specific the type of drag asset
 std::string currentAssetTargetType = "";
 
-
-
 void WindowsFramework::UpdateGuiWindow()
 {
     // Move camera
@@ -147,26 +146,19 @@ void WindowsFramework::UpdateGuiWindow()
 
     // Show scene hierarchy
     {
-        ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_MenuBar;
-
-        ImGui::Begin("Hierarchy", NULL, window_flags);
+        ImGui::Begin("Hierarchy", NULL, mWindowFlags);
 
         auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
-            std::string wanttofind;
-            ImGui::InputText(" ", &wanttofind, ImGuiInputTextFlags_EnterReturnsTrue);
+            std::string wantToFind;
+            ImGui::InputText(" ", &wantToFind, ImGuiInputTextFlags_EnterReturnsTrue);
             ImGui::SameLine();
             ImGui::Button("search");
             {
                 for (auto iter = scene->entities.begin(); iter != scene->entities.end(); iter++)
-                {
-                    if (wanttofind == (*iter)->GetName().c_str())
-                    {
+                    if (wantToFind == (*iter)->GetName().c_str())
                         selected = iter - scene->entities.begin();
-                    }
-                }
             }
 
             //MenuBar
@@ -174,12 +166,11 @@ void WindowsFramework::UpdateGuiWindow()
             {
                 if (ImGui::BeginMenu("Menu"))
                 {
-                    UpdateGuiWindow_Hierarchy_MenuBar(scene);
+                    UpdateGuiWindowHierarchyMenuBar(scene);
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
             }
-
 
             // Show or rename entity
             for (int i = 0; i < scene->entities.size(); i++)
@@ -594,10 +585,8 @@ bool WindowsFramework::HandleIO()
     return true;
 }
 
-//Some functions have quick operations in UpdateGuiWindow , now we  add it to the menu bar and keep the shortcut unchanged
-void WindowsFramework::UpdateGuiWindow_Hierarchy_MenuBar(Scene* scene)
+void WindowsFramework::UpdateGuiWindowHierarchyMenuBar(Scene* scene)
 {
-    ImGui::MenuItem("(Some strange operations)", NULL, false, false);
     if (ImGui::BeginMenu("New"))
     {
         for (auto t : rttr::type::get_types())
@@ -625,11 +614,9 @@ void WindowsFramework::UpdateGuiWindow_Hierarchy_MenuBar(Scene* scene)
 
     if (ImGui::MenuItem("Rename"))
     {
-        //rename (todo)
+        // TODO
     }
 }
-
-
 
 bool WindowsFramework::InitMainWindow()
 {

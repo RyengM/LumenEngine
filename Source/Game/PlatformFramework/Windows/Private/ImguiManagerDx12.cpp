@@ -36,13 +36,38 @@ DrawDataProxy::~DrawDataProxy()
     delete mDrawData;
 }
 
+void ImguiManagerDx12::Init(int frameNum)
+{
+    mEditorContext = ImGui::CreateContext();
+    LoadStyle();
+    mContexts.emplace_back(mEditorContext);
+    mContext2IndexMap[mEditorContext] = 0;
+    mFrameNum = frameNum;
+    
+    mProxyStorage = (DrawDataProxy*)malloc(mContextNum * frameNum * sizeof(DrawDataProxy));
+    // Create default memory to ensure memory is legal
+    for (int i = 0; i < mContextNum * frameNum; i++)
+        new(&mProxyStorage[i])DrawDataProxy();
+}
+
+void ImguiManagerDx12::Clear()
+{
+    for (auto& context : mContexts)
+    {
+        ImGui::SetCurrentContext(context);
+        ImGui_ImplDX12_Shutdown();
+        ImGui::DestroyContext(context);
+    }
+    mContexts.clear();
+    free(mProxyStorage);
+}
+
 void ImguiManagerDx12::LoadStyle()
 {
     ImGuiStyle* style = &ImGui::GetStyle();
     style->WindowPadding = ImVec2(5, 5);
     style->WindowRounding = 0.0f;
     style->WindowBorderSize = 0.0f;
-
 
     style->FramePadding = ImVec2(5, 5);
     style->FrameRounding = 0.0f;
@@ -54,8 +79,6 @@ void ImguiManagerDx12::LoadStyle()
     style->GrabMinSize = 5.0f;
     style->GrabRounding = 3.0f;
     style->ScrollbarRounding = 0.0f;
-
-
 
     style->Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.00f);
     style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
@@ -97,33 +120,6 @@ void ImguiManagerDx12::LoadStyle()
     style->Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
     style->Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.25f, 1.00f, 0.00f, 0.40f);
     style->Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(1.00f, 0.98f, 0.95f, 1.40f);
-}
-
-void ImguiManagerDx12::Init(int frameNum)
-{
-    mEditorContext = ImGui::CreateContext();
-    //ImGui::StyleColorsDark();
-    LoadStyle();
-    mContexts.emplace_back(mEditorContext);
-    mContext2IndexMap[mEditorContext] = 0;
-    mFrameNum = frameNum;
-    
-    mProxyStorage = (DrawDataProxy*)malloc(mContextNum * frameNum * sizeof(DrawDataProxy));
-    // Create default memory to ensure memory is legal
-    for (int i = 0; i < mContextNum * frameNum; i++)
-        new(&mProxyStorage[i])DrawDataProxy();
-}
-
-void ImguiManagerDx12::Clear()
-{
-    for (auto& context : mContexts)
-    {
-        ImGui::SetCurrentContext(context);
-        ImGui_ImplDX12_Shutdown();
-        ImGui::DestroyContext(context);
-    }
-    mContexts.clear();
-    free(mProxyStorage);
 }
 
 DrawDataProxy* ImguiManagerDx12::CreateContextDrawDataProxy(ImGuiContext* context)
