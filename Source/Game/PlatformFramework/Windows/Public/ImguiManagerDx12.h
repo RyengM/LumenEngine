@@ -25,12 +25,13 @@ namespace Lumen::Game
     public:
         void Init(int frameNum);
         void Clear();
+        // Load ImGui interface style
+        void LoadStyle();
 
         DrawDataProxy* CreateContextDrawDataProxy(ImGuiContext* context);
 
         inline std::vector<ImGuiContext*>& GetContexts() noexcept { return mContexts; }
 
-        void LoadStyle();
     private:
         int mCurrentFrameNum = 0;
         int mFrameNum = 0;
