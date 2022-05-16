@@ -38,6 +38,7 @@ namespace Lumen::Game
         void UpdateBuffer();
 
         std::string name;
+        std::string path;
         std::string guid;
 
         [[serialize(true)]]

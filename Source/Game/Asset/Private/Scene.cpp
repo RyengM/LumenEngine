@@ -9,10 +9,10 @@ Scene::Scene()
 
 }
 
-bool Scene::CreateEntity(std::string_view className)
+Entity* Scene::CreateEntity(std::string_view className)
 {
 	rttr::type derivedType = rttr::type::get_by_name(className.data());
-	if (!derivedType.is_valid()) return false;
+	if (!derivedType.is_valid()) return nullptr;
 
 	// Note variant manage data life itself, we need to persistent data with shared_ptr
 	variant derived = derivedType.create();
@@ -24,7 +24,7 @@ bool Scene::CreateEntity(std::string_view className)
 		graphicsContext->CreateEntity(entityProxy);
 	});
 
-	return true;
+	return entity.get();
 }
 
 void Scene::DeleteEntity(std::string_view name)

@@ -13,7 +13,7 @@ namespace Lumen::Game
         Scene();
 
         // Create an entity by editor reflection
-        bool CreateEntity(std::string_view className);
+        Entity* CreateEntity(std::string_view className);
         // Delete an entity by editor reflection
         // Erase opeartion is not efficient, improve it later
         void DeleteEntity(std::string_view name);

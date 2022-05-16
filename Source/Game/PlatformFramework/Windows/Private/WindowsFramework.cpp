@@ -127,7 +127,8 @@ std::string currentAssetTargetType = "";
 void WindowsFramework::UpdateGuiWindow()
 {
     // Move camera
-    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
+    Scene* scene = AssetManager::GetInstance().GetScene();
+    Camera* camera = &scene->camera;
     if (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_D))
         camera->ProcessKeyboard();
 
@@ -148,7 +149,6 @@ void WindowsFramework::UpdateGuiWindow()
     {
         ImGui::Begin("Hierarchy", NULL, mWindowFlags);
 
-        auto scene = AssetManager::GetInstance().GetScene();
         if (scene)
         {
             std::string wantToFind;
@@ -177,7 +177,7 @@ void WindowsFramework::UpdateGuiWindow()
             {
                 auto& entity = scene->entities[i];
                 // Normal frame
-                if (!bTextInput)
+                if (!bTextInput || selected != i)
                 {
                     if (ImGui::Selectable(entity->GetName().c_str(), selected == i))
                     {
@@ -189,7 +189,7 @@ void WindowsFramework::UpdateGuiWindow()
                 else
                 {
                     std::string name = entity->GetName();
-                    if (ImGui::InputText("new name##rename", &name, ImGuiInputTextFlags_EnterReturnsTrue))
+                    if (selected == i && ImGui::InputText("new name##rename", &name, ImGuiInputTextFlags_EnterReturnsTrue))
                     {
                         if (name == "") { bTextInput = false; continue; }      // empty name
                         entity->SetName(name);
@@ -235,7 +235,6 @@ void WindowsFramework::UpdateGuiWindow()
     // Show object detail
     {
         ImGui::Begin("Detail");
-        auto scene = AssetManager::GetInstance().GetScene();
         // Show entity detail
         if (detailShowType == 0)
         {
@@ -249,6 +248,16 @@ void WindowsFramework::UpdateGuiWindow()
         else if (detailShowType == 1)
         {
             ShowDetailInternal(matShownInDetail);
+
+            // Save material
+            if (ImGui::BeginPopupContextWindow())
+            {
+                if (ImGui::Button("Save"))
+                {
+                    Serializer::GetInstance().Serialize(matShownInDetail, matShownInDetail->path);
+                }
+                ImGui::EndPopup();
+            }
         }
         ImGui::End();
 
@@ -256,7 +265,6 @@ void WindowsFramework::UpdateGuiWindow()
         if (bAssetBindChanged)
         {
             // Update info in render side
-            auto scene = AssetManager::GetInstance().GetScene();
             if (scene && scene->entities.size())
             {
                 Entity* selectedEntity = scene->entities[selected].get();
@@ -303,9 +311,31 @@ void WindowsFramework::UpdateGuiWindow()
             mEngine.deviceStatus->bSceneWindow = false;
 
         // Show control panel
+        if (ImGui::Button("Objects")) ImGui::OpenPopup("create objects");
+        ImGui::SameLine();
         if (ImGui::Button("Start")) mEngine.BeginPlay();
         ImGui::SameLine();
         if (ImGui::Button("Stop")) mEngine.EndPlay();
+
+        if (ImGui::BeginPopup("create objects"))
+        {
+            std::string builtinMesh = "";
+            if (ImGui::Button("Cube")) builtinMesh = "cube";
+            if (ImGui::Button("Sphere")) builtinMesh = "sphere";
+            if (ImGui::Button("Plane")) builtinMesh = "plane";
+
+            if (builtinMesh != "")
+            {
+                Entity* entity = scene->CreateEntity("Entity");
+                if (entity)
+                {
+                    entity->SetMeshGUID(builtinMesh + "-builtin");
+                    scene->UpdateEntity(entity);
+                }
+            }
+
+            ImGui::EndPopup();
+        }
 
         // Show scene RT
         if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
@@ -337,7 +367,7 @@ void WindowsFramework::ShowFolderContext()
     if (!activeAssetNode) return;
 
     ImGuiStyle& style = ImGui::GetStyle();
-    float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+    float windowVisible = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 
     for (auto node : activeAssetNode->children)
     {
@@ -352,8 +382,8 @@ void WindowsFramework::ShowFolderContext()
                 detailShowType = 1;
             }
         }
-        float next_button_x2 = ImGui::GetItemRectMax().x + style.ItemSpacing.x + ImGui::CalcTextSize(node->fileName.c_str(), NULL, true).x;
-        if (next_button_x2 < window_visible_x2)
+        float nextButton = ImGui::GetItemRectMax().x + style.ItemSpacing.x + ImGui::CalcTextSize(node->fileName.c_str(), NULL, true).x;
+        if (nextButton < windowVisible)
             ImGui::SameLine();
 
         if (ImGui::BeginDragDropSource())
@@ -611,11 +641,8 @@ void WindowsFramework::UpdateGuiWindowHierarchyMenuBar(Scene* scene)
             selected = 0;
         }
     }
-
     if (ImGui::MenuItem("Rename"))
-    {
-        // TODO
-    }
+        bTextInput = true;
 }
 
 bool WindowsFramework::InitMainWindow()

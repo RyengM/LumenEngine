@@ -37,7 +37,7 @@ void AssetManager::BuildResourceMap()
     EnterDictRecur(assetFolder, mAssetTree.get());
     // Make sure default shaderlab is existed in asset folder
     bool bHasDefaultShader = false;
-    for (auto iter : mGuid2ShaderLabMap)
+    for (const auto& iter : mGuid2ShaderLabMap)
         if (iter.second->name == "Default")
             bHasDefaultShader = true;
     assert(bHasDefaultShader);
@@ -148,6 +148,7 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
         new(mat)Material();
         Serializer::GetInstance().Deserialize(mat, path.string());
         mat->name = stem.string();
+        mat->path = path.string();
         mat->guid = meta.guid;
         mGuid2MaterialMap.emplace(meta.guid, mat);
     }
@@ -207,6 +208,7 @@ void AssetManager::CreateMaterial()
     Meta meta;
     std::filesystem::path metaPath = std::filesystem::path(path).concat(".meta");
     meta.guid = xg::newGuid().str();
+    mat->path = path.string();
     mat->guid = meta.guid;
     Serializer::GetInstance().Serialize(&meta, metaPath.string());
     // Add material info to asset tree
@@ -223,10 +225,21 @@ void AssetManager::CreateMaterial()
 
 void AssetManager::CreateBuiltInMeshes()
 {
-    Mesh* mesh = mMeshStorage.RequestElement();
-    new(mesh)Mesh(MeshGenerator::CreateSphere(0.5f, 20, 20));
-    mesh->name = "sphere-builtin";
-    mBuiltInMeshMap[mesh->name] = mesh;
+    // Sphere
+    Mesh* meshSphere = mMeshStorage.RequestElement();
+    new(meshSphere)Mesh(MeshGenerator::CreateSphere(0.5f, 20, 20));
+    meshSphere->name = "sphere-builtin";
+    mBuiltInMeshMap[meshSphere->name] = meshSphere;
+    // Cube
+    Mesh* meshCube = mMeshStorage.RequestElement();
+    new(meshCube)Mesh(MeshGenerator::CreateCube(1, 1, 1));
+    meshCube->name = "cube-builtin";
+    mBuiltInMeshMap[meshCube->name] = meshCube;
+    // Plane
+    Mesh* meshPlane = mMeshStorage.RequestElement();
+    new(meshPlane)Mesh(MeshGenerator::CreateGrid(20, 20, 2, 2));
+    meshPlane->name = "plane-builtin";
+    mBuiltInMeshMap[meshPlane->name] = meshPlane;
 }
 
 Mesh* AssetManager::GetMeshByGUID(xg::Guid guid)

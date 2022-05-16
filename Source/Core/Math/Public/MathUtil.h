@@ -11,16 +11,25 @@ namespace Lumen::Core
 	struct Float2
 	{
 		float x = 0, y = 0;
+
+		Float2() {}
+		Float2(float x, float y) : x(x), y(y) {}
 	};
 
 	struct Float3
 	{
 		float x = 0, y = 0, z = 0;
+
+		Float3() {}
+		Float3(float x, float y, float z) : x(x), y(y), z(z) {}
 	};
 
 	struct Float4
 	{
 		float x = 0, y = 0, z = 0, w = 0;
+
+		Float4() {}
+		Float4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 	};
 
 	class MathUtil

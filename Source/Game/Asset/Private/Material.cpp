@@ -16,6 +16,7 @@ Material::Material()
 Material::Material(const Material& rhs)
 {
 	name = rhs.name;
+	path = rhs.path;
 	guid = rhs.guid;
 	shaderlab = rhs.shaderlab;
 	propertyList = rhs.propertyList;
@@ -29,6 +30,7 @@ Material::Material(const Material& rhs)
 Material::Material(Material&& rhs)
 {
 	name = std::move(rhs.name);
+	path = std::move(rhs.path);
 	guid = std::move(rhs.guid);
 	shaderlab = std::move(rhs.shaderlab);
 	propertyList = std::move(rhs.propertyList);
