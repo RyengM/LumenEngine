@@ -11,6 +11,7 @@ namespace Lumen::Game
     {
     public:
         Entity();
+        virtual ~Entity() {}
 
         virtual void BeginPlay() {};
         virtual void Tick() {};

@@ -237,7 +237,7 @@ using namespace Lumen::Core;
 RTTR_REGISTRATION
 {
 	registration::class_<Lumen::Core::Mat3>("Mat3")
-		.property("data", &Mat3::data)
+		//.property("data", &Mat3::data)	// C2664 under c++20
 		.constructor<>()
 		.constructor<const float>()
 		.constructor<float>()
@@ -250,7 +250,7 @@ RTTR_REGISTRATION
 		.method("Clear", &Mat3::Clear)
 	;
 	registration::class_<Lumen::Core::Mat4>("Mat4")
-		.property("data", &Mat4::data)
+		//.property("data", &Mat4::data)
 		.constructor<>()
 		.constructor<const float>()
 		.constructor<float>()

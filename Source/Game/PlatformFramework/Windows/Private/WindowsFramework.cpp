@@ -243,6 +243,15 @@ void WindowsFramework::UpdateGuiWindow()
                 Entity* selectedEntity = scene->entities[selected].get();
                 ShowDetailInternal(selectedEntity);
             }
+            // Save scene
+            if (ImGui::BeginPopupContextWindow())
+            {
+                if (ImGui::Button("Save"))
+                {
+                    AssetManager::GetInstance().SaveScene();
+                }
+                ImGui::EndPopup();
+            }
         }
         // Show asset file detail
         else if (detailShowType == 1)

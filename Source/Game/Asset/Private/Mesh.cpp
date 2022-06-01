@@ -20,9 +20,12 @@ Mesh AssimpProcessMesh(aiMesh* mesh, const aiScene* scene)
         v.pos.y = mesh->mVertices[i].y;
         v.pos.z = mesh->mVertices[i].z;
 
-        v.normal.x = mesh->mNormals[i].x;
-        v.normal.y = mesh->mNormals[i].y;
-        v.normal.z = mesh->mNormals[i].z;
+        if (mesh->mNormals)
+        {
+            v.normal.x = mesh->mNormals[i].x;
+            v.normal.y = mesh->mNormals[i].y;
+            v.normal.z = mesh->mNormals[i].z;
+        }
 
         if (mesh->mTangents)
         {
