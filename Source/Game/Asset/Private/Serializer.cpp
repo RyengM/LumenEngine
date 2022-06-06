@@ -1,6 +1,7 @@
 #include "Game/Asset/Public/Serializer.h"
 #include <regex>
 #include <fstream>
+#include <sstream>
 
 using namespace Lumen::Game;
 using namespace Lumen::Core;

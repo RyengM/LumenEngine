@@ -51,10 +51,10 @@ namespace Lumen::Render
         virtual void CreateSceneBuffer(VisualBuffer* buffer) override;
 
         // Create all GPU resources related to entity
-        virtual void CreateEntity(const Entity& entity) override;
+        virtual void CreateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) override;
 
         // Update all GPU resources related to entity
-        virtual void UpdateEntity(const Entity& entity) override;
+        virtual void UpdateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) override;
 
         // Create texture
         virtual void CreatePlainTexture(Texture* texture, std::string_view guid) override;
@@ -75,10 +75,10 @@ namespace Lumen::Render
         virtual void CreateShaderlab(const ShaderLab& shaderlab) override;
 
         // Create render item
-        virtual void CreateRenderItem(const Entity& entity) override;
+        virtual void CreateRenderItem(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) override;
 
         // Update render item resource bind
-        virtual void UpdateRenderItem(const Entity& entity) override;
+        virtual void UpdateRenderItem(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) override;
 
         // Remove render item
         virtual void RemoveRenderItem(std::string_view guid) override;

@@ -23,12 +23,6 @@ namespace Lumen::Game
         // TODO. Settings
 
         [[serialize(true)]]
-        Camera camera;
-
-        [[serialize(true)]]
-        DirectionalLight light;
-
-        [[serialize(true)]]
         std::vector<std::shared_ptr<Entity>> entities;
 
         // The index is used for avoiding name duplication

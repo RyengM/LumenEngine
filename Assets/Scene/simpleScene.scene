@@ -1,95 +1,71 @@
 {
-    "camera": {
-        "mClassName": "Entity",
-        "mName": "",
-        "mTransform": {
-            "position": {
-                "x": -6.68470573425293,
-                "y": 12.4050874710083,
-                "z": -8.490377426147461
-            },
-            "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            }
-        },
-        "mMeshContainer": {
-            "mesh": {
-                "guid": "",
-                "name": ""
-            }
-        },
-        "mMeshRenderer": {
-            "material": {
-                "guid": "",
-                "name": ""
-            }
-        },
-        "mFov": 45.0,
-        "mAspectRatio": 1.7777777910232544,
-        "mNearPlane": 0.10000000149011612,
-        "mFarPlane": 100.0,
-        "mMoveSpeed": 0.20000000298023224,
-        "mYaw": -42.60007095336914,
-        "mPitch": 46.800010681152344
-    },
-    "light": {
-        "mClassName": "Entity",
-        "mName": "",
-        "mTransform": {
-            "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "rotation": {
-                "x": 1.0,
-                "y": -1.0,
-                "z": 1.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            }
-        },
-        "mMeshContainer": {
-            "mesh": {
-                "guid": "",
-                "name": ""
-            }
-        },
-        "mMeshRenderer": {
-            "material": {
-                "guid": "",
-                "name": ""
-            }
-        },
-        "strength": {
-            "x": 0.6,
-            "y": 0.6,
-            "z": 0.6
-        }
-    },
     "entities": [
         {
-            "mClassName": "Entity",
-            "mName": "box",
+            "mClassName": "Camera",
+            "mName": "camera",
             "mTransform": {
                 "position": {
-                    "x": 0.30000001192092896,
-                    "y": 0.0,
-                    "z": 0.0
+                    "x": -19.296741485595703,
+                    "y": 13.471245765686035,
+                    "z": 24.370464324951172
                 },
                 "rotation": {
                     "x": 0.0,
                     "y": 0.0,
+                    "z": 0.0
+                },
+                "scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "mFov": 45.0,
+            "mAspectRatio": 1.7777777910232544,
+            "mNearPlane": 0.10000000149011612,
+            "mFarPlane": 100.0,
+            "mMoveSpeed": 0.20000000298023224,
+            "mYaw": 217.39894104003906,
+            "mPitch": 17.99976348876953
+        },
+        {
+            "mClassName": "DirectionalLight",
+            "mName": "light",
+            "mTransform": {
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "x": 3.700000047683716,
+                    "y": -5.300000190734863,
+                    "z": 1.0
+                },
+                "scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "strength": {
+                "x": 1.2000000476837158,
+                "y": 1.2000000476837158,
+                "z": 1.2000000476837158
+            }
+        },
+        {
+            "mClassName": "MeshEntity",
+            "mName": "plane",
+            "mTransform": {
+                "position": {
+                    "x": 3.200000047683716,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rotation": {
+                    "x": -0.20000000298023224,
+                    "y": 0.20000000298023224,
                     "z": 0.0
                 },
                 "scale": {
@@ -100,14 +76,14 @@
             },
             "mMeshContainer": {
                 "mesh": {
-                    "guid": "fbcc47a7-c788-4222-8f6d-ec8c86c283c8",
-                    "name": "box"
+                    "guid": "a37345dd-7b8c-4e7c-abc2-a1950ddd46f4",
+                    "name": "x-35_obj"
                 }
             },
             "mMeshRenderer": {
                 "material": {
                     "guid": "4525064d-b66c-4995-abcc-36136bfd8070",
-                    "name": "defualt"
+                    "name": "default"
                 }
             }
         }

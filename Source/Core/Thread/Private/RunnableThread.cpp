@@ -1,5 +1,6 @@
 #include "Core/Thread/Public/RunnableThread.h"
 #include "Core/Thread/Public/ThreadManager.h"
+#include "Core/Logger/Public/Logger.h"
 
 using namespace Lumen::Core;
 
@@ -7,6 +8,8 @@ RunnableThread* RunnableThread::Create(const char* name, Runnable* runnable)
 {
     RunnableThread* thread = new RunnableThread(name, runnable);
     ThreadManager::GetInstance().Register(thread);
+
+    LOG_INFO("Render thread created");
     return thread;
 }
 
@@ -24,7 +27,7 @@ RunnableThread::RunnableThread(const char* name, Runnable* runnable) : mName(nam
 
 RunnableThread::~RunnableThread()
 {
-    if (bInitialized) Exit();
+    if (bInitialized && !bStop) Exit();
 }
 
 void RunnableThread::Run()
@@ -41,4 +44,5 @@ void RunnableThread::Exit()
     ThreadManager::GetInstance().UnRegister(mThread.get_id());
     mThread.join();
     delete mRunnable;
+    LOG_INFO("Render thread destroyed");
 }

@@ -125,7 +125,9 @@ void ImguiManagerDx12::LoadStyle()
 DrawDataProxy* ImguiManagerDx12::CreateContextDrawDataProxy(ImGuiContext* context)
 {
     if (!context->Viewports[0]->DrawDataP.Valid)
+    {
         LOG_WARN("Invalid Imgui draw data, use origin data instead, may cause some unexpected error");
+    }
 
     int index = mCurrentFrameNum * mContextNum + mContext2IndexMap.at(context);
     mCurrentFrameNum = (mCurrentFrameNum + 1) % mFrameNum;

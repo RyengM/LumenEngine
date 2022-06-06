@@ -1,6 +1,7 @@
 #include "Game/PlatformFramework/Windows/Public/WindowsFramework.h"
 #include "Game/PlatformFramework/Windows/Public/imgui_impl_win32.h"
 #include "Game/Asset/Public/Serializer.h"
+#include "Game/GamePlay/Public/MeshEntity.h"
 #include "ThirdParty/Imgui/imgui_stdlib.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
 #include "Render/RHI/D3D12/Public/D3DContext.h"
@@ -128,7 +129,7 @@ void WindowsFramework::UpdateGuiWindow()
 {
     // Move camera
     Scene* scene = AssetManager::GetInstance().GetScene();
-    Camera* camera = &scene->camera;
+    Camera* camera = dynamic_cast<Camera*>(scene->entities[0].get());
     if (ImGui::IsKeyDown(ImGuiKey_W) || ImGui::IsKeyDown(ImGuiKey_S) || ImGui::IsKeyDown(ImGuiKey_A) || ImGui::IsKeyDown(ImGuiKey_D))
         camera->ProcessKeyboard();
 
@@ -203,9 +204,12 @@ void WindowsFramework::UpdateGuiWindow()
             // Delete entity by delete key
             if (ImGui::IsWindowHovered() && ImGui::IsKeyReleased(ImGuiKey_Delete))
             {
-                if (scene->entities.size())
+                // Camera and Light can not be deleted now
+                if (scene->entities.size() && selected != 0 && selected != 1)
+                {
                     scene->DeleteEntity(scene->entities[selected]->GetName());
-                selected = 0;
+                    selected = 0;
+                }
             }
             // Popup window to operate entities
             if (ImGui::BeginPopupContextWindow())
@@ -335,7 +339,7 @@ void WindowsFramework::UpdateGuiWindow()
 
             if (builtinMesh != "")
             {
-                Entity* entity = scene->CreateEntity("Entity");
+                MeshEntity* entity = dynamic_cast<MeshEntity*>(scene->CreateEntity("MeshEntity"));
                 if (entity)
                 {
                     entity->SetMeshGUID(builtinMesh + "-builtin");
@@ -565,7 +569,7 @@ bool WindowsFramework::ShowDetailAssociative(const rttr::property& p, const rttr
 bool WindowsFramework::HandleIO()
 {
     ImGuiContext& g = *GImGui;
-    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
+    Camera* camera = dynamic_cast<Camera*>(AssetManager::GetInstance().GetScene()->entities[0].get());
 
     auto status = mEngine.deviceStatus.get();
 
@@ -644,7 +648,7 @@ void WindowsFramework::UpdateGuiWindowHierarchyMenuBar(Scene* scene)
     }
     if (ImGui::MenuItem("Delete"))
     {
-        if (scene->entities.size())
+        if (scene->entities.size() && selected != 0 && selected != 1)
         {
             scene->DeleteEntity(scene->entities[selected]->GetName());
             selected = 0;
@@ -707,7 +711,6 @@ LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wP
                 return true;
         }
 
-    Camera* camera = &AssetManager::GetInstance().GetScene()->camera;
     switch (message)
     {
     case WM_COMMAND:

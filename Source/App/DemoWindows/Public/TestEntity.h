@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Game/GamePlay/Public/Entity.h"
+#include "Game/GamePlay/Public/MeshEntity.h"
 
 using namespace Lumen::Game;
 
-class TestEntity : public Entity
+class TestEntity : public MeshEntity
 {
 public:
     TestEntity();
@@ -20,5 +20,5 @@ private:
     std::string mStrValue = "Test";
 
     RTTR_REGISTRATION_FRIEND
-    RTTR_ENABLE(Entity)
+    RTTR_ENABLE(MeshEntity)
 };

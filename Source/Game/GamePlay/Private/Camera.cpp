@@ -15,7 +15,6 @@ Camera::Camera(float fov, float aspect, float nearPlane, float farPlane)
 	mNearPlane = nearPlane;
 	mFarPlane = farPlane;
 
-	UpdateProjMatrix();
 	Update();
 }
 
@@ -25,6 +24,7 @@ void Camera::Update()
 	UpdateRotateVector();
 	mViewMatrix = MathUtil::LookAt(pos, pos + mFront, mWorldUp);
 	mViewProjMatrix = mProjMatrix * mViewMatrix;
+	UpdateProjMatrix();
 }
 
 void Camera::UpdateProjMatrix()

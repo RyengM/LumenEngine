@@ -16,16 +16,11 @@ RTTR_REGISTRATION
 		.constructor<>()
 		.method("BeginPlay", &Entity::BeginPlay)
 		.method("Tick", &Entity::Tick)
-		.method("GetEntityClassName", &Entity::GetEntityClassName)
+		.method("GetMeshContainer", &Entity::GetMeshContainer)
+		.method("GetMeshRenderer", &Entity::GetMeshRenderer)
 		.method("GetName", &Entity::GetName)
 		.method("SetName", &Entity::SetName)
 		.method("GetTransform", &Entity::GetTransform)
-		.method("GetTransformPtr", &Entity::GetTransformPtr)
-		.method("GetMeshContainer", &Entity::GetMeshContainer)
-		.method("GetMeshContainerPtr", &Entity::GetMeshContainerPtr)
-		.method("SetMeshGUID", &Entity::SetMeshGUID)
-		.method("GetMeshRenderer", &Entity::GetMeshRenderer)
-		.method("GetMeshRendererPtr", &Entity::GetMeshRendererPtr)
 		.method("GetGuid", &Entity::GetGuid)
 		.property("mClassName", &Entity::mClassName, registration::protected_access)
 		(
@@ -36,14 +31,6 @@ RTTR_REGISTRATION
 			metadata("serialize", true)
 		)
 		.property("mTransform", &Entity::mTransform, registration::protected_access)
-		(
-			metadata("serialize", true)
-		)
-		.property("mMeshContainer", &Entity::mMeshContainer, registration::protected_access)
-		(
-			metadata("serialize", true)
-		)
-		.property("mMeshRenderer", &Entity::mMeshRenderer, registration::protected_access)
 		(
 			metadata("serialize", true)
 		)

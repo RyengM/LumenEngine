@@ -11,6 +11,8 @@ using std::chrono::microseconds;
 
 void EditorEngine::PreInit(const WindowInfo& windowInfo)
 {
+    SCOPE_INFO("Editor engine preInit");
+
     // Read config file and fill config, todo later
 
     // Init render command, the frame buffer size should be larger than one
@@ -18,11 +20,16 @@ void EditorEngine::PreInit(const WindowInfo& windowInfo)
 
     // Launch render thread
     RenderRunnable* renderRunnable = new RenderRunnable(windowInfo, &mProfileData);
-    RunnableThread* renderThread = RunnableThread::Create("RenderThread", renderRunnable);
+    renderThread = RunnableThread::Create("RenderThread", renderRunnable);
+
+    // Register engine reflections that may not be auto reflected
+    RegisterReflections();
 }
 
 void EditorEngine::Init()
 {
+    SCOPE_INFO("Editor engine init");
+
     // Load asset manager, we load all the assts now, later will only load scene assets at begining
     // CPU built-in meshes will be established here
     AssetManager::GetInstance().BuildResourceMap();
@@ -47,7 +54,10 @@ void EditorEngine::Init()
 
     // Init IO status recording and link objects associated with it
     deviceStatus = std::make_shared<DeviceStatus>();
-    AssetManager::GetInstance().GetScene()->camera.deviceStatus = deviceStatus;
+    Camera* camera = dynamic_cast<Camera*>(AssetManager::GetInstance().GetScene()->entities[0].get());
+    camera->deviceStatus = deviceStatus;
+    camera->UpdateProjMatrix();
+    camera->Update();
 
     // Tranfer scene data to render thread
     CreateScene();
@@ -69,11 +79,13 @@ void EditorEngine::Tick()
     std::set<Material*> usedMaterials;
     for (auto entityPtr : entities)
     {
-        if (Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(entityPtr->GetMeshRendererPtr()->material.guid)))
-            usedMaterials.emplace(mat);
-        ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entityProxy = Entity(*entityPtr.get())](RHIContext* graphicsContext) {
-            graphicsContext->UpdateObjectCB(entityProxy);
-        });
+        if (entityPtr->GetMeshRenderer())
+            if (Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(entityPtr->GetMeshRenderer()->material.guid)))
+                usedMaterials.emplace(mat);
+        if (entityPtr->GetMeshContainer())
+            ENQUEUE_RENDER_COMMAND("UpdateObjectCB", [entityProxy = Entity(*entityPtr.get())](RHIContext* graphicsContext) {
+                graphicsContext->UpdateObjectCB(entityProxy);
+            });
     }
     for (auto mat : usedMaterials)
     {
@@ -91,9 +103,9 @@ void EditorEngine::Tick()
     }
 
     // Update pass constant buffer
-    auto camera = AssetManager::GetInstance().GetScene()->camera;
-    auto light = AssetManager::GetInstance().GetScene()->light;
-    auto updatePassCBLambda = [camProxy = Camera(camera), lightProxy = DirectionalLight(light)](RHIContext* graphicsContext) {
+    auto camera = dynamic_cast<Camera*>(AssetManager::GetInstance().GetScene()->entities[0].get());
+    auto light = dynamic_cast<DirectionalLight*>(AssetManager::GetInstance().GetScene()->entities[1].get());
+    auto updatePassCBLambda = [camProxy = Camera(*camera), lightProxy = DirectionalLight(*light)](RHIContext* graphicsContext) {
         graphicsContext->UpdatePassCB(camProxy, lightProxy);
     };
     ENQUEUE_RENDER_COMMAND("UpdatePassCB", updatePassCBLambda);
@@ -112,11 +124,14 @@ void EditorEngine::Tick()
 
 void EditorEngine::Exit()
 {
-
+    renderThread->Exit();
+    LOG_INFO("Editor engine exit");
 }
 
 void EditorEngine::BeginPlay()
 {
+    SCOPE_INFO("BeginePlay");
+
     for (auto entity : AssetManager::GetInstance().GetScene()->entities)
         entity->BeginPlay();
     bPlaying = true;
@@ -146,8 +161,17 @@ void EditorEngine::CreateScene()
     // Entities
     for (auto entity : AssetManager::GetInstance().GetScene()->entities)
     {
-        ENQUEUE_RENDER_COMMAND("CreateEntity", [entityProxy = Entity(*entity.get())](RHIContext* graphicsContext) {
-            graphicsContext->CreateEntity(entityProxy);
-        });
+        if (entity->GetMeshContainer() && entity->GetMeshRenderer())
+            ENQUEUE_RENDER_COMMAND("CreateEntity", [entity](RHIContext* graphicsContext) {
+                const Entity entityProxy(*entity.get());
+                const MeshComponent meshContainer(*entity->GetMeshContainer());
+                const MeshRendererComponent meshRenderer(*entity->GetMeshRenderer());
+                graphicsContext->CreateEntity(entityProxy, meshContainer, meshRenderer);
+            });
     }
+}
+
+void EditorEngine::RegisterReflections()
+{
+    DirectionalLight light;
 }

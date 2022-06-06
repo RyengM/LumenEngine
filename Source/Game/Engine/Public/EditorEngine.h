@@ -32,6 +32,8 @@ namespace Lumen::Game
     private:
         // Use scene data from asset manager to build gpu resource
         void CreateScene();
+        // Register engine reflections that may not be auto reflected
+        void RegisterReflections();
 
     public:
         // Record device IO status
@@ -46,5 +48,7 @@ namespace Lumen::Game
         ProfileData mProfileData;
         // Scene display buffer
         std::unique_ptr<VisualBuffer> mSceneBuffer;
+        // Render thread handle
+        RunnableThread* renderThread;
     };
 }

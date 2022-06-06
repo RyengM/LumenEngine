@@ -127,7 +127,7 @@ void D3DContext::UpdatePassCB(const Camera& camera, const DirectionalLight& ligh
     constants.farZ = camera.GetFarZ();
     constants.ambientLight = { 0.4f, 0.4f, 0.6f, 1.0f };
     constants.light[0].position = MathHelper::ConvertToDxFloat3(light.GetPosition());
-    constants.light[0].direction = MathHelper::ConvertToDxFloat3(light.GetDirection());
+    constants.light[0].direction = MathHelper::ConvertToDxFloat3(light.GetDirection().Normalize());
     constants.light[0].strength = MathHelper::ConvertToDxFloat3(light.strength);
 
     passCB->SetData<PassConstants>(0, constants, true);
@@ -275,13 +275,11 @@ void D3DContext::CreateSceneBuffer(VisualBuffer* buffer)
     buffer->srvHandle = mSceneRT->colorBuffer->srvView->gpuDescriptorHandleGPU.ptr;
 }
 
-void D3DContext::CreateEntity(const Entity& entity)
+void D3DContext::CreateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer)
 {
-    MeshComponent meshComponent = entity.GetMeshContainer();
-    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.mesh.guid));
-    if (mesh) CreateGeometry(mesh, meshComponent.mesh.guid);
+    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshContainer.mesh.guid));
+    if (mesh) CreateGeometry(mesh, meshContainer.mesh.guid);
 
-    MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
     Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(meshRenderer.material.guid));
     if (mat)
     {
@@ -295,16 +293,14 @@ void D3DContext::CreateEntity(const Entity& entity)
         ShaderLab* shaderlab = AssetManager::GetInstance().GetShaderlabByGUID(xg::Guid(mat->shaderlab.guid));
         if (shaderlab) CreateShaderlab(*shaderlab);
     }
-    CreateRenderItem(entity);
+    CreateRenderItem(entity, meshContainer, meshRenderer);
 }
 
-void D3DContext::UpdateEntity(const Entity& entity)
+void D3DContext::UpdateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer)
 {
-    MeshComponent meshComponent = entity.GetMeshContainer();
-    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshComponent.mesh.guid));
-    if (mesh) CreateGeometry(mesh, meshComponent.mesh.guid);
+    Mesh* mesh = AssetManager::GetInstance().GetMeshByGUID(xg::Guid(meshContainer.mesh.guid));
+    if (mesh) CreateGeometry(mesh, meshContainer.mesh.guid);
 
-    MeshRendererComponent meshRenderer = entity.GetMeshRenderer();
     Material* mat = AssetManager::GetInstance().GetMaterialByGUID(xg::Guid(meshRenderer.material.guid));
     // Try to create every resource of material, create operation will return immediately if resource is existed
     if (mat)
@@ -320,7 +316,7 @@ void D3DContext::UpdateEntity(const Entity& entity)
         if (shaderlab) CreateShaderlab(*shaderlab);
     }
 
-    UpdateRenderItem(entity);
+    UpdateRenderItem(entity, meshContainer, meshRenderer);
 }
 
 void D3DContext::CreatePlainTexture(Texture* texture, std::string_view guid)
@@ -521,15 +517,15 @@ void D3DContext::CreateShaderlab(const ShaderLab& shaderlab)
     }
 }
 
-void D3DContext::CreateRenderItem(const Entity& entity)
+void D3DContext::CreateRenderItem(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer)
 {
     auto item = std::make_unique<D3DRenderItem>();
 
-    auto meshGuid = entity.GetMeshContainer().mesh.guid;
+    auto meshGuid = meshContainer.mesh.guid;
     if (mMeshes.find(meshGuid) != mMeshes.end())
         item->mesh = mMeshes.at(meshGuid).get();
 
-    auto matGuid = entity.GetMeshRenderer().material.guid;
+    auto matGuid = meshRenderer.material.guid;
     if (mMaterials.find(matGuid) != mMaterials.end())
         item->material = mMaterials.at(matGuid).get();
 
@@ -540,16 +536,18 @@ void D3DContext::CreateRenderItem(const Entity& entity)
     mAllRenderItems[item->guid] = std::move(item);
 }
 
-void D3DContext::UpdateRenderItem(const Entity& entity)
+void D3DContext::UpdateRenderItem(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer)
 {
     auto guid = entity.GetGuid().str();
     if (mAllRenderItems.find(guid) == mAllRenderItems.end()) return;
 
     auto item = mAllRenderItems.at(guid).get();
-    auto meshGuid = entity.GetMeshContainer().mesh.guid;
+
+    auto meshGuid = meshContainer.mesh.guid;
     if (mMeshes.find(meshGuid) != mMeshes.end())
         item->mesh = mMeshes.at(meshGuid).get();
-    auto matGuid = entity.GetMeshRenderer().material.guid;
+
+    auto matGuid = meshRenderer.material.guid;
     if (mMaterials.find(matGuid) != mMaterials.end())
         item->material = mMaterials.at(matGuid).get();
 }

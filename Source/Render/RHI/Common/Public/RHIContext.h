@@ -58,9 +58,9 @@ namespace Lumen::Render
 
         virtual void CreateSceneBuffer(VisualBuffer* buffer) = 0;
 
-        virtual void CreateEntity(const Entity& entity) = 0;
+        virtual void CreateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) = 0;
 
-        virtual void UpdateEntity(const Entity& entity) = 0;
+        virtual void UpdateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) = 0;
 
         virtual void CreateGeometry(const Mesh& mesh, std::string_view guid) = 0;
 
@@ -81,8 +81,8 @@ namespace Lumen::Render
 
         virtual uint32_t CreateMaterial(Material* mat, std::string_view guid) = 0;
 
-        virtual void CreateRenderItem(const Entity& entity) = 0;
+        virtual void CreateRenderItem(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) = 0;
 
-        virtual void UpdateRenderItem(const Entity& entity) = 0;
+        virtual void UpdateRenderItem(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) = 0;
     };
 }
