@@ -157,9 +157,9 @@ void WindowsFramework::UpdateGuiWindow()
             ImGui::SameLine();
             ImGui::Button("search");
             {
-                for (auto iter = scene->entities.begin(); iter != scene->entities.end(); iter++)
-                    if (wantToFind == (*iter)->GetName().c_str())
-                        selected = iter - scene->entities.begin();
+                for (int i = 0; i < scene->entities.size(); i++)
+                    if (scene->entities[i].get() && wantToFind == scene->entities[i]->GetName().c_str())
+                        selected = i;
             }
 
             //MenuBar
@@ -177,6 +177,7 @@ void WindowsFramework::UpdateGuiWindow()
             for (int i = 0; i < scene->entities.size(); i++)
             {
                 auto& entity = scene->entities[i];
+                if (!entity.get()) continue;
                 // Normal frame
                 if (!bTextInput || selected != i)
                 {
@@ -207,7 +208,7 @@ void WindowsFramework::UpdateGuiWindow()
                 // Camera and Light can not be deleted now
                 if (scene->entities.size() && selected != 0 && selected != 1)
                 {
-                    scene->DeleteEntity(scene->entities[selected]->GetName());
+                    scene->entities[selected]->Destroy();
                     selected = 0;
                 }
             }
@@ -650,7 +651,7 @@ void WindowsFramework::UpdateGuiWindowHierarchyMenuBar(Scene* scene)
     {
         if (scene->entities.size() && selected != 0 && selected != 1)
         {
-            scene->DeleteEntity(scene->entities[selected]->GetName());
+            scene->entities[selected]->Destroy();
             selected = 0;
         }
     }

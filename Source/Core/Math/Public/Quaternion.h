@@ -6,10 +6,10 @@ namespace Lumen::Core
 {
     struct Quaternion
     {
-		float w, x, y, z = 0.f;
+		float w, x, y, z;
 		Vec3 v;
 
-		Quaternion() {}
+		Quaternion() : w(0), x(0), y(0), z(0) {}
 		Quaternion(float w, float x, float y, float z);
 		Quaternion(float theta, const Vec3& axis);
 

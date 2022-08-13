@@ -45,6 +45,7 @@ void AssetManager::BuildResourceMap()
 
 void AssetManager::SaveScene()
 {
+    mScene->SortEntityList();
     Serializer::GetInstance().Serialize(mScene.get(), "../../Assets/Scene/simpleScene.scene");
 }
 
@@ -171,6 +172,8 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
     {
         mScene = std::make_unique<Scene>();
         Serializer::GetInstance().Deserialize(mScene.get(), path.string());
+        for (int i = 0; i < mScene->entities.size(); i++)
+            mScene->entityMap.emplace(mScene->entities[i]->GetGuid(), i);
     }
 
     return true;
