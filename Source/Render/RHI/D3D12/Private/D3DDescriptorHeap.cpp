@@ -33,7 +33,6 @@ D3DDescriptorHeap::D3DDescriptorHeap(RHIDevice* rhiDevice, const EHeapDescriptor
     }
     ThrowIfFailed(device->d3dDevice->CreateDescriptorHeap(&descriptorCPU, IID_PPV_ARGS(&cpuDescriptorHeap)));
     cpuHeapStartHandleCPU = cpuDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    gpuHeapStartHandleCPU = cpuDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
     if (type != EHeapDescriptorType::CBV_SRV_UAV) return;
 

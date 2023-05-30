@@ -27,8 +27,8 @@ namespace Lumen::Render
 
     struct ProfileData
     {
-        float               gameThreadTickTime;
-        float               renderThreadTickTime;
+        float               gameThreadTickTime = 0;
+        float               renderThreadTickTime = 0;
     };
 
     class RHIContext
@@ -46,6 +46,8 @@ namespace Lumen::Render
 
         virtual void Present() = 0;
 
+        virtual void Resize(const WindowInfo& windowInfo) = 0;
+
         virtual void UpdateObjectCB(const Entity& entity) = 0;
 
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) = 0;
@@ -57,6 +59,8 @@ namespace Lumen::Render
         virtual void DrawUI(void* data) = 0;
 
         virtual void CreateSceneBuffer(VisualBuffer* buffer) = 0;
+
+        virtual void ResizeSceneBuffer(VisualBuffer* buffer) = 0;
 
         virtual void CreateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) = 0;
 

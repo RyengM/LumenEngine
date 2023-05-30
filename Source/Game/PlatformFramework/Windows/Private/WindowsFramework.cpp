@@ -3,6 +3,7 @@
 #include "Game/Asset/Public/Serializer.h"
 #include "Game/GamePlay/Public/MeshEntity.h"
 #include "ThirdParty/Imgui/imgui_stdlib.h"
+#include "ThirdParty/Imgui/imgui_internal.h"
 #include "Render/RenderCore/Public/RenderCommand.h"
 #include "Render/RHI/D3D12/Public/D3DContext.h"
 #include <cassert>
@@ -14,9 +15,18 @@ using namespace Lumen::Core;
 using namespace Lumen::Render;
 using namespace std::filesystem;
 
+static WindowsFramework* gWindowsFramework = nullptr;
+
+LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return gWindowsFramework->WindowProc(hwnd, msg, wParam, lParam);
+}
+
 // Static method for engine launch, program main body
 int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework)
 {
+    gWindowsFramework = pFramework;
+
     if (!pFramework->InitMainWindow())
         return 0;
  
@@ -59,6 +69,7 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
     pFramework->Clean();
 
     // Delete the framework
+    gWindowsFramework = nullptr;
     delete pFramework;
 
     // return this part of the WM_QUIT message
@@ -68,7 +79,6 @@ int WindowsFramework::RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCm
 void WindowsFramework::InitUI()
 {
     mImguiManager.Init(mEngine.GetConfig().frameBufferNum);
-    gImguiManager = &mImguiManager;
     mWindowFlags |= ImGuiWindowFlags_MenuBar;
 
     ImGui_ImplWin32_Init(mWindowInfo.mainWnd);
@@ -317,7 +327,7 @@ void WindowsFramework::UpdateGuiWindow()
 
     // Show render tagret
     {
-        ImGui::Begin("Scene");
+        ImGui::Begin("Scene", NULL, ImGuiWindowFlags_MenuBar);
 
         if (ImGui::IsWindowHovered())
             mEngine.deviceStatus->bSceneWindow = true;
@@ -325,37 +335,53 @@ void WindowsFramework::UpdateGuiWindow()
             mEngine.deviceStatus->bSceneWindow = false;
 
         // Show control panel
-        if (ImGui::Button("Objects")) ImGui::OpenPopup("create objects");
-        ImGui::SameLine();
-        if (ImGui::Button("Start")) mEngine.BeginPlay();
-        ImGui::SameLine();
-        if (ImGui::Button("Stop")) mEngine.EndPlay();
-
-        if (ImGui::BeginPopup("create objects"))
+        if (ImGui::BeginMenuBar())
         {
-            std::string builtinMesh = "";
-            if (ImGui::Button("Cube")) builtinMesh = "cube";
-            if (ImGui::Button("Sphere")) builtinMesh = "sphere";
-            if (ImGui::Button("Plane")) builtinMesh = "plane";
-
-            if (builtinMesh != "")
+            if (ImGui::BeginMenu("Objects"))
             {
-                MeshEntity* entity = dynamic_cast<MeshEntity*>(scene->CreateEntity("MeshEntity"));
-                if (entity)
-                {
-                    entity->SetMeshGUID(builtinMesh + "-builtin");
-                    scene->UpdateEntity(entity);
-                }
+                ImGui::OpenPopup("create objects");
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Start"))
+            {
+                mEngine.BeginPlay();
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Stop"))
+            {
+                mEngine.EndPlay();
+                ImGui::EndMenu();
             }
 
-            ImGui::EndPopup();
+            if (ImGui::BeginPopup("create objects"))
+            {
+                std::string builtinMesh = "";
+                if (ImGui::Button("Cube")) builtinMesh = "cube";
+                if (ImGui::Button("Sphere")) builtinMesh = "sphere";
+                if (ImGui::Button("Plane")) builtinMesh = "plane";
+
+                if (builtinMesh != "")
+                {
+                    MeshEntity* entity = dynamic_cast<MeshEntity*>(scene->CreateEntity("MeshEntity"));
+                    if (entity)
+                    {
+                        entity->SetMeshGUID(builtinMesh + "-builtin");
+                        scene->UpdateEntity(entity);
+                    }
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::EndMenuBar();
         }
 
         // Show scene RT
-        if (mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
+        if (mEngine.GetSceneBufferPtr()->srvHandle && mEngine.GetSceneBufferPtr()->srvHandle != 0xcdcdcdcdcdcdcdcd)
         {
+            ImGuiWindow* guiWindow = ImGui::FindWindowByName("Scene");
             auto sceneBufPtr = mEngine.GetSceneBufferPtr();
-            ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, ImVec2(sceneBufPtr->width, sceneBufPtr->height));
+            //ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, ImVec2(sceneBufPtr->width, sceneBufPtr->height));
+            ImVec2 Rect(guiWindow->InnerRect.GetSize().x, guiWindow->InnerRect.GetSize().y - guiWindow->TitleBarRect().GetSize().y);
+            ImGui::Image((ImTextureID)sceneBufPtr->srvHandle, Rect);
         }
         ImGui::End();
     }
@@ -662,7 +688,7 @@ void WindowsFramework::UpdateGuiWindowHierarchyMenuBar(Scene* scene)
 bool WindowsFramework::InitMainWindow()
 {
     mWndClass.style = CS_HREDRAW | CS_VREDRAW;
-    mWndClass.lpfnWndProc = WindowProc;
+    mWndClass.lpfnWndProc = MainWndProc;
     mWndClass.cbClsExtra = 0;
     mWndClass.cbWndExtra = 0;
     mWndClass.hInstance = mhAppInst;
@@ -698,19 +724,23 @@ bool WindowsFramework::InitMainWindow()
     return true;
 }
 
+void WindowsFramework::OnResize()
+{
+    mEngine.OnResize(mWindowInfo);
+}
+
 // Forward declare message handler from imgui_impl_win32.h
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Message handler
 LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (gImguiManager)
-        for (auto context : gImguiManager->GetContexts())
-        {
-            ImGui::SetCurrentContext(context);
-            if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
-                return true;
-        }
+    for (auto context : mImguiManager.GetContexts())
+    {
+        ImGui::SetCurrentContext(context);
+        if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+            return true;
+    }
 
     switch (message)
     {
@@ -727,6 +757,12 @@ LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wP
     break;
     case WM_SIZE:
     {
+        mWindowInfo.clientWidth = LOWORD(lParam);
+        mWindowInfo.clientHeight = HIWORD(lParam);
+
+        OnResize();
+
+        return 0;
     }
     break;
     case WM_DESTROY:

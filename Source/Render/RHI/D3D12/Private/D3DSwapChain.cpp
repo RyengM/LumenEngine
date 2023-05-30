@@ -72,11 +72,49 @@ D3DSwapChain::D3DSwapChain(RHIDevice* rhiDevice, RHICommandContext* rhiCmdContex
 
 void D3DSwapChain::InitResourceView(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap)
 {
-    D3DDevice* device = static_cast<D3DDevice*>(rhiDevice);
-
     for (int i = 0; i < mSwapChainBufferCount; i++)
         mSwapChainBufferView[i] = std::make_unique<D3DRenderTargetView>(rhiDevice, rtvDescriptorHeap, mSwapChainBuffer[i].get());
 
+    mDepthStencilView = std::make_unique<D3DDepthStencilView>(rhiDevice, dsvDescriptorHeap, mDepthStencilBuffer.get());
+}
+
+void D3DSwapChain::Resize(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap, int width, int height)
+{
+    for (int i = 0; i < mSwapChainBufferCount; ++i)
+        mSwapChainBuffer[i]->defaultResource.Reset();
+    mDepthStencilBuffer->defaultResource.Reset();
+
+    // Resize the swap chain.
+    ThrowIfFailed(mSwapChain->ResizeBuffers(
+        mSwapChainBufferCount,
+        width, height,
+        mBackBufferFormat,
+        DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+
+    mCurBackBufferIndex = 0;
+
+    for (int i = 0; i < mSwapChainBufferCount; i++)
+    {
+        ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i]->defaultResource)));
+        mSwapChainBufferView[i] = std::make_unique<D3DRenderTargetView>(rhiDevice, rtvDescriptorHeap, mSwapChainBuffer[i].get());
+    }
+
+    TextureDescriptor depthStencilDesc;
+    {
+        depthStencilDesc.width = (int)width;
+        depthStencilDesc.height = (int)height;
+        depthStencilDesc.slices = 1;
+        depthStencilDesc.sparse = false;
+        depthStencilDesc.mipLevel = 1;
+        depthStencilDesc.anisoLevel = 1;
+        depthStencilDesc.sample = EMSAASample::None;
+        depthStencilDesc.usageType = EUsageType::DepthStencil;
+        depthStencilDesc.textureType = ETextureType::Tex2D;
+        depthStencilDesc.storageType = EStorageType::Default;
+        depthStencilDesc.format = EGraphicsFormat::D24_S8_UNorm;
+        depthStencilDesc.initState = ETextureInitState::Common;
+    }
+    mDepthStencilBuffer = std::make_unique<D3DTextureResource>(rhiDevice, depthStencilDesc);
     mDepthStencilView = std::make_unique<D3DDepthStencilView>(rhiDevice, dsvDescriptorHeap, mDepthStencilBuffer.get());
 }
 

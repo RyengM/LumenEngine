@@ -13,6 +13,7 @@ namespace Lumen::Render
         D3DSwapChain(RHIDevice* rhiDevice, RHICommandContext* rhiCmdContext, void* hWnd, size_t width, size_t height);
 
         void InitResourceView(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap);
+        void Resize(RHIDevice* rhiDevice, D3DDescriptorHeap* rtvDescriptorHeap, D3DDescriptorHeap* dsvDescriptorHeap, int width, int height);
         D3DRenderTargetView* GetCurrentBackBufferView();
         D3DTextureResource* GetCurrentBuffer();
         D3DDepthStencilView* GetDepthStencilView();
@@ -26,6 +27,6 @@ namespace Lumen::Render
         std::unique_ptr<D3DTextureResource>                 mDepthStencilBuffer;
         std::unique_ptr<D3DDepthStencilView>                mDepthStencilView;
         DXGI_FORMAT                                         mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-        int                                                 mCurBackBufferIndex = 0;
+        uint32_t                                            mCurBackBufferIndex = 0;
     };
 }

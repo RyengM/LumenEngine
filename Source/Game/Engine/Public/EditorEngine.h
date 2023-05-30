@@ -13,6 +13,8 @@ namespace Lumen::Game
     class EditorEngine
     {
     public:
+        EditorEngine();
+
         // Launch modules
         void PreInit(const WindowInfo& windowInfo);
         // Load assets
@@ -21,13 +23,18 @@ namespace Lumen::Game
         void Tick();
         // Exit engine
         void Exit();
+        // Resize buffer
+        void OnResize(const WindowInfo& windowInfo);
 
         void BeginPlay();
         void EndPlay();
 
-        inline Config GetConfig() const noexcept { return mConfig; }
-        inline ProfileData* GetProfileData() noexcept { return &mProfileData; }
-        inline VisualBuffer* GetSceneBufferPtr() const noexcept { return mSceneBuffer.get(); }
+        Config GetConfig() const noexcept { return mConfig; }
+        ProfileData* GetProfileData() noexcept { return &mProfileData; }
+        VisualBuffer* GetSceneBufferPtr() const noexcept { return mSceneBuffer.get(); }
+
+        void SetResizedSceneInfo(float sceneWidth, float sceneHeight) { mCachedSceneWidth = sceneWidth; mCachedSceneHeight = sceneHeight; bSceneResized = true; }
+        void GetCachedSceneInfo(float& outSceneWidth, float& outSceneHeight) { outSceneWidth = mCachedSceneWidth; outSceneHeight = mCachedSceneHeight; }
 
     private:
         // Use scene data from asset manager to build gpu resource
@@ -41,7 +48,16 @@ namespace Lumen::Game
 
     private:
         // If editor is in playing mode, entity will not tick if beginplay is not activated
-        bool bPlaying = false;
+        bool bPlaying : 1;
+        // If editor window is resized
+        bool bSwapchainResized : 1;
+        // If scene is resized
+        bool bSceneResized : 1;
+
+        // Cached scene size, TODO. if this size changed, scene buffer will be resized
+        float mCachedSceneWidth;
+        float mCachedSceneHeight;
+
         // Config data
         Config mConfig;
         // Profile data
@@ -49,6 +65,8 @@ namespace Lumen::Game
         // Scene display buffer
         std::unique_ptr<VisualBuffer> mSceneBuffer;
         // Render thread handle
-        RunnableThread* renderThread;
+        RunnableThread* mRenderThread;
+        // Cached editor window info, if this info changed, swapchain will be resized
+        WindowInfo mCachedWindowInfo;
     };
 }

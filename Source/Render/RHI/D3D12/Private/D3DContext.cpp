@@ -71,6 +71,22 @@ void D3DContext::Present()
     mSwapChain->Present();
 }
 
+void D3DContext::Resize(const WindowInfo& windowInfo)
+{
+    // Flush before changing any resources.
+    mGraphicsContext->FlushQueue();
+
+    mSwapChain->Resize(mDevice.get(), mRtvDescriptorHeap.get(), mDsvDescriptorHeap.get(), windowInfo.clientWidth, windowInfo.clientHeight);
+
+    auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "ResizeSwapchainBuffer"));
+    auto cmdList = cmdBuffer->commandList;
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(mSwapChain->GetDepthStencilBuffer()->defaultResource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+    cmdList->ResourceBarrier(1, &barrier);
+    ExecuteCmdBuffer(cmdBuffer);
+
+    mGraphicsContext->FlushQueue();
+}
+
 void D3DContext::UpdateObjectCB(const Entity& entity)
 {
     auto objectCB = mGraphicsContext->currentFrameResource->objectBuffers.get();
@@ -273,6 +289,11 @@ void D3DContext::CreateSceneBuffer(VisualBuffer* buffer)
     }
     mSceneRT = std::make_unique<D3DDepthRenderTarget>(mDevice.get(), mCbvSrvUavDescriptorHeap.get(), mRtvDescriptorHeap.get(), mDsvDescriptorHeap.get(), colorDescriptor, depthStencilDesc);
     buffer->srvHandle = mSceneRT->colorBuffer->srvView->gpuDescriptorHandleGPU.ptr;
+}
+
+void D3DContext::ResizeSceneBuffer(VisualBuffer* buffer)
+{
+    // TODO.
 }
 
 void D3DContext::CreateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer)

@@ -16,7 +16,6 @@ namespace Lumen::Render
     public:
         // Handle for cpu descriptor heap
         D3D12_CPU_DESCRIPTOR_HANDLE                         cpuHeapStartHandleCPU;
-        D3D12_GPU_DESCRIPTOR_HANDLE                         gpuHeapStartHandleCPU;
 
         // Handle for gpu descriptor heap
         D3D12_CPU_DESCRIPTOR_HANDLE                         cpuHeapStartHandleGPU;

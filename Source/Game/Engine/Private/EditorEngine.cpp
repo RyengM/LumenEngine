@@ -9,6 +9,15 @@ using namespace Lumen::Render;
 using std::chrono::high_resolution_clock;
 using std::chrono::microseconds;
 
+EditorEngine::EditorEngine()
+    : bPlaying(false)
+    , bSwapchainResized(false)
+    , bSceneResized(false)
+    , mCachedSceneWidth(1440)
+    , mCachedSceneHeight(810)
+    , mRenderThread(nullptr)
+{}
+
 void EditorEngine::PreInit(const WindowInfo& windowInfo)
 {
     SCOPE_INFO("Editor engine preInit");
@@ -20,10 +29,12 @@ void EditorEngine::PreInit(const WindowInfo& windowInfo)
 
     // Launch render thread
     RenderRunnable* renderRunnable = new RenderRunnable(windowInfo, &mProfileData);
-    renderThread = RunnableThread::Create("RenderThread", renderRunnable);
+    mRenderThread = RunnableThread::Create("RenderThread", renderRunnable);
 
     // Register engine reflections that may not be auto reflected
     RegisterReflections();
+
+    mCachedWindowInfo = windowInfo;
 }
 
 void EditorEngine::Init()
@@ -46,7 +57,7 @@ void EditorEngine::Init()
     }
 
     // Prepare scene buffer
-    mSceneBuffer = std::make_unique<VisualBuffer>("scene", 1440, 810);
+    mSceneBuffer = std::make_unique<VisualBuffer>("scene", mCachedSceneWidth, mCachedSceneHeight);
     auto sceneBufferPtr = mSceneBuffer.get();
     ENQUEUE_RENDER_COMMAND("CreateSceneBuffer", [sceneBufferPtr](RHIContext* graphicsContext) {
         graphicsContext->CreateSceneBuffer(sceneBufferPtr);
@@ -66,6 +77,21 @@ void EditorEngine::Init()
 void EditorEngine::Tick()
 {
     high_resolution_clock::time_point beginTime = high_resolution_clock::now();
+
+    // Resize scene buffer
+    if (bSceneResized)
+    {
+        // TODO.
+    }
+
+    // Resize swapchain buffer
+    if (bSwapchainResized)
+    {
+        ENQUEUE_RENDER_COMMAND("Resize", [this](RHIContext* graphicsContext) {
+            graphicsContext->Resize(mCachedWindowInfo);
+        });
+        bSwapchainResized = false;
+    }
     
     auto& entities = AssetManager::GetInstance().GetScene()->entities;
 
@@ -131,8 +157,14 @@ void EditorEngine::Tick()
 
 void EditorEngine::Exit()
 {
-    renderThread->Exit();
+    mRenderThread->Exit();
     LOG_INFO("Editor engine exit");
+}
+
+void EditorEngine::OnResize(const WindowInfo& windowInfo)
+{
+    bSwapchainResized = true;
+    mCachedWindowInfo = windowInfo;
 }
 
 void EditorEngine::BeginPlay()

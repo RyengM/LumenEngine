@@ -14,11 +14,13 @@ namespace Lumen::Game
         WindowsFramework(const wchar_t* name) : BaseFramework(name) {};
         static int RunFramework(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow, WindowsFramework* pFramework);
 
+        virtual LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
     protected:
         bool InitMainWindow();
         // Break loop if return false
         bool HandleIO();
-        static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+        void OnResize();
 
     private:
         // Do some work with GUI and d3d12 backend
@@ -50,7 +52,4 @@ namespace Lumen::Game
         WNDCLASS            mWndClass;
         WindowInfo          mWindowInfo;
     };
-
-    // Record the address of imgui manager in framework, used for WinProc
-    static ImguiManagerDx12* gImguiManager = nullptr;
 }

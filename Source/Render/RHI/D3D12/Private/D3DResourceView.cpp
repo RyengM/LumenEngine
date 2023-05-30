@@ -10,7 +10,6 @@ D3DRenderTargetView::D3DRenderTargetView(RHIDevice* rhiDevice, D3DDescriptorHeap
     offset = descriptorHeap->RequestElement();
     descriptorHandle = descriptorHeap->cpuHeapStartHandleCPU;
     descriptorHandle.ptr += offset * descriptorHeap->descriptorSize;
-    gpuAddress = descriptorHeap->gpuHeapStartHandleCPU.ptr + offset * descriptorHeap->descriptorSize;
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDescriptor;
     ZeroMemory(&rtvDescriptor, sizeof(rtvDescriptor));
@@ -31,7 +30,6 @@ D3DDepthStencilView::D3DDepthStencilView(RHIDevice* rhiDevice, D3DDescriptorHeap
     offset = descriptorHeap->RequestElement();
     descriptorHandle = descriptorHeap->cpuHeapStartHandleCPU;
     descriptorHandle.ptr += offset * descriptorHeap->descriptorSize;
-    gpuAddress = descriptorHeap->gpuHeapStartHandleCPU.ptr + offset * descriptorHeap->descriptorSize;
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDescriptor;
     ZeroMemory(&dsvDescriptor, sizeof(dsvDescriptor));
@@ -51,9 +49,7 @@ D3DShaderResourceView::D3DShaderResourceView(RHIDevice* rhiDevice, D3DDescriptor
     offset = descriptorHeap->RequestElement();
     cpuDescriptorHandleCPU = descriptorHeap->cpuHeapStartHandleCPU;
     cpuDescriptorHandleCPU.ptr += offset * descriptorHeap->descriptorSize;
-    gpuDescriptorHandleCPU = descriptorHeap->gpuHeapStartHandleCPU;
     gpuDescriptorHandleCPU.ptr += offset * descriptorHeap->descriptorSize;
-    gpuAddress = gpuDescriptorHandleCPU.ptr;
 
     cpuDescriptorHandleGPU = descriptorHeap->cpuHeapStartHandleGPU;
     cpuDescriptorHandleGPU.ptr += offset * descriptorHeap->descriptorSize;

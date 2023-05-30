@@ -37,6 +37,9 @@ namespace Lumen::Render
 
         virtual void Present() override;
 
+        // Resize swapchain buffer
+        virtual void Resize(const WindowInfo& windowInfo) override;
+
         virtual void UpdateObjectCB(const Entity& entity) override;
 
         virtual void UpdatePassCB(const Camera& camera, const DirectionalLight& light) override;
@@ -49,6 +52,8 @@ namespace Lumen::Render
 
         // Create scene buffer for display
         virtual void CreateSceneBuffer(VisualBuffer* buffer) override;
+
+        virtual void ResizeSceneBuffer(VisualBuffer* buffer) override;
 
         // Create all GPU resources related to entity
         virtual void CreateEntity(const Entity& entity, const MeshComponent& meshContainer, const MeshRendererComponent& meshRenderer) override;
