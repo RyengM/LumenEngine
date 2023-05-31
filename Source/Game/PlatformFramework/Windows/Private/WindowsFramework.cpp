@@ -334,43 +334,52 @@ void WindowsFramework::UpdateGuiWindow()
         else
             mEngine.deviceStatus->bSceneWindow = false;
 
+        auto CreateEntity = [scene](const std::string& builtinMesh)
+        {
+            if (builtinMesh != "")
+            {
+                MeshEntity* entity = dynamic_cast<MeshEntity*>(scene->CreateEntity("MeshEntity"));
+                if (entity)
+                {
+                    entity->SetMeshGUID(builtinMesh + "-builtin");
+                    scene->UpdateEntity(entity);
+                }
+            }
+        };
+
+        static bool bCreateCube = false;
+        static bool bCreateSphere = false;
+        static bool bCreatePlane = false;
+        static bool bBeginPlay = false;
+        static bool bEndPlay = false;
+
+        if (bCreateCube)    CreateEntity("cube");
+        if (bCreateSphere)  CreateEntity("sphere");
+        if (bCreatePlane)   CreateEntity("plane");
+
+        bCreateCube = false;
+        bCreateSphere = false;
+        bCreatePlane = false;
+        bBeginPlay = false;
+        bEndPlay = false;
+
         // Show control panel
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("Objects"))
             {
-                ImGui::OpenPopup("create objects");
+                ImGui::MenuItem("Cube", NULL, &bCreateCube);
+                ImGui::MenuItem("Sphere", NULL, &bCreateSphere);
+                ImGui::MenuItem("Plane", NULL, &bCreatePlane);
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Start"))
+            if (ImGui::BeginMenu("Actions"))
             {
-                mEngine.BeginPlay();
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Stop"))
-            {
-                mEngine.EndPlay();
+                ImGui::MenuItem("Start", NULL, &bBeginPlay);
+                ImGui::MenuItem("Stop", NULL, &bEndPlay);
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginPopup("create objects"))
-            {
-                std::string builtinMesh = "";
-                if (ImGui::Button("Cube")) builtinMesh = "cube";
-                if (ImGui::Button("Sphere")) builtinMesh = "sphere";
-                if (ImGui::Button("Plane")) builtinMesh = "plane";
-
-                if (builtinMesh != "")
-                {
-                    MeshEntity* entity = dynamic_cast<MeshEntity*>(scene->CreateEntity("MeshEntity"));
-                    if (entity)
-                    {
-                        entity->SetMeshGUID(builtinMesh + "-builtin");
-                        scene->UpdateEntity(entity);
-                    }
-                }
-                ImGui::EndPopup();
-            }
             ImGui::EndMenuBar();
         }
 
@@ -757,10 +766,12 @@ LRESULT CALLBACK WindowsFramework::WindowProc(HWND hWnd, UINT message, WPARAM wP
     break;
     case WM_SIZE:
     {
-        mWindowInfo.clientWidth = LOWORD(lParam);
-        mWindowInfo.clientHeight = HIWORD(lParam);
-
-        OnResize();
+        if (wParam != SIZE_MINIMIZED)
+        {
+            mWindowInfo.clientWidth = LOWORD(lParam);
+            mWindowInfo.clientHeight = HIWORD(lParam);
+            OnResize();
+        }
 
         return 0;
     }
