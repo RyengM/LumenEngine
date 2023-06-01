@@ -334,13 +334,16 @@ void WindowsFramework::UpdateGuiWindow()
         if (mFileBrowser.HasSelected())
         {
             selectedFilePath = mFileBrowser.GetSelected().string();
-            mFileBrowser.ClearSelected();
-            std::filesystem::path metaPath = std::filesystem::path(selectedFilePath).concat(".meta");
-            if (std::filesystem::exists(metaPath))
+            if (selectedFilePath.extension() == ".shader")
             {
-                Meta meta;
-                Serializer::GetInstance().Deserialize(&meta, metaPath.string());
-                AssetManager::GetInstance().CreateMaterial(xg::Guid(meta.guid));
+                mFileBrowser.ClearSelected();
+                std::filesystem::path metaPath = std::filesystem::path(selectedFilePath).concat(".meta");
+                if (std::filesystem::exists(metaPath))
+                {
+                    Meta meta;
+                    Serializer::GetInstance().Deserialize(&meta, metaPath.string());
+                    AssetManager::GetInstance().CreateMaterial(xg::Guid(meta.guid));
+                }
             }
         }
     }
