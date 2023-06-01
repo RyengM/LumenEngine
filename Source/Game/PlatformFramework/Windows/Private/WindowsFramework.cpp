@@ -81,6 +81,8 @@ void WindowsFramework::InitUI()
     mImguiManager.Init(mEngine.GetConfig().frameBufferNum);
     mWindowFlags |= ImGuiWindowFlags_MenuBar;
 
+    mFileBrowser = ImGui::FileBrowser(ImGuiFileBrowserFlags_NoModal);
+
     ImGui_ImplWin32_Init(mWindowInfo.mainWnd);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -319,10 +321,28 @@ void WindowsFramework::UpdateGuiWindow()
         {
             // Material
             if (ImGui::Button("Create material"))
-                AssetManager::GetInstance().CreateMaterial();
+            {
+                mFileBrowser.Open();
+            }
             ImGui::EndPopup();
         }
         ImGui::End();
+
+        mFileBrowser.Display();
+
+        std::filesystem::path selectedFilePath;
+        if (mFileBrowser.HasSelected())
+        {
+            selectedFilePath = mFileBrowser.GetSelected().string();
+            mFileBrowser.ClearSelected();
+            std::filesystem::path metaPath = std::filesystem::path(selectedFilePath).concat(".meta");
+            if (std::filesystem::exists(metaPath))
+            {
+                Meta meta;
+                Serializer::GetInstance().Deserialize(&meta, metaPath.string());
+                AssetManager::GetInstance().CreateMaterial(xg::Guid(meta.guid));
+            }
+        }
     }
 
     // Show render tagret

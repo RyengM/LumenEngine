@@ -2,6 +2,7 @@
 
 #include "Game/Engine/Public/BaseFramework.h"
 #include "Game/PlatformFramework/Windows/Public/ImguiManagerDx12.h"
+#include "ThirdParty/Imgui/imfilebrowser.h"
 #include <memory>
 
 namespace Lumen::Game
@@ -46,6 +47,7 @@ namespace Lumen::Game
         // Imgui settings
         ImguiManagerDx12    mImguiManager;
         ImGuiWindowFlags    mWindowFlags = 0;
+        ImGui::FileBrowser  mFileBrowser;
 
         // Win32 settings
         HINSTANCE           mhAppInst = nullptr;            // Application instance handle

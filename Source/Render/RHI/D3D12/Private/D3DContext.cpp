@@ -172,6 +172,12 @@ void D3DContext::RenderScene(uint32_t width, uint32_t height)
     auto cmdBuffer = static_cast<D3DCommandBuffer*>(RequestCmdBuffer(EContextType::Graphics, "RenderScene"));
     auto cmdList = cmdBuffer->commandList;
 
+    if (!mPSOs.contains("Default"))
+    {
+        ShaderLab* shaderlab = AssetManager::GetInstance().GetDefaultShaderlab();
+        if (shaderlab) CreateShaderlab(*shaderlab);
+    }
+
     auto pso = mPSOs.at("Default").get();
     auto frameResource = mGraphicsContext->currentFrameResource;
 
@@ -205,13 +211,16 @@ void D3DContext::RenderScene(uint32_t width, uint32_t height)
     DrawRenderItems(cmdList.Get(), mRenderItems[(uint32_t)ERenderLayer::Opaque]);
 
     // Draw sky
-    cmdList->SetPipelineState(mPSOs.at("SimpleSky")->d3dPso.Get());
-    DrawRenderItems(cmdList.Get(), mRenderItems[(uint32_t)ERenderLayer::Sky]);
+    if (mPSOs.contains("Default"))
+    {
+        cmdList->SetPipelineState(mPSOs.at("SimpleSky")->d3dPso.Get());
+        DrawRenderItems(cmdList.Get(), mRenderItems[(uint32_t)ERenderLayer::Sky]);
 
-    cmdList->ResourceBarrier(1, &afterBarrier);
+        cmdList->ResourceBarrier(1, &afterBarrier);
 
-    ExecuteCmdBuffer(cmdBuffer);
-    ReleaseCmdBuffer(cmdBuffer);
+        ExecuteCmdBuffer(cmdBuffer);
+        ReleaseCmdBuffer(cmdBuffer);
+    }
 }
 
 void D3DContext::DrawRenderItems(ID3D12GraphicsCommandList* cmdList,const  std::vector<D3DRenderItem*>& renderItems)

@@ -36,13 +36,14 @@ namespace Lumen::Game
         // Serialize scene to asset folder, TODO, now only support one default scene
         void SaveScene();
 
-        // Create default material asset
-        void CreateMaterial();
+        // Create material asset
+        void CreateMaterial(const xg::Guid& guid);
 
         Mesh* GetMeshByGUID(xg::Guid guid);
         Texture* GetTextureByGUID(xg::Guid guid);
         Material* GetMaterialByGUID(xg::Guid guid);
         ShaderLab* GetShaderlabByGUID(xg::Guid guid);
+        ShaderLab* GetDefaultShaderlab();
         
         inline Scene* GetScene() noexcept { return mScene.get(); }
         inline AssetTreeNode* GetAssetTree() noexcept { return mAssetTree.get(); }

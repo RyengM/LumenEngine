@@ -179,15 +179,15 @@ bool AssetManager::LoadAsset(std::filesystem::path path)
     return true;
 }
 
-void AssetManager::CreateMaterial()
+void AssetManager::CreateMaterial(const xg::Guid& guid)
 {
     Material* mat = mMaterialStorage.RequestElement();
     new(mat)Material();
     mat->name = "new-material_" + std::to_string(matIndex++) + ".mat";
     // Extract shaderlab property to material
-    ShaderLab* shader = mGuid2ShaderLabMap.at(mDefaultShaderGuid);
+    ShaderLab* shader = mGuid2ShaderLabMap.at(guid);
     mat->shaderlab.name = shader->name;
-    mat->shaderlab.guid = mDefaultShaderGuid;
+    mat->shaderlab.guid = guid;
     mat->propertyListSize = shader->propertyCapacity;
     for (const auto& prop : shader->properties)
     {
@@ -272,5 +272,13 @@ ShaderLab* AssetManager::GetShaderlabByGUID(xg::Guid guid)
     ShaderLab* shaderlab = nullptr;
     if (mGuid2ShaderLabMap.find(guid) != mGuid2ShaderLabMap.end())
         shaderlab = mGuid2ShaderLabMap.at(guid);
+    return shaderlab;
+}
+
+ShaderLab* AssetManager::GetDefaultShaderlab()
+{
+    ShaderLab* shaderlab = nullptr;
+    if (mDefaultShaderGuid.isValid())
+        shaderlab = mGuid2ShaderLabMap.at(mDefaultShaderGuid);
     return shaderlab;
 }
